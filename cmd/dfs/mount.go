@@ -1,0 +1,135 @@
+package dfs
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/manifoldco/promptui"
+	"github.com/spf13/cobra"
+)
+
+var (
+	optionVerbosity         = "verbosity"
+	optionBeeApi            = "bee.endpoint"
+	optionBeePostageBatchId = "bee.batch"
+	optionIsGatewayProxy    = "bee.gateway"
+	optionNetwork           = "network"
+	optionRPC               = "rpc"
+
+	defaultVerbosity      = "trace"
+
+	username   string
+	password   string
+	pod        string
+	mountpoint string
+)
+
+var mountCmd = &cobra.Command{
+	Use:   "mount",
+	Short: "Mount a pod into a specified mount point",
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		if username == "" {
+			return fmt.Errorf("plesae provide a username")
+		}
+		if password == "" {
+			return fmt.Errorf("plesae provide password")
+		}
+		if pod == "" {
+			return fmt.Errorf("plesae provide a pod name")
+		}
+		if mountpoint == "" {
+			return fmt.Errorf("plesae provide a mountpoint")
+		}
+		return nil
+	},
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		fmt.Println(fdfs)
+		fmt.Println()
+		fmt.Println(cfgFile)
+		if _, err := os.Stat(cfgFile); err != nil {
+			// if there is no configFile, write it
+			err = setupConfig()
+			if err != nil {
+				return err
+			}
+		} else {
+			config.SetConfigFile(cfgFile)
+			if err := config.ReadInConfig(); err != nil {
+				return err
+			}
+		}
+		return nil
+	},
+}
+
+func init() {
+	mountCmd.Flags().StringVarP(&username, "username", "u", "", "fdp username")
+	mountCmd.Flags().StringVarP(&password, "password", "p", "", "password")
+	mountCmd.Flags().StringVarP(&pod, "pod", "d", "", "pod to mount")
+	mountCmd.Flags().StringVarP(&mountpoint, "mountpoint", "f", "", "mountpoint")
+	rootCmd.AddCommand(mountCmd)
+}
+
+func setupConfig() error {
+	promptEndpoint := promptui.Prompt{
+		Label: "Bee Endpoint",
+	}
+	beeEndpoint, err := promptEndpoint.Run()
+	if err != nil {
+		return err
+	}
+
+	promptGateway := promptui.Select{
+		Label: "Is endpoint is bee gateway proxy?",
+		Items: []string{"Yes", "No"},
+	}
+	_, beeGateway, err := promptGateway.Run()
+	if err != nil {
+		return err
+	}
+	beeGatewayBool := false
+	if beeGateway == "Yes" {
+		beeGatewayBool = true
+	}
+	// TODO check beeEndpoint is reachable
+	beeBatch := ""
+	if beeGateway == "No" {
+		promptBatch := promptui.Prompt{
+			Label: "Batch ",
+		}
+		beeBatch, err = promptBatch.Run()
+		if err != nil {
+			return err
+		}
+		// TODO check batch validity as a string
+	}
+
+	promptNetwork := promptui.Select{
+		Label: "Select Network",
+		Items: []string{"Play", "Testnet"},
+	}
+	_, network, err := promptNetwork.Run()
+	if err != nil {
+		return err
+	}
+	promptRPC := promptui.Prompt{
+		Label: "RPC Endpoint",
+	}
+	rpc, err := promptRPC.Run()
+	if err != nil {
+		return err
+	}
+
+	// TODO check RPC connection
+	config.Set(optionVerbosity, defaultVerbosity)
+	config.Set(optionBeeApi, beeEndpoint)
+	config.Set(optionBeePostageBatchId, beeBatch)
+	config.Set(optionIsGatewayProxy, beeGatewayBool)
+	config.Set(optionNetwork, network)
+	config.Set(optionRPC, rpc)
+
+	if err := config.WriteConfigAs(cfgFile); err != nil {
+		return err
+	}
+	return nil
+}
