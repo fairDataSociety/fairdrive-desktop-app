@@ -16,7 +16,7 @@ var (
 	cfgFile string
 	config  = viper.New()
 
-	fdfs = `
+	message = `
   ______       __   ______          
  /      \     /  | /      \         
 /$$$$$$  |____$$ |/$$$$$$  |_______ 

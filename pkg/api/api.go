@@ -51,11 +51,11 @@ func New(logger logging.Logger, username, password, pod string, fc *FairOSConfig
 	d := &DfsAPI{
 		API: api,
 	}
-	err = d.login(username, password)
+	err = d.Login(username, password)
 	if err != nil {
 		return nil, err
 	}
-	err = d.openPod(pod, password)
+	err = d.OpenPod(pod, password)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func New(logger logging.Logger, username, password, pod string, fc *FairOSConfig
 	return d, nil
 }
 
-func (d *DfsAPI) login(username, password string) error {
+func (d *DfsAPI) Login(username, password string) error {
 	ui, _, _, err := d.API.LoginUserV2(username, password, "")
 	if err != nil {
 		return err
@@ -72,7 +72,7 @@ func (d *DfsAPI) login(username, password string) error {
 	return nil
 }
 
-func (d *DfsAPI) openPod(pod, password string) error {
+func (d *DfsAPI) OpenPod(pod, password string) error {
 	pi, err := d.API.OpenPod(pod, password, d.DfsSessionId)
 	if err != nil {
 		return err

@@ -46,7 +46,7 @@ var mountCmd = &cobra.Command{
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		fmt.Println(fdfs)
+		fmt.Println(message)
 		fmt.Println()
 		fmt.Println(cfgFile)
 		if _, err := os.Stat(cfgFile); err != nil {
