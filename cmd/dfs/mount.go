@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/datafund/fdfs/pkg/api"
+	dfuse "github.com/datafund/fdfs/pkg/fuse"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	"github.com/winfsp/cgofuse/fuse"
 )
 
 var (
@@ -58,6 +61,21 @@ var mountCmd = &cobra.Command{
 				return err
 			}
 		}
+		fc := &api.FairOSConfig{
+			IsProxy: config.GetBool(optionIsGatewayProxy),
+			Bee:     config.GetString(optionBeeApi),
+			Batch:   config.GetString(optionBeePostageBatchId),
+			RPC:     config.GetString(optionRPC),
+			Network: config.GetString(optionNetwork),
+		}
+		dfsFuse, err := dfuse.New(username, password, pod, 5, fc)
+		if err != nil {
+			return err
+		}
+		host := fuse.NewFileSystemHost(dfsFuse)
+		defer host.Unmount()
+
+		host.Mount("", []string{mountpoint})
 		return nil
 	},
 }
