@@ -20,42 +20,38 @@ type node_t struct {
 	stat    fuse.Stat_t
 	xatr    map[string][]byte
 	chldrn  []string
-	data    []byte
 	opencnt int
 }
 
-func newNode(id string, dev uint64, ino uint64, mode uint32, uid uint32, gid uint32) *node_t {
-	tmsp := fuse.Now()
-	self := node_t{
-		id: id,
-		stat: fuse.Stat_t{
-			Dev:      dev,
-			Ino:      ino,
-			Mode:     mode,
-			Nlink:    1,
-			Uid:      uid,
-			Gid:      gid,
-			Atim:     tmsp,
-			Mtim:     tmsp,
-			Ctim:     tmsp,
-			Birthtim: tmsp,
-			Flags:    0,
-		},
-		xatr:    nil,
-		opencnt: 0,
-	}
-	if fuse.S_IFDIR == self.stat.Mode&fuse.S_IFMT {
-		self.chldrn = []string{}
-	}
-	return &self
-}
+//func newNode(id string, dev uint64, ino uint64, mode uint32, uid uint32, gid uint32) *node_t {
+//	tmsp := fuse.Now()
+//	self := node_t{
+//		id: id,
+//		stat: fuse.Stat_t{
+//			Dev:      dev,
+//			Ino:      ino,
+//			Mode:     mode,
+//			Nlink:    1,
+//			Uid:      uid,
+//			Gid:      gid,
+//			Atim:     tmsp,
+//			Mtim:     tmsp,
+//			Ctim:     tmsp,
+//			Birthtim: tmsp,
+//			Flags:    0,
+//		},
+//		xatr:    nil,
+//		opencnt: 0,
+//	}
+//	if fuse.S_IFDIR == self.stat.Mode&fuse.S_IFMT {
+//		self.chldrn = []string{}
+//	}
+//	return &self
+//}
 
-func (f *node_t) isDir() bool {
-	if f.stat.Mode&fuse.S_IFDIR > 0 {
-		return true
-	}
-	return false
-}
+//func (f *node_t) isDir() bool {
+//	return.stat.Mode&fuse.S_IFDIR > 0
+//}
 
 type Ffdfs struct {
 	fuse.FileSystemBase
@@ -63,7 +59,6 @@ type Ffdfs struct {
 	log     logging.Logger
 	api     *api.DfsAPI
 	ino     uint64
-	root    *node_t
 	openmap map[uint64]*node_t
 }
 
@@ -199,18 +194,18 @@ func (f *Ffdfs) openNode(path string, dir bool) (int, uint64) {
 	return 0, node.stat.Ino
 }
 
-func (f *Ffdfs) closeNode(fh uint64) int {
-	node := f.openmap[fh]
-	node.opencnt--
-	if 0 == node.opencnt {
-		err := node.Close()
-		if err != nil {
-			return -fuse.EIO
-		}
-		delete(f.openmap, node.stat.Ino)
-	}
-	return 0
-}
+//func (f *Ffdfs) closeNode(fh uint64) int {
+//	node := f.openmap[fh]
+//	node.opencnt--
+//	if 0 == node.opencnt {
+//		err := node.Close()
+//		if err != nil {
+//			return -fuse.EIO
+//		}
+//		delete(f.openmap, node.stat.Ino)
+//	}
+//	return 0
+//}
 
 func (f *node_t) Close() error {
 	return nil
