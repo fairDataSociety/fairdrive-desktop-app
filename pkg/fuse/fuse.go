@@ -1,7 +1,7 @@
 package fuse
 
 import (
-	"bufio"
+	"bytes"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -74,14 +74,18 @@ func New(username, password, pod string, logLevel logrus.Level, fc *api.FairOSCo
 	if err != nil {
 		return nil, err
 	}
-	return &Ffdfs{
+	f := &Ffdfs{
 		log: logger,
 		api: dfsApi,
-	}, nil
+	}
+	f.openmap = map[uint64]*node_t{}
+	return f, nil
 }
 
 // Getattr gets file attributes.
 func (f *Ffdfs) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errc int) {
+	defer f.synchronize()()
+
 	node := f.getNode(path, fh)
 	if nil == node {
 		return -fuse.ENOENT
@@ -99,6 +103,7 @@ func (f *Ffdfs) Readdir(path string,
 	ofst int64,
 	fh uint64) (errc int) {
 	defer f.synchronize()()
+
 	node := f.getNode(path, fh)
 	if nil == node {
 		return -fuse.ENOENT
@@ -115,31 +120,45 @@ func (f *Ffdfs) Readdir(path string,
 	return 0
 }
 
+func (f *Ffdfs) Opendir(path string) (errc int, fh uint64) {
+	defer f.synchronize()()
+
+	return f.openNode(path, true)
+}
+
+func (f *Ffdfs) Open(path string, flags int) (errc int, fh uint64) {
+	defer f.synchronize()()
+
+	return f.openNode(path, false)
+}
+
 // Read reads data from a file.
 func (f *Ffdfs) Read(path string, buff []byte, ofst int64, fh uint64) (n int) {
+	defer f.synchronize()()
+
 	r, _, err := f.api.DownloadFile(f.api.Pod.GetPodName(), path, f.api.DfsSessionId)
 	if err != nil {
 		f.log.Errorf("read: download failed %s: %s", path, err.Error())
 		return -fuse.EIO
 	}
 
-	b := bufio.NewReader(r)
-	dataSize := b.Size()
-	discarded, err := b.Discard(int(ofst - 1))
-	if int64(discarded) != ofst-1 {
-		f.log.Errorf("read: reader discard failed %s: %s", path, err.Error())
+	buf := new(bytes.Buffer)
+	_, err = buf.ReadFrom(r)
+	if err != nil {
 		return -fuse.EIO
 	}
 
+	dataSize := buf.Len()
 	endofst := ofst + int64(len(buff))
 	if endofst > int64(dataSize) {
 		endofst = int64(dataSize)
 	}
-
 	if endofst < ofst {
 		return 0
 	}
-	n, err = b.Read(buff)
+
+	buf.Next(int(ofst))
+	n, err = buf.Read(buff)
 	if err != nil {
 		f.log.Errorf("read: read failed %s: %s", path, err.Error())
 		return -fuse.EIO
@@ -195,18 +214,6 @@ func (f *Ffdfs) closeNode(fh uint64) int {
 
 func (f *node_t) Close() error {
 	return nil
-}
-
-//func (f *Ffdfs) Opendir(path string) (errc int, fh uint64) {
-//	defer f.synchronize()()
-//
-//	return f.openNode(path, true)
-//}
-
-func (f *Ffdfs) Open(path string, flags int) (errc int, fh uint64) {
-	defer f.synchronize()()
-
-	return f.openNode(path, false)
 }
 
 func (f *Ffdfs) synchronize() func() {

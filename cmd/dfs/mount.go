@@ -19,7 +19,7 @@ var (
 	optionNetwork           = "network"
 	optionRPC               = "rpc"
 
-	defaultVerbosity      = "trace"
+	defaultVerbosity = "trace"
 
 	username   string
 	password   string
