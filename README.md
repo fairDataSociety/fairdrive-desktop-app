@@ -47,6 +47,7 @@ Flags:
 ```
 
 `mount` command will automatically detect if you have a config file for fdfs. It will be created on the fly if it is not present in your home folder.
+
 ![fdfs](https://user-images.githubusercontent.com/15252513/190614895-bd1a9aff-8bf5-4c47-b747-c042e1adbf61.gif)
 
 After mount is successful, you will be able to see the content of your pod at the given mount-point.
