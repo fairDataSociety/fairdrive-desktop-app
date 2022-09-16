@@ -2,7 +2,6 @@ package fuse
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -69,7 +68,7 @@ type Ffdfs struct {
 
 func New(username, password, pod string, logLevel logrus.Level, fc *api.FairOSConfig) (*Ffdfs, error) {
 	logger := logging.New(os.Stdout, logLevel)
-	apiLogger := logging.New(os.Stdout, 5)
+	apiLogger := logging.New(os.Stdout, 3)
 	dfsApi, err := api.New(apiLogger, username, password, pod, fc)
 	if err != nil {
 		return nil, err
@@ -203,7 +202,6 @@ func (f *Ffdfs) Write(path string, buff []byte, ofst int64, fh uint64) (n int) {
 		node.stat.Size = endofst
 	}
 	var err error
-	fmt.Println("WriteAt", path, ofst, len(buff))
 	n, err = f.api.WriteAt(path, bytes.NewReader(buff), uint64(ofst))
 	if err != nil {
 		f.log.Errorf("failed write %v", err)
