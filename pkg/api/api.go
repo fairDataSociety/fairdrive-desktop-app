@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
@@ -89,4 +90,9 @@ func (d *DfsAPI) Inode(path string) (*dir.Inode, error) {
 		return nil, fmt.Errorf("dir not found")
 	}
 	return inode, nil
+}
+
+func (d *DfsAPI) WriteAt(path string, update io.Reader, offset uint64) (int, error) {
+	file := d.Pod.GetFile()
+	return file.WriteAt(path, update, offset)
 }

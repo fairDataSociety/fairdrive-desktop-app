@@ -3,7 +3,7 @@ module github.com/datafund/fdfs
 go 1.17
 
 require (
-	github.com/fairdatasociety/fairOS-dfs v0.8.1
+	github.com/fairdatasociety/fairOS-dfs v0.8.2-rc6.0.20220916074351-4a1f4630b8c5
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/plexsysio/taskmanager v0.0.0-20211220123746-de5ebdd49ae2
@@ -79,5 +79,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/blake3 v1.1.7 // indirect
 )
-
-replace github.com/fairdatasociety/fairOS-dfs => ../../fairDataSociety/fairOS-dfs
