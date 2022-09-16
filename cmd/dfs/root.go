@@ -32,7 +32,7 @@ $$/      $$$$$$$/ $$/     $$$$$$$/`
 var rootCmd = &cobra.Command{
 	Use:   "fdfs",
 	Short: "Filesystem in USErspace (FUSE) client for fairO-dfs",
-	Long: `fdfs is FUSE integration with fairOS-dfs. It lets you mount a 
+	Long: `fdfs is a FUSE client for fairOS-dfs. It lets you mount your 
 pod on your own user space and interact with your data.`,
 }
 
