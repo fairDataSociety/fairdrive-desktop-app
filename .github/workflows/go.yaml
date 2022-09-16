@@ -24,12 +24,6 @@ jobs:
             arch: amd64
             cgo: 1
             cpath: C:\Program Files (x86)\WinFsp\inc\fuse
-          - os: windows-latest
-            arch: amd64
-            cgo: 0
-          - os: windows-latest
-            arch: 386
-            cgo: 0
           - os: ubuntu-latest
             arch: amd64
             cgo: 1
@@ -122,3 +116,7 @@ jobs:
         run: make test
       - name: Build
         run: make binary
+      - uses: actions/upload-artifact@v3
+        with:
+          name: my-artifact
+          path: dist/fdfs
