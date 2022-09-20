@@ -237,28 +237,17 @@ func TestWrite(t *testing.T) {
 	}
 
 	fd.Close()
+	<-time.After(time.Second)
+	err = os.WriteFile(filepath.Join(mntDir, "file1"), []byte("asdasd"), 0666)
+	if err != nil {
+		t.Fatal(err)
+	}
 	fd2, err := os.Open(filepath.Join(mntDir, "file1"))
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	data, err := io.ReadAll(fd2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fd2.Close()
-
-	<-time.After(time.Second)
-	err = os.WriteFile(filepath.Join(mntDir, "file1"), []byte("asdasd"), 0666)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fd2, err = os.Open(filepath.Join(mntDir, "file1"))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	data, err = io.ReadAll(fd2)
 	if err != nil {
 		t.Fatal(err)
 	}

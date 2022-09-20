@@ -57,8 +57,6 @@ func (n *node_t) enqueueWriteOp(op *ops) {
 		n.writesInFlight = append(n.writesInFlight[:idx], append([]*ops{op}, n.writesInFlight[idx:]...)...)
 	}
 	n.writesInFlight = merge(n.writesInFlight)
-
-	return
 }
 
 func merge(writeOps []*ops) (merged []*ops) {
@@ -122,8 +120,8 @@ func newNode(id string, dev uint64, ino uint64, mode uint32, uid uint32, gid uin
 	return &self
 }
 
-func (f *node_t) isDir() bool {
-	return f.stat.Mode&fuse.S_IFDIR > 0
+func (n *node_t) isDir() bool {
+	return n.stat.Mode&fuse.S_IFDIR > 0
 }
 
 type Ffdfs struct {
@@ -708,7 +706,7 @@ func (f *Ffdfs) closeNode(fh uint64) int {
 	return 0
 }
 
-func (f *node_t) Close() error {
+func (n *node_t) Close() error {
 	return nil
 }
 
