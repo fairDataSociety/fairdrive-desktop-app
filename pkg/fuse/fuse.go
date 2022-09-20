@@ -2,6 +2,7 @@ package fuse
 
 import (
 	"bytes"
+	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -19,12 +20,80 @@ const (
 	blockSize = 65536
 )
 
+type ops struct {
+	start int64
+	end   int64
+	buf   []byte
+	tmsp  int64
+}
+
 type node_t struct {
-	id      string
-	stat    fuse.Stat_t
-	xatr    map[string][]byte
-	chldrn  []string
-	opencnt int
+	id             string
+	stat           fuse.Stat_t
+	xatr           map[string][]byte
+	chldrn         []string
+	opencnt        int
+	writesInFlight []*ops
+	readsInFlight  io.ReadSeekCloser
+}
+
+func (n *node_t) enqueueWriteOp(op *ops) {
+	if n.writesInFlight == nil {
+		n.writesInFlight = make([]*ops, 0)
+	}
+
+	idx := 0
+	for ; idx < len(n.writesInFlight); idx++ {
+		if n.writesInFlight[idx].start > op.start {
+			break
+		}
+	}
+	switch {
+	case idx == 0:
+		n.writesInFlight = append([]*ops{op}, n.writesInFlight...)
+	case idx == len(n.writesInFlight):
+		n.writesInFlight = append(n.writesInFlight, op)
+	default:
+		n.writesInFlight = append(n.writesInFlight[:idx], append([]*ops{op}, n.writesInFlight[idx:]...)...)
+	}
+	n.writesInFlight = merge(n.writesInFlight)
+
+	return
+}
+
+func merge(writeOps []*ops) (merged []*ops) {
+	for _, op := range writeOps {
+		if len(merged) == 0 || merged[len(merged)-1].end < op.start {
+			// No overlap
+			merged = append(merged, op)
+		} else {
+			prev := merged[len(merged)-1]
+			if op.end > prev.end {
+				old := prev.end
+				prev.end = op.end
+				prev.buf = append(prev.buf, make([]byte, prev.end-old)...)
+				var idxSrc, idxDst, tmsp int64
+				if op.tmsp > prev.tmsp {
+					idxDst = op.start - prev.start
+					tmsp = op.tmsp
+				} else {
+					idxDst = old - prev.start
+					idxSrc = old - op.start
+					tmsp = prev.tmsp
+				}
+				copy(prev.buf[idxDst:], op.buf[idxSrc:])
+				prev.tmsp = tmsp
+			} else {
+				if op.tmsp > prev.tmsp {
+					start := op.start - prev.start
+					end := start + (op.end - op.start)
+					copy(prev.buf[start:end], op.buf)
+					prev.tmsp = op.tmsp
+				}
+			}
+		}
+	}
+	return merged
 }
 
 func newNode(id string, dev uint64, ino uint64, mode uint32, uid uint32, gid uint32) *node_t {
@@ -154,35 +223,31 @@ func (f *Ffdfs) Open(path string, flags int) (errc int, fh uint64) {
 // Read reads data from a file.
 func (f *Ffdfs) Read(path string, buff []byte, ofst int64, fh uint64) (n int) {
 	defer f.synchronize()()
+	node := f.getNode(path, fh)
+	if node.readsInFlight == nil {
+		r, _, err := f.api.ReadSeekCloser(f.api.Pod.GetPodName(), path, f.api.DfsSessionId)
+		if err != nil {
+			f.log.Errorf("read: download failed %s: %s", path, err.Error())
+			return -fuse.EIO
+		}
+		node.readsInFlight = r
+	}
 
-	r, _, err := f.api.DownloadFile(f.api.Pod.GetPodName(), path, f.api.DfsSessionId)
+	_, err := node.readsInFlight.Seek(ofst, 0)
 	if err != nil {
-		f.log.Errorf("read: download failed %s: %s", path, err.Error())
+		f.log.Errorf("read: seek failed %s: %s", path, err.Error())
 		return -fuse.EIO
 	}
-
-	buf := new(bytes.Buffer)
-	_, err = buf.ReadFrom(r)
-	if err != nil {
-		return -fuse.EIO
-	}
-
-	dataSize := buf.Len()
-	endofst := ofst + int64(len(buff))
-	if endofst > int64(dataSize) {
-		endofst = int64(dataSize)
-	}
-	if endofst < ofst {
-		return 0
-	}
-
-	buf.Next(int(ofst))
-	n, err = buf.Read(buff)
+	dBuf := make([]byte, len(buff))
+	n, err = node.readsInFlight.Read(dBuf)
 	if err != nil {
 		f.log.Errorf("read: read failed %s: %s", path, err.Error())
 		return -fuse.EIO
 	}
-	return
+	if ofst+int64(n) == node.stat.Size {
+		node.readsInFlight = nil
+	}
+	return copy(buff, dBuf[:n])
 }
 
 func (f *Ffdfs) Mknod(path string, mode uint32, dev uint64) (errc int) {
@@ -192,7 +257,6 @@ func (f *Ffdfs) Mknod(path string, mode uint32, dev uint64) (errc int) {
 
 func (f *Ffdfs) Write(path string, buff []byte, ofst int64, fh uint64) (n int) {
 	defer f.synchronize()()
-
 	node := f.getNode(path, fh)
 	if nil == node {
 		return -fuse.ENOENT
@@ -201,16 +265,21 @@ func (f *Ffdfs) Write(path string, buff []byte, ofst int64, fh uint64) (n int) {
 	if endofst > node.stat.Size {
 		node.stat.Size = endofst
 	}
-	var err error
-	n, err = f.api.WriteAt(path, bytes.NewReader(buff), uint64(ofst))
-	if err != nil {
-		f.log.Errorf("failed write %v", err)
-		return -fuse.EIO
+	bcopy := make([]byte, len(buff))
+	copy(bcopy, buff)
+
+	newOp := &ops{
+		start: ofst,
+		end:   ofst + int64(len(buff)),
+		buf:   bcopy,
+		tmsp:  time.Now().UnixNano(),
 	}
+
+	node.enqueueWriteOp(newOp)
 	tmsp := fuse.Now()
 	node.stat.Ctim = tmsp
 	node.stat.Mtim = tmsp
-	return n
+	return len(buff)
 }
 
 func (f *Ffdfs) Setxattr(path string, name string, value []byte, flags int) (errc int) {
@@ -356,12 +425,15 @@ func (f *Ffdfs) Mkdir(path string, mode uint32) int {
 
 func (f *Ffdfs) Truncate(path string, size int64, fh uint64) int {
 	defer f.synchronize()()
-
 	node := f.getNode(path, fh)
 	if nil == node {
 		return -fuse.ENOENT
 	}
-
+	_, err := f.api.WriteAt(node.id, bytes.NewReader([]byte{}), uint64(0), true)
+	if err != nil {
+		f.log.Errorf("failed write %v", err)
+		return -fuse.EIO
+	}
 	node.stat.Size = size
 	tmsp := fuse.Now()
 	node.stat.Ctim = tmsp
@@ -378,7 +450,6 @@ func (f *Ffdfs) Releasedir(path string, fh uint64) (errc int) {
 
 func (f *Ffdfs) Release(path string, fh uint64) (errc int) {
 	defer f.synchronize()()
-
 	return f.closeNode(fh)
 }
 
@@ -442,13 +513,13 @@ func (f *Ffdfs) Rename(oldpath string, newpath string) (errc int) {
 	if oldnode.isDir() {
 		err := f.api.API.RenameDir(f.api.Pod.GetPodName(), oldpath, newpath, f.api.DfsSessionId)
 		if err != nil {
-			f.log.Errorf("failed renaming node %v", err)
+			f.log.Errorf("failed renaming dir %v", err)
 			return -fuse.EIO
 		}
 	} else {
 		err := f.api.API.RenameFile(f.api.Pod.GetPodName(), oldpath, newpath, f.api.DfsSessionId)
 		if err != nil {
-			f.log.Errorf("failed renaming node %v", err)
+			f.log.Errorf("failed renaming file %v", err)
 			return -fuse.EIO
 		}
 	}
@@ -565,10 +636,10 @@ func (f *Ffdfs) removeNode(path string, dir bool) int {
 		return -fuse.ENOTDIR
 	}
 
-	if 0 < len(node.chldrn) {
-		f.log.Errorf("failed removing %s is a dir and not empty", path)
-		return -fuse.ENOTEMPTY
-	}
+	//if 0 < len(node.chldrn) {
+	//	f.log.Errorf("failed removing %s is a dir and not empty", path)
+	//	return -fuse.ENOTEMPTY
+	//}
 	node.stat.Nlink--
 	for idx, chld := range prnt.chldrn {
 		if chld == filepath.Base(path) {
@@ -620,6 +691,14 @@ func (f *Ffdfs) closeNode(fh uint64) int {
 	node := f.openmap[fh]
 	node.opencnt--
 	if 0 == node.opencnt {
+		for _, op := range node.writesInFlight {
+			_, err := f.api.WriteAt(node.id, bytes.NewReader(op.buf), uint64(op.start), false)
+			if err != nil {
+				f.log.Errorf("failed write %v", err)
+				return -fuse.EIO
+			}
+		}
+		node.writesInFlight = nil
 		err := node.Close()
 		if err != nil {
 			return -fuse.EIO
