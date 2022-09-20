@@ -92,7 +92,7 @@ func (d *DfsAPI) Inode(path string) (*dir.Inode, error) {
 	return inode, nil
 }
 
-func (d *DfsAPI) WriteAt(path string, update io.Reader, offset uint64) (int, error) {
+func (d *DfsAPI) WriteAt(path string, update io.Reader, offset uint64, truncate bool) (int, error) {
 	file := d.Pod.GetFile()
-	return file.WriteAt(path, update, offset)
+	return file.WriteAt(path, update, offset, truncate)
 }
