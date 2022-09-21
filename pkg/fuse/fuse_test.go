@@ -84,45 +84,45 @@ func setupFairosWithFs(t *testing.T) *api.DfsAPI {
 	return dfsApi
 }
 
-func setupFairos(t *testing.T) *api.DfsAPI {
-	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(os.Stdout, 5)
-	ens := mock2.NewMockNamespaceManager()
-	tm := taskmanager.New(1, 10, time.Second*15, logger)
-	userObject := user.NewUsers("", mockClient, ens, logger)
-	password := "password1"
-	username := "fdfs"
-	_, _, _, _, ui, err := userObject.CreateNewUserV2(username, password, "", "", tm)
-	if err != nil {
-		t.Fatal(err)
-	}
-	pod1 := ui.GetPod()
-	podName1 := "test1"
-	pi, err := pod1.CreatePod(podName1, password, "")
-	if err != nil {
-		t.Fatalf("error creating pod %s : %s", podName1, err.Error())
-	}
-
-	dirObject := pi.GetDirectory()
-	err = dirObject.MkRootDir(podName1, pi.GetPodAddress(), pi.GetFeed())
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	mockDfs := dfs.NewMockDfsAPI(mockClient, userObject, logger, "/")
-	dfsApi := &api.DfsAPI{
-		API: mockDfs,
-	}
-	err = dfsApi.Login(username, password)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = dfsApi.GetPodInfo(podName1, password, false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return dfsApi
-}
+//func setupFairos(t *testing.T) *api.DfsAPI {
+//	mockClient := mock.NewMockBeeClient()
+//	logger := logging.New(os.Stdout, 5)
+//	ens := mock2.NewMockNamespaceManager()
+//	tm := taskmanager.New(1, 10, time.Second*15, logger)
+//	userObject := user.NewUsers("", mockClient, ens, logger)
+//	password := "password1"
+//	username := "fdfs"
+//	_, _, _, _, ui, err := userObject.CreateNewUserV2(username, password, "", "", tm)
+//	if err != nil {
+//		t.Fatal(err)
+//	}
+//	pod1 := ui.GetPod()
+//	podName1 := "test1"
+//	pi, err := pod1.CreatePod(podName1, password, "")
+//	if err != nil {
+//		t.Fatalf("error creating pod %s : %s", podName1, err.Error())
+//	}
+//
+//	dirObject := pi.GetDirectory()
+//	err = dirObject.MkRootDir(podName1, pi.GetPodAddress(), pi.GetFeed())
+//	if err != nil {
+//		t.Fatal(err)
+//	}
+//
+//	mockDfs := dfs.NewMockDfsAPI(mockClient, userObject, logger, "/")
+//	dfsApi := &api.DfsAPI{
+//		API: mockDfs,
+//	}
+//	err = dfsApi.Login(username, password)
+//	if err != nil {
+//		t.Fatal(err)
+//	}
+//	err = dfsApi.GetPodInfo(podName1, password, false)
+//	if err != nil {
+//		t.Fatal(err)
+//	}
+//	return dfsApi
+//}
 
 func newTestFs(t *testing.T, dfsApi *api.DfsAPI) (*Ffdfs, string, func()) {
 	logger := logging.New(os.Stdout, 5)
