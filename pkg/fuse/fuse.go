@@ -18,6 +18,7 @@ import (
 
 const (
 	blockSize = 65536
+	bFree     = 5242880 // ~ 20GB
 )
 
 type ops struct {
@@ -146,6 +147,14 @@ func New(username, password, pod string, logLevel logrus.Level, fc *api.FairOSCo
 	}
 	f.openmap = map[uint64]*node_t{}
 	return f, nil
+}
+
+func (f *Ffdfs) Statfs(path string, stat *fuse.Statfs_t) int {
+	// TODO fix space availability logic based on batchID
+	// bFree is just a place holder for now for demo
+	stat.Bavail = bFree
+	stat.Bavail = bFree
+	return 0
 }
 
 func (f *Ffdfs) Utimens(path string, tmsp []fuse.Timespec) (errc int) {
