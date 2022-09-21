@@ -246,8 +246,8 @@ func (f *Ffdfs) Read(path string, buff []byte, ofst int64, fh uint64) (n int) {
 		return -fuse.EIO
 	}
 	dBufLen := int64(len(buff))
-	if node.stat.Size < int64(len(buff)) {
-		dBufLen = node.stat.Size
+	if node.stat.Size - ofst < int64(len(buff)) {
+		dBufLen = node.stat.Size - ofst
 	}
 	dBuf := make([]byte, dBufLen)
 	n, err = node.readsInFlight.Read(dBuf)
