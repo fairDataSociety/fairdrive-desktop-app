@@ -16,7 +16,7 @@ linter:
 
 .PHONY: test
 test:
-	$(GO) test -v ./...
+	$(GO) test -v ./... -p 1
 
 dist:
 	mkdir $@
