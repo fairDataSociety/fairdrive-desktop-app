@@ -236,7 +236,11 @@ func (f *Ffdfs) Read(path string, buff []byte, ofst int64, fh uint64) (n int) {
 		f.log.Errorf("read: seek failed %s: %s", path, err.Error())
 		return -fuse.EIO
 	}
-	dBuf := make([]byte, len(buff))
+	dBufLen := int64(len(buff))
+	if node.stat.Size < int64(len(buff)) {
+		dBufLen = node.stat.Size
+	}
+	dBuf := make([]byte, dBufLen)
 	n, err = node.readsInFlight.Read(dBuf)
 	if err != nil {
 		f.log.Errorf("read: read failed %s: %s", path, err.Error())
