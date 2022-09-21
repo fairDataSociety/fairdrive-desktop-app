@@ -24,6 +24,7 @@ var (
 	username   string
 	password   string
 	pod        string
+	createPod  bool
 	mountpoint string
 )
 
@@ -68,7 +69,7 @@ var mountCmd = &cobra.Command{
 			RPC:     config.GetString(optionRPC),
 			Network: config.GetString(optionNetwork),
 		}
-		dfsFuse, err := dfuse.New(username, password, pod, 5, fc)
+		dfsFuse, err := dfuse.New(username, password, pod, 5, fc, createPod)
 		if err != nil {
 			return err
 		}
@@ -84,6 +85,7 @@ func init() {
 	mountCmd.Flags().StringVarP(&username, "username", "u", "", "fdp username")
 	mountCmd.Flags().StringVarP(&password, "password", "p", "", "password")
 	mountCmd.Flags().StringVarP(&pod, "pod", "d", "", "pod to mount")
+	mountCmd.Flags().BoolVarP(&createPod, "create", "c", false, "create the pod with provided name")
 	mountCmd.Flags().StringVarP(&mountpoint, "mountpoint", "f", "", "mountpoint")
 	rootCmd.AddCommand(mountCmd)
 }

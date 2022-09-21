@@ -80,7 +80,7 @@ func setupFairosWithFs(t *testing.T) *api.DfsAPI {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = dfsApi.OpenPod(podName1, password)
+	err = dfsApi.GetPodInfo(podName1, password, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,7 +120,7 @@ func setupFairos(t *testing.T) *api.DfsAPI {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = dfsApi.OpenPod(podName1, password)
+	err = dfsApi.GetPodInfo(podName1, password, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -312,7 +312,10 @@ func TestMultiDirWithFiles(t *testing.T) {
 				buf := make([]byte, 1024)
 				var off int64 = 0
 				for off < v.size {
-					rand.Read(buf)
+					_, err = rand.Read(buf)
+					if err != nil {
+						t.Fatal(err)
+					}
 					n, err := f.Write(buf)
 					if err != nil {
 						t.Fatal(err)
@@ -347,7 +350,7 @@ func TestMultiDirWithFiles(t *testing.T) {
 				}
 				if got, err := ioutil.ReadFile(filepath.Join(mnt, v.path)); err != nil {
 					t.Fatalf("ReadFile: %v", err)
-				} else if bytes.Compare(got, v.content) != 0 {
+				} else if !bytes.Equal(got, v.content) {
 					t.Fatalf("ReadFile %s: got %q, want %q", filepath.Join(mnt, v.path), got[:30], v.content[:30])
 				}
 			}

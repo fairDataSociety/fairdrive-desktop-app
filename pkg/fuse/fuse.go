@@ -134,10 +134,10 @@ type Ffdfs struct {
 	openmap map[uint64]*node_t
 }
 
-func New(username, password, pod string, logLevel logrus.Level, fc *api.FairOSConfig) (*Ffdfs, error) {
+func New(username, password, pod string, logLevel logrus.Level, fc *api.FairOSConfig, createPod bool) (*Ffdfs, error) {
 	logger := logging.New(os.Stdout, logLevel)
 	apiLogger := logging.New(os.Stdout, 3)
-	dfsApi, err := api.New(apiLogger, username, password, pod, fc)
+	dfsApi, err := api.New(apiLogger, username, password, pod, fc, createPod)
 	if err != nil {
 		return nil, err
 	}
