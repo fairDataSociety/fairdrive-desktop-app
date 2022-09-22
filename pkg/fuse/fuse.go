@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	blockSize = 1048576     // ~ 1MB
-	free      = 21474836480 // ~ 20GB
+	blockSize uint64 = 1048576     // ~ 1MB
+	free      uint64 = 21474836480 // ~ 20GB
 )
 
 type ops struct {
@@ -166,8 +166,8 @@ func (f *Ffdfs) Statfs(path string, stat *fuse.Statfs_t) int {
 	// TODO fix space availability logic based on batchID
 	// bFree is just a place holder for now for demo
 	stat.Bsize = uint64(dStat.Bsize)
-	stat.Bfree = uint64(free / dStat.Bsize)
-	stat.Bavail = uint64(free / dStat.Bsize)
+	stat.Bfree = free / uint64(dStat.Bsize)
+	stat.Bavail = free / uint64(dStat.Bsize)
 
 	return 0
 }
@@ -637,7 +637,7 @@ func (f *Ffdfs) makeNode(path string, mode uint32, dev uint64, data []byte) int 
 			return -fuse.EIO
 		}
 	} else {
-		err := f.api.API.UploadFile(f.api.Pod.GetPodName(), flnm, f.api.DfsSessionId, int64(len(data)), bytes.NewReader(data), prntPath, "", blockSize)
+		err := f.api.API.UploadFile(f.api.Pod.GetPodName(), flnm, f.api.DfsSessionId, int64(len(data)), bytes.NewReader(data), prntPath, "", uint32(blockSize))
 		if err != nil {
 			return -fuse.EIO
 		}
