@@ -70,14 +70,7 @@ func setupFairosWithFs(t *testing.T) *api.DfsAPI {
 		t.Fatal(err)
 	}
 	mockDfs := dfs.NewMockDfsAPI(mockClient, userObject, logger, "/")
-	dfsApi := &api.DfsAPI{
-		API: mockDfs,
-	}
-	err = dfsApi.Login(username, password)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = dfsApi.GetPodInfo(podName1, password, false)
+	dfsApi, err := api.NewMockApi(logger, username, password, podName1, mockDfs, false)
 	if err != nil {
 		t.Fatal(err)
 	}

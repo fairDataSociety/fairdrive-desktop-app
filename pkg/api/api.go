@@ -16,6 +16,7 @@ type DfsAPI struct {
 	*dfs.API
 	DfsSessionId string
 	Pod          *pod.Info
+	logger       logging.Logger
 }
 
 type FairOSConfig struct {
@@ -50,9 +51,28 @@ func New(logger logging.Logger, username, password, pod string, fc *FairOSConfig
 		return nil, err
 	}
 	d := &DfsAPI{
-		API: api,
+		API:    api,
+		logger: logger,
 	}
 	err = d.Login(username, password)
+	if err != nil {
+		return nil, err
+	}
+	err = d.GetPodInfo(pod, password, createPod)
+	if err != nil {
+		return nil, err
+	}
+
+	return d, nil
+}
+
+// NewMockApi is a mocker.  it is only used in tests
+func NewMockApi(logger logging.Logger, username, password, pod string, api *dfs.API, createPod bool) (*DfsAPI, error) {
+	d := &DfsAPI{
+		API:    api,
+		logger: logger,
+	}
+	err := d.Login(username, password)
 	if err != nil {
 		return nil, err
 	}
@@ -70,6 +90,7 @@ func (d *DfsAPI) Login(username, password string) error {
 		return err
 	}
 	d.DfsSessionId = ui.GetSessionId()
+	d.logger.Debugf("user %s logged in", username)
 	return nil
 }
 
@@ -80,6 +101,7 @@ func (d *DfsAPI) GetPodInfo(podname, password string, createPod bool) error {
 	} else {
 		d.Pod, err = d.API.OpenPod(podname, password, d.DfsSessionId)
 	}
+	d.logger.Debugf("got pod info of %s", podname)
 	return err
 }
 
@@ -87,12 +109,15 @@ func (d *DfsAPI) Inode(path string) (*dir.Inode, error) {
 	directory := d.Pod.GetDirectory()
 	inode := directory.GetDirFromDirectoryMap(path)
 	if inode == nil {
+		d.logger.Errorf("dir not found: %s", path)
 		return nil, fmt.Errorf("dir not found")
 	}
+	d.logger.Debugf("got dir info %s", path)
 	return inode, nil
 }
 
 func (d *DfsAPI) WriteAt(path string, update io.Reader, offset uint64, truncate bool) (int, error) {
+	d.logger.Debugf("writing to file %s", path)
 	file := d.Pod.GetFile()
 	return file.WriteAt(path, update, offset, truncate)
 }
