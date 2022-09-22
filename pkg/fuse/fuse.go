@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -152,22 +153,30 @@ func New(username, password, pod string, logLevel logrus.Level, fc *api.FairOSCo
 
 // Statfs sets the filesystem stats
 func (f *Ffdfs) Statfs(path string, stat *fuse.Statfs_t) int {
-	// read native block size
-	var dStat unix.Statfs_t
-	wd, err := os.Getwd()
-	if err != nil {
-		return -fuse.ENOSYS
-	}
-	err = unix.Statfs(wd, &dStat)
-	if err != nil {
-		return -fuse.ENOSYS
-	}
+	if runtime.GOOS != "windows" {
+		// read native block size
+		var dStat unix.Statfs_t
+		wd, err := os.Getwd()
+		if err != nil {
+			return -fuse.ENOSYS
+		}
+		err = unix.Statfs(wd, &dStat)
+		if err != nil {
+			return -fuse.ENOSYS
+		}
 
+		// TODO fix space availability logic based on batchID
+		// bFree is just a place holder for now for demo
+		stat.Bsize = uint64(dStat.Bsize)
+		stat.Bfree = free / uint64(dStat.Bsize)
+		stat.Bavail = free / uint64(dStat.Bsize)
+	}
+	var bSize uint64 = 4096
 	// TODO fix space availability logic based on batchID
 	// bFree is just a place holder for now for demo
-	stat.Bsize = uint64(dStat.Bsize)
-	stat.Bfree = free / uint64(dStat.Bsize)
-	stat.Bavail = free / uint64(dStat.Bsize)
+	stat.Bsize = bSize
+	stat.Bfree = free / bSize
+	stat.Bavail = free / bSize
 
 	return 0
 }
