@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	blockSize = 65536
+	blockSize = 1048576     // ~ 1MB
 	free      = 21474836480 // ~ 20GB
 )
 
@@ -345,6 +345,7 @@ func (f *Ffdfs) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errc int) {
 
 func (f *Ffdfs) Truncate(path string, size int64, fh uint64) int {
 	defer f.synchronize()()
+	f.log.Debugf("truncating file: %s", path)
 	node := f.getNode(path, fh)
 	if nil == node {
 		return -fuse.ENOENT
