@@ -14,11 +14,12 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/sirupsen/logrus"
 	"github.com/winfsp/cgofuse/fuse"
+	"golang.org/x/sys/unix"
 )
 
 const (
 	blockSize = 65536
-	bFree     = 5242880 // ~ 20GB
+	free      = 21474836480 // ~ 20GB
 )
 
 type ops struct {
@@ -151,10 +152,23 @@ func New(username, password, pod string, logLevel logrus.Level, fc *api.FairOSCo
 
 // Statfs sets the filesystem stats
 func (f *Ffdfs) Statfs(path string, stat *fuse.Statfs_t) int {
+	// read native block size
+	var dStat unix.Statfs_t
+	wd, err := os.Getwd()
+	if err != nil {
+		return -fuse.ENOSYS
+	}
+	err = unix.Statfs(wd, &dStat)
+	if err != nil {
+		return -fuse.ENOSYS
+	}
+
 	// TODO fix space availability logic based on batchID
 	// bFree is just a place holder for now for demo
-	stat.Bavail = bFree
-	stat.Bavail = bFree
+	stat.Bsize = uint64(dStat.Bsize)
+	stat.Bfree = uint64(free / dStat.Bsize)
+	stat.Bavail = uint64(free / dStat.Bsize)
+
 	return 0
 }
 
@@ -391,7 +405,6 @@ func (f *Ffdfs) Read(path string, buff []byte, ofst int64, fh uint64) (n int) {
 func (f *Ffdfs) Write(path string, buff []byte, ofst int64, fh uint64) (n int) {
 	defer f.synchronize()()
 
-	f.log.Debugf("write: file %s from %d to %d", path, ofst, len(buff))
 	node := f.getNode(path, fh)
 	if nil == node {
 		return -fuse.ENOENT
@@ -718,6 +731,7 @@ func (f *Ffdfs) closeNode(fh uint64) int {
 	node.opencnt--
 	if 0 == node.opencnt {
 		for _, op := range node.writesInFlight {
+			f.log.Debugf("write: file %s from %d to %d", node.id, uint64(op.start), len(op.buf))
 			_, err := f.api.WriteAt(node.id, bytes.NewReader(op.buf), uint64(op.start), false)
 			if err != nil {
 				f.log.Errorf("failed write %v", err)
