@@ -3,10 +3,12 @@ package dfs
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/datafund/fdfs/pkg/api"
 	dfuse "github.com/datafund/fdfs/pkg/fuse"
 	"github.com/manifoldco/promptui"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/winfsp/cgofuse/fuse"
 )
@@ -69,13 +71,32 @@ var mountCmd = &cobra.Command{
 			RPC:     config.GetString(optionRPC),
 			Network: config.GetString(optionNetwork),
 		}
-		dfsFuse, err := dfuse.New(username, password, pod, 5, fc, createPod)
+		verbosity := config.GetString(optionVerbosity)
+		var level logrus.Level
+		switch v := strings.ToLower(verbosity); v {
+		case "0", "silent":
+			level = 0
+		case "1", "error":
+			level = logrus.ErrorLevel
+		case "2", "warn":
+			level = logrus.WarnLevel
+		case "3", "info":
+			level = logrus.InfoLevel
+		case "4", "debug":
+			level = logrus.DebugLevel
+		case "5", "trace":
+			level = logrus.TraceLevel
+		default:
+			fmt.Println("unknown verbosity level", v)
+			return fmt.Errorf("unknown verbosity level")
+		}
+		dfsFuse, err := dfuse.New(username, password, pod, level, fc, createPod)
 		if err != nil {
 			return err
 		}
 		host := fuse.NewFileSystemHost(dfsFuse)
 		defer host.Unmount()
-
+		fmt.Printf("%s is accessable at %s\n", pod, mountpoint)
 		host.Mount("", []string{mountpoint})
 		return nil
 	},
@@ -100,7 +121,7 @@ func setupConfig() error {
 	}
 
 	promptGateway := promptui.Select{
-		Label: "Is endpoint is bee gateway proxy?",
+		Label: "Are you using gateway proxy (https://github.com/ethersphere/gateway-proxy)?",
 		Items: []string{"Yes", "No"},
 	}
 	_, beeGateway, err := promptGateway.Run()

@@ -136,7 +136,7 @@ type Ffdfs struct {
 
 func New(username, password, pod string, logLevel logrus.Level, fc *api.FairOSConfig, createPod bool) (*Ffdfs, error) {
 	logger := logging.New(os.Stdout, logLevel)
-	apiLogger := logging.New(os.Stdout, 3)
+	apiLogger := logging.New(os.Stdout, logLevel)
 	dfsApi, err := api.New(apiLogger, username, password, pod, fc, createPod)
 	if err != nil {
 		return nil, err
@@ -149,6 +149,7 @@ func New(username, password, pod string, logLevel logrus.Level, fc *api.FairOSCo
 	return f, nil
 }
 
+// Statfs sets the filesystem stats
 func (f *Ffdfs) Statfs(path string, stat *fuse.Statfs_t) int {
 	// TODO fix space availability logic based on batchID
 	// bFree is just a place holder for now for demo
@@ -157,317 +158,27 @@ func (f *Ffdfs) Statfs(path string, stat *fuse.Statfs_t) int {
 	return 0
 }
 
-func (f *Ffdfs) Utimens(path string, tmsp []fuse.Timespec) (errc int) {
-	defer f.synchronize()()
-
-	node := f.lookupNode(path)
-	if nil == node {
-		return -fuse.ENOENT
-	}
-	defer node.Close()
-
-	node.stat.Ctim = fuse.Now()
-	if nil == tmsp {
-		tmsp0 := node.stat.Ctim
-		tmsa := [2]fuse.Timespec{tmsp0, tmsp0}
-		tmsp = tmsa[:]
-	}
-	node.stat.Atim = tmsp[0]
-	node.stat.Mtim = tmsp[1]
-	return 0
-}
-
-// Getattr gets file attributes.
-func (f *Ffdfs) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errc int) {
-	defer f.synchronize()()
-
-	node := f.getNode(path, fh)
-	if nil == node {
-		return -fuse.ENOENT
-	}
-	*stat = node.stat
-	return 0
-}
-
-// Readdir reads a directory.
-func (f *Ffdfs) Readdir(path string,
-	fill func(
-		name string,
-		stat *fuse.Stat_t,
-		ofst int64) bool,
-	ofst int64,
-	fh uint64) (errc int) {
-	defer f.synchronize()()
-
-	node := f.getNode(path, fh)
-	if nil == node {
-		return -fuse.ENOENT
-	}
-
-	fill(".", &node.stat, 0)
-	fill("..", nil, 0)
-	for _, chld := range node.chldrn {
-		nd := f.lookupNode(filepath.Join(path, chld))
-		if nd != nil && !fill(chld, &nd.stat, 0) {
-			break
-		}
-	}
-	return 0
-}
-
-func (f *Ffdfs) Opendir(path string) (errc int, fh uint64) {
-	defer f.synchronize()()
-
-	return f.openNode(path, true)
-}
-
-func (f *Ffdfs) Open(path string, flags int) (errc int, fh uint64) {
-	defer f.synchronize()()
-
-	return f.openNode(path, false)
-}
-
-// Read reads data from a file.
-func (f *Ffdfs) Read(path string, buff []byte, ofst int64, fh uint64) (n int) {
-	defer f.synchronize()()
-	node := f.getNode(path, fh)
-	if node.readsInFlight == nil {
-		r, _, err := f.api.ReadSeekCloser(f.api.Pod.GetPodName(), path, f.api.DfsSessionId)
-		if err != nil {
-			f.log.Errorf("read: download failed %s: %s", path, err.Error())
-			return -fuse.EIO
-		}
-		node.readsInFlight = r
-	}
-
-	_, err := node.readsInFlight.Seek(ofst, 0)
-	if err != nil {
-		f.log.Errorf("read: seek failed %s: %s", path, err.Error())
-		return -fuse.EIO
-	}
-	dBufLen := int64(len(buff))
-	if node.stat.Size - ofst < int64(len(buff)) {
-		dBufLen = node.stat.Size - ofst
-	}
-	dBuf := make([]byte, dBufLen)
-	n, err = node.readsInFlight.Read(dBuf)
-	if err != nil {
-		f.log.Errorf("read: read failed %s: %s", path, err.Error())
-		return -fuse.EIO
-	}
-	if ofst+int64(n) == node.stat.Size {
-		node.readsInFlight = nil
-	}
-	return copy(buff, dBuf[:n])
-}
-
+// Mknod creates a file node.
 func (f *Ffdfs) Mknod(path string, mode uint32, dev uint64) (errc int) {
 	defer f.synchronize()()
+
+	f.log.Debugf("mknod: creating file: %s", path)
 	return f.makeNode(path, mode, dev, nil)
 }
 
-func (f *Ffdfs) Write(path string, buff []byte, ofst int64, fh uint64) (n int) {
-	defer f.synchronize()()
-	node := f.getNode(path, fh)
-	if nil == node {
-		return -fuse.ENOENT
-	}
-	endofst := ofst + int64(len(buff))
-	if endofst > node.stat.Size {
-		node.stat.Size = endofst
-	}
-	bcopy := make([]byte, len(buff))
-	copy(bcopy, buff)
-
-	newOp := &ops{
-		start: ofst,
-		end:   ofst + int64(len(buff)),
-		buf:   bcopy,
-		tmsp:  time.Now().UnixNano(),
-	}
-
-	node.enqueueWriteOp(newOp)
-	tmsp := fuse.Now()
-	node.stat.Ctim = tmsp
-	node.stat.Mtim = tmsp
-	return len(buff)
-}
-
-func (f *Ffdfs) Setxattr(path string, name string, value []byte, flags int) (errc int) {
-	defer f.synchronize()()
-
-	node := f.lookupNode(path)
-	if nil == node {
-		return -fuse.ENOENT
-	}
-	defer node.Close()
-
-	if "com.apple.ResourceFork" == name {
-		f.log.Errorf("unsupported xatr %v", name)
-		return -fuse.ENOTSUP
-	}
-	if fuse.XATTR_CREATE == flags {
-		if _, ok := node.xatr[name]; ok {
-			f.log.Errorf("xatr already exists %v", name)
-			return -fuse.EEXIST
-		}
-	} else if fuse.XATTR_REPLACE == flags {
-		if _, ok := node.xatr[name]; !ok {
-			f.log.Errorf("xatr not found %v", name)
-			return -fuse.ENOATTR
-		}
-	}
-	xatr := make([]byte, len(value))
-	copy(xatr, value)
-	if nil == node.xatr {
-		node.xatr = map[string][]byte{}
-	}
-	node.xatr[name] = xatr
-	return 0
-}
-
-func (f *Ffdfs) Getxattr(path string, name string) (errc int, xatr []byte) {
-	defer f.synchronize()()
-
-	node := f.lookupNode(path)
-	if nil == node {
-		return -fuse.ENOENT, nil
-	}
-	if "com.apple.ResourceFork" == name {
-		f.log.Errorf("unsupported xatr %v", name)
-		return -fuse.ENOTSUP, nil
-	}
-	xatr, ok := node.xatr[name]
-	if !ok {
-		f.log.Errorf("xatr not found %v", name)
-		return -fuse.ENOATTR, nil
-	}
-	return 0, xatr
-}
-
-func (f *Ffdfs) Removexattr(path string, name string) (errc int) {
-	defer f.synchronize()()
-
-	node := f.lookupNode(path)
-	if nil == node {
-		return -fuse.ENOENT
-	}
-	defer node.Close()
-
-	if "com.apple.ResourceFork" == name {
-		f.log.Errorf("unsupported xatr %v", name)
-		return -fuse.ENOTSUP
-	}
-	if _, ok := node.xatr[name]; !ok {
-		f.log.Errorf("xatr not found %v", name)
-		return -fuse.ENOATTR
-	}
-	delete(node.xatr, name)
-	return 0
-}
-
-func (f *Ffdfs) Listxattr(path string, fill func(name string) bool) (errc int) {
-	defer f.synchronize()()
-
-	node := f.lookupNode(path)
-	if nil == node {
-		return -fuse.ENOENT
-	}
-	for name := range node.xatr {
-		if !fill(name) {
-			f.log.Errorf("failed to fill xatr %s", name)
-			return -fuse.ERANGE
-		}
-	}
-	return 0
-}
-
-func (f *Ffdfs) Chflags(path string, flags uint32) (errc int) {
-	defer f.synchronize()()
-
-	node := f.lookupNode(path)
-	if nil == node {
-		return -fuse.ENOENT
-	}
-	defer node.Close()
-
-	node.stat.Flags = flags
-	node.stat.Ctim = fuse.Now()
-	return 0
-}
-
-func (f *Ffdfs) Chmod(path string, mode uint32) (errc int) {
-	defer f.synchronize()()
-
-	node := f.lookupNode(path)
-	if nil == node {
-		return -fuse.ENOENT
-	}
-	defer node.Close()
-
-	node.stat.Mode = (node.stat.Mode & fuse.S_IFMT) | mode&07777
-	node.stat.Ctim = fuse.Now()
-	return 0
-}
-
-func (f *Ffdfs) Chown(path string, uid uint32, gid uint32) (errc int) {
-	defer f.synchronize()()
-
-	node := f.lookupNode(path)
-	if nil == node {
-		return -fuse.ENOENT
-	}
-	defer node.Close()
-
-	if ^uint32(0) != uid {
-		node.stat.Uid = uid
-	}
-	if ^uint32(0) != gid {
-		node.stat.Gid = gid
-	}
-	node.stat.Ctim = fuse.Now()
-	return 0
-}
-
+// Mkdir creates a directory
 func (f *Ffdfs) Mkdir(path string, mode uint32) int {
 	defer f.synchronize()()
+
+	f.log.Debugf("mkdir: creating directory: %s", path)
 	return f.makeNode(path, fuse.S_IFDIR|(mode&07777), 0, nil)
-}
-
-func (f *Ffdfs) Truncate(path string, size int64, fh uint64) int {
-	defer f.synchronize()()
-	node := f.getNode(path, fh)
-	if nil == node {
-		return -fuse.ENOENT
-	}
-	_, err := f.api.WriteAt(node.id, bytes.NewReader([]byte{}), uint64(0), true)
-	if err != nil {
-		f.log.Errorf("failed write %v", err)
-		return -fuse.EIO
-	}
-	node.stat.Size = size
-	tmsp := fuse.Now()
-	node.stat.Ctim = tmsp
-	node.stat.Mtim = tmsp
-
-	return 0
-}
-
-func (f *Ffdfs) Releasedir(path string, fh uint64) (errc int) {
-	defer f.synchronize()()
-
-	return f.closeNode(fh)
-}
-
-func (f *Ffdfs) Release(path string, fh uint64) (errc int) {
-	defer f.synchronize()()
-	return f.closeNode(fh)
 }
 
 // Unlink removes a file.
 func (f *Ffdfs) Unlink(path string) int {
 	defer f.synchronize()()
 
+	f.log.Debugf("unlink: removing file: %s", path)
 	return f.removeNode(path, false)
 }
 
@@ -475,9 +186,11 @@ func (f *Ffdfs) Unlink(path string) int {
 func (f *Ffdfs) Rmdir(path string) int {
 	defer f.synchronize()()
 
+	f.log.Debugf("rmdir: removing directory: %s", path)
 	return f.removeNode(path, true)
 }
 
+// Rename renames a node
 func (f *Ffdfs) Rename(oldpath string, newpath string) (errc int) {
 	defer f.synchronize()()
 
@@ -542,6 +255,308 @@ func (f *Ffdfs) Rename(oldpath string, newpath string) (errc int) {
 	}
 	return 0
 }
+
+func (f *Ffdfs) Chmod(path string, mode uint32) (errc int) {
+	defer f.synchronize()()
+
+	node := f.lookupNode(path)
+	if nil == node {
+		return -fuse.ENOENT
+	}
+	defer node.Close()
+
+	node.stat.Mode = (node.stat.Mode & fuse.S_IFMT) | mode&07777
+	node.stat.Ctim = fuse.Now()
+	return 0
+}
+
+func (f *Ffdfs) Chown(path string, uid uint32, gid uint32) (errc int) {
+	defer f.synchronize()()
+
+	node := f.lookupNode(path)
+	if nil == node {
+		return -fuse.ENOENT
+	}
+	defer node.Close()
+
+	if ^uint32(0) != uid {
+		node.stat.Uid = uid
+	}
+	if ^uint32(0) != gid {
+		node.stat.Gid = gid
+	}
+	node.stat.Ctim = fuse.Now()
+	return 0
+}
+
+func (f *Ffdfs) Utimens(path string, tmsp []fuse.Timespec) (errc int) {
+	defer f.synchronize()()
+
+	node := f.lookupNode(path)
+	if nil == node {
+		return -fuse.ENOENT
+	}
+	defer node.Close()
+
+	node.stat.Ctim = fuse.Now()
+	if nil == tmsp {
+		tmsp0 := node.stat.Ctim
+		tmsa := [2]fuse.Timespec{tmsp0, tmsp0}
+		tmsp = tmsa[:]
+	}
+	node.stat.Atim = tmsp[0]
+	node.stat.Mtim = tmsp[1]
+	return 0
+}
+
+func (f *Ffdfs) Open(path string, flags int) (errc int, fh uint64) {
+	defer f.synchronize()()
+
+	f.log.Debugf("open: file %s", path)
+	return f.openNode(path, false)
+}
+
+// Getattr gets file attributes.
+func (f *Ffdfs) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errc int) {
+	defer f.synchronize()()
+
+	node := f.getNode(path, fh)
+	if nil == node {
+		f.log.Errorf("getattr: failed: %s", path)
+		return -fuse.ENOENT
+	}
+	*stat = node.stat
+	return 0
+}
+
+func (f *Ffdfs) Truncate(path string, size int64, fh uint64) int {
+	defer f.synchronize()()
+	node := f.getNode(path, fh)
+	if nil == node {
+		return -fuse.ENOENT
+	}
+	_, err := f.api.WriteAt(node.id, bytes.NewReader([]byte{}), uint64(0), true)
+	if err != nil {
+		f.log.Errorf("truncate :failed write %v", err)
+		return -fuse.EIO
+	}
+	node.stat.Size = size
+	tmsp := fuse.Now()
+	node.stat.Ctim = tmsp
+	node.stat.Mtim = tmsp
+
+	return 0
+}
+
+// Read reads data from a file.
+func (f *Ffdfs) Read(path string, buff []byte, ofst int64, fh uint64) (n int) {
+	defer f.synchronize()()
+
+	f.log.Debugf("read: file %s from %d to %d", path, ofst, ofst+int64(len(buff)))
+	node := f.getNode(path, fh)
+	if ofst == node.stat.Size {
+		return 0
+	}
+
+	if node.readsInFlight == nil {
+		r, _, err := f.api.ReadSeekCloser(f.api.Pod.GetPodName(), path, f.api.DfsSessionId)
+		if err != nil {
+			f.log.Errorf("read: download failed %s: %s", path, err.Error())
+			return -fuse.EIO
+		}
+		node.readsInFlight = r
+	}
+
+	_, err := node.readsInFlight.Seek(ofst, 0)
+	if err != nil {
+		f.log.Errorf("read: seek failed %s: %s", path, err.Error())
+		return -fuse.EIO
+	}
+	dBufLen := int64(len(buff))
+	if node.stat.Size-ofst < int64(len(buff)) {
+		dBufLen = node.stat.Size - ofst
+	}
+	dBuf := make([]byte, dBufLen)
+	n, err = node.readsInFlight.Read(dBuf)
+	if err != nil {
+		f.log.Errorf("read: read failed %s: %s", path, err.Error())
+		return -fuse.EIO
+	}
+	if ofst+int64(n) == node.stat.Size {
+		node.readsInFlight = nil
+	}
+	return copy(buff, dBuf[:n])
+}
+
+func (f *Ffdfs) Write(path string, buff []byte, ofst int64, fh uint64) (n int) {
+	defer f.synchronize()()
+
+	f.log.Debugf("write: file %s from %d to %d", path, ofst, len(buff))
+	node := f.getNode(path, fh)
+	if nil == node {
+		return -fuse.ENOENT
+	}
+	endofst := ofst + int64(len(buff))
+	if endofst > node.stat.Size {
+		node.stat.Size = endofst
+	}
+	bcopy := make([]byte, len(buff))
+	copy(bcopy, buff)
+
+	newOp := &ops{
+		start: ofst,
+		end:   ofst + int64(len(buff)),
+		buf:   bcopy,
+		tmsp:  time.Now().UnixNano(),
+	}
+
+	node.enqueueWriteOp(newOp)
+	tmsp := fuse.Now()
+	node.stat.Ctim = tmsp
+	node.stat.Mtim = tmsp
+	return len(buff)
+}
+
+func (f *Ffdfs) Release(path string, fh uint64) (errc int) {
+	defer f.synchronize()()
+	return f.closeNode(fh)
+}
+
+func (f *Ffdfs) Opendir(path string) (errc int, fh uint64) {
+	defer f.synchronize()()
+
+	f.log.Debugf("opendir: directory %s", path)
+	return f.openNode(path, true)
+}
+
+// Readdir reads a directory.
+func (f *Ffdfs) Readdir(path string,
+	fill func(
+		name string,
+		stat *fuse.Stat_t,
+		ofst int64) bool,
+	ofst int64,
+	fh uint64) (errc int) {
+	defer f.synchronize()()
+
+	node := f.getNode(path, fh)
+	if nil == node {
+		return -fuse.ENOENT
+	}
+
+	fill(".", &node.stat, 0)
+	fill("..", nil, 0)
+	for _, chld := range node.chldrn {
+		nd := f.lookupNode(filepath.Join(path, chld))
+		if nd != nil && !fill(chld, &nd.stat, 0) {
+			break
+		}
+	}
+	return 0
+}
+
+func (f *Ffdfs) Releasedir(path string, fh uint64) (errc int) {
+	defer f.synchronize()()
+
+	return f.closeNode(fh)
+}
+
+func (f *Ffdfs) Setxattr(path string, name string, value []byte, flags int) (errc int) {
+	defer f.synchronize()()
+
+	node := f.lookupNode(path)
+	if nil == node {
+		return -fuse.ENOENT
+	}
+	defer node.Close()
+
+	if "com.apple.ResourceFork" == name {
+		return -fuse.ENOTSUP
+	}
+	if fuse.XATTR_CREATE == flags {
+		if _, ok := node.xatr[name]; ok {
+			return -fuse.EEXIST
+		}
+	} else if fuse.XATTR_REPLACE == flags {
+		if _, ok := node.xatr[name]; !ok {
+			return -fuse.ENOATTR
+		}
+	}
+	xatr := make([]byte, len(value))
+	copy(xatr, value)
+	if nil == node.xatr {
+		node.xatr = map[string][]byte{}
+	}
+	node.xatr[name] = xatr
+	return 0
+}
+
+func (f *Ffdfs) Getxattr(path string, name string) (errc int, xatr []byte) {
+	defer f.synchronize()()
+
+	node := f.lookupNode(path)
+	if nil == node {
+		return -fuse.ENOENT, nil
+	}
+	if "com.apple.ResourceFork" == name {
+		return -fuse.ENOTSUP, nil
+	}
+	xatr, ok := node.xatr[name]
+	if !ok {
+		return -fuse.ENOATTR, nil
+	}
+	return 0, xatr
+}
+
+func (f *Ffdfs) Removexattr(path string, name string) (errc int) {
+	defer f.synchronize()()
+
+	node := f.lookupNode(path)
+	if nil == node {
+		return -fuse.ENOENT
+	}
+	defer node.Close()
+
+	if "com.apple.ResourceFork" == name {
+		return -fuse.ENOTSUP
+	}
+	if _, ok := node.xatr[name]; !ok {
+		return -fuse.ENOATTR
+	}
+	delete(node.xatr, name)
+	return 0
+}
+
+func (f *Ffdfs) Listxattr(path string, fill func(name string) bool) (errc int) {
+	defer f.synchronize()()
+
+	node := f.lookupNode(path)
+	if nil == node {
+		return -fuse.ENOENT
+	}
+	for name := range node.xatr {
+		if !fill(name) {
+			f.log.Errorf("failed to fill xatr %s", name)
+			return -fuse.ERANGE
+		}
+	}
+	return 0
+}
+
+func (f *Ffdfs) Chflags(path string, flags uint32) (errc int) {
+	defer f.synchronize()()
+
+	node := f.lookupNode(path)
+	if nil == node {
+		return -fuse.ENOENT
+	}
+	defer node.Close()
+
+	node.stat.Flags = flags
+	node.stat.Ctim = fuse.Now()
+	return 0
+}
+
 func (f *Ffdfs) Setcrtime(path string, tmsp fuse.Timespec) (errc int) {
 	defer f.synchronize()()
 
@@ -737,7 +752,7 @@ func (f *Ffdfs) lookupNode(path string) (node *node_t) {
 	if err != nil {
 		dirInode, err := f.api.Inode(path)
 		if err != nil {
-			f.log.Warningf("lookup failed for %s: %s\n", path, err.Error())
+			f.log.Warningf("lookup failed for %s: %s", path, err.Error())
 			return
 		}
 		fileOrDirNames := []string{}
@@ -772,17 +787,17 @@ func (f *Ffdfs) lookupNode(path string) (node *node_t) {
 	}
 	accTime, err := strconv.ParseInt(fStat.AccessTime, 10, 64)
 	if err != nil {
-		f.log.Warningf("lookup failed for %s: %s\n", path, err.Error())
+		f.log.Warningf("lookup failed for %s: %s", path, err.Error())
 		return
 	}
 	modTime, err := strconv.ParseInt(fStat.ModificationTime, 10, 64)
 	if err != nil {
-		f.log.Warningf("lookup failed for %s: %s\n", path, err.Error())
+		f.log.Warningf("lookup failed for %s: %s", path, err.Error())
 		return
 	}
 	creationTime, err := strconv.ParseInt(fStat.ModificationTime, 10, 64)
 	if err != nil {
-		f.log.Warningf("lookup failed for %s: %s\n", path, err.Error())
+		f.log.Warningf("lookup failed for %s: %s", path, err.Error())
 		return
 	}
 	f.ino++
