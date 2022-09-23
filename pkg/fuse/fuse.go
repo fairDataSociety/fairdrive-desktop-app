@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -15,12 +14,12 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/sirupsen/logrus"
 	"github.com/winfsp/cgofuse/fuse"
-	"golang.org/x/sys/unix"
 )
 
 const (
-	blockSize uint64 = 1048576     // ~ 1MB
-	free      uint64 = 21474836480 // ~ 20GB
+	sysBlockSize uint64 = 4096
+	fdsBlockSize uint64 = 1048576     // ~ 1MB
+	free         uint64 = 21474836480 // ~ 20GB
 )
 
 type ops struct {
@@ -153,27 +152,11 @@ func New(username, password, pod string, logLevel logrus.Level, fc *api.FairOSCo
 
 // Statfs sets the filesystem stats
 func (f *Ffdfs) Statfs(_ string, stat *fuse.Statfs_t) int {
-	var bSize uint64 = 4096
-	if runtime.GOOS != "windows" {
-		// read native block size
-		var dStat unix.Statfs_t
-		wd, err := os.Getwd()
-		if err != nil {
-			return -fuse.ENOSYS
-		}
-		err = unix.Statfs(wd, &dStat)
-		if err != nil {
-			return -fuse.ENOSYS
-		}
-		bSize = uint64(dStat.Bsize)
-	}
-
 	// TODO fix space availability logic based on batchID
 	// bFree is just a place holder for now for demo
-	stat.Bsize = bSize
-	stat.Bfree = free / bSize
-	stat.Bavail = free / bSize
-
+	stat.Bsize = sysBlockSize
+	stat.Bfree = free / sysBlockSize
+	stat.Bavail = free / sysBlockSize
 	return 0
 }
 
@@ -642,7 +625,7 @@ func (f *Ffdfs) makeNode(path string, mode uint32, dev uint64, data []byte) int 
 			return -fuse.EIO
 		}
 	} else {
-		err := f.api.API.UploadFile(f.api.Pod.GetPodName(), flnm, f.api.DfsSessionId, int64(len(data)), bytes.NewReader(data), prntPath, "", uint32(blockSize))
+		err := f.api.API.UploadFile(f.api.Pod.GetPodName(), flnm, f.api.DfsSessionId, int64(len(data)), bytes.NewReader(data), prntPath, "", uint32(fdsBlockSize))
 		if err != nil {
 			return -fuse.EIO
 		}
