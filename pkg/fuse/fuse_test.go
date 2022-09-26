@@ -3,10 +3,13 @@ package fuse
 import (
 	"bytes"
 	"crypto/rand"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 	"testing/fstest"
 	"testing/iotest"
@@ -20,6 +23,8 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/plexsysio/taskmanager"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/winfsp/cgofuse/fuse"
 )
 
@@ -128,7 +133,7 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI) (*Ffdfs, string, func()) {
 	srv := fuse.NewFileSystemHost(f)
 	srv.SetCapReaddirPlus(true)
 	sched := make(chan struct{})
-	var fuseArgs []string
+	var fuseArgs = []string{"-onolocalcaches"}
 
 	go func() {
 		close(sched)
@@ -388,6 +393,420 @@ func TestMultiDirWithFiles(t *testing.T) {
 	//})
 }
 
+func TestRCloneTests(t *testing.T) {
+	dfsApi := setupFairos(t)
+	_, mntDir, closer := newTestFs(t, dfsApi)
+	defer closer()
+
+	t.Run("touch and delete", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir")
+		err := os.Mkdir(runDir, 0777)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.RemoveAll(runDir)
+
+		path := filepath.Join(runDir, "touched")
+		err = writeFile(path, []byte(""), 0600)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = os.Remove(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Wait for file to disappear from listing
+		deleted := false
+		for i := 0; i < 100; i++ {
+			_, err := os.Stat(path)
+			if os.IsNotExist(err) {
+				deleted = true
+				break
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+		if !deleted {
+			t.Fatal("failed to delete file")
+		}
+
+		localDm := make(dirMap)
+		readLocal(t, localDm, runDir)
+		if len(localDm) != 0 {
+			t.Fatal("delete failed")
+		}
+	})
+
+	t.Run("rename and open", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir")
+		err := os.Mkdir(runDir, 0777)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.RemoveAll(runDir)
+
+		example := []byte("Some Data")
+		path := filepath.Join(runDir, "rename")
+		f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = f.Write(example)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = f.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = os.Rename(path, path+"bla")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		localDm := make(dirMap)
+		readLocal(t, localDm, runDir)
+		t.Log(localDm)
+
+		if len(localDm) != 1 {
+			t.Fatal("rename failed")
+		}
+		size, ok := localDm[path+"bla"]
+		if !ok {
+			t.Fatal("rename failed")
+		}
+		if size != int64(len(example)) {
+			t.Fatal("content mismatch")
+		}
+
+		err = os.Remove(path + "bla")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Wait for file to disappear from listing
+		deleted := false
+		for i := 0; i < 100; i++ {
+			_, err := os.Stat(filepath.Join(runDir, "renameble"))
+			if os.IsNotExist(err) {
+				deleted = true
+				break
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+		if !deleted {
+			t.Fatal("failed to delete file")
+		}
+
+		localDm = make(dirMap)
+		readLocal(t, localDm, runDir)
+		if len(localDm) != 0 {
+			t.Fatal("delete failed")
+		}
+	})
+
+	t.Run("dir ls", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir")
+		err := os.Mkdir(runDir, 0777)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.RemoveAll(runDir)
+
+		dirPath := filepath.Join(runDir, "a directory")
+		err = os.Mkdir(dirPath, 0777)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		path := filepath.Join(runDir, "a file")
+		err = writeFile(path, []byte("hello"), 0600)
+		if err != nil {
+			t.Fatal(err)
+		}
+		entries := "a directory/|a file:5"
+		checkDir(t, runDir, entries)
+	})
+
+	t.Run("dir create and remove", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir")
+		err := os.Mkdir(runDir, 0777)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.RemoveAll(runDir)
+
+		dirPath := filepath.Join(runDir, "dir")
+		err = os.Mkdir(dirPath, 0777)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		subDir := filepath.Join(dirPath, "subdir")
+		err = os.Mkdir(subDir, 0777)
+		if err != nil {
+			t.Fatal(err)
+		}
+		entries := "dir/|dir/subdir/"
+		checkDir(t, runDir, entries)
+	})
+
+	t.Run("dir create and remove file", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir")
+		err := os.Mkdir(runDir, 0777)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.RemoveAll(runDir)
+
+		dirPath := filepath.Join(runDir, "dir")
+		err = os.Mkdir(dirPath, 0777)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		path := filepath.Join(dirPath, "file")
+		err = writeFile(path, []byte("potato"), 0600)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		entries := "dir/|dir/file:6"
+		checkDir(t, runDir, entries)
+	})
+
+	t.Run("dir rename file", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir")
+		err := os.Mkdir(runDir, 0777)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.RemoveAll(runDir)
+
+		dirPath := filepath.Join(runDir, "dir")
+		err = os.Mkdir(dirPath, 0777)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		path := filepath.Join(dirPath, "file")
+		err = writeFile(path, []byte("potato"), 0600)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		entries := "dir/|dir/file:6"
+		checkDir(t, runDir, entries)
+		path2 := path + "2"
+		err = os.Rename(path, path2)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		entries = "dir/|dir/file2:6"
+		checkDir(t, runDir, entries)
+		path3 := path + "3"
+		err = os.Rename(path2, path3)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		entries = "dir/|dir/file3:6"
+		checkDir(t, runDir, entries)
+	})
+
+	t.Run("rename empty dir", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir")
+		err := os.Mkdir(runDir, 0777)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.RemoveAll(runDir)
+
+		dirPath := filepath.Join(runDir, "dir")
+		err = os.Mkdir(dirPath, 0777)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		dirPath1 := filepath.Join(runDir, "dir1")
+		err = os.Mkdir(dirPath1, 0777)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		path := filepath.Join(dirPath1, "potato.txt")
+		err = writeFile(path, []byte("maris piper"), 0600)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		entries := "dir/|dir1/|dir1/potato.txt:11"
+		checkDir(t, runDir, entries)
+
+		path2 := filepath.Join(runDir, "dir/dir2")
+		err = os.Rename(dirPath1, path2)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		entries = "dir/|dir/dir2/|dir/dir2/potato.txt:11"
+		checkDir(t, runDir, entries)
+
+		path3 := filepath.Join(runDir, "dir/dir3")
+		err = os.Rename(path2, path3)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		entries = "dir/|dir/dir3/|dir/dir3/potato.txt:11"
+		checkDir(t, runDir, entries)
+	})
+
+	t.Run("rename full dir", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir")
+		err := os.Mkdir(runDir, 0777)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.RemoveAll(runDir)
+
+		dirPath := filepath.Join(runDir, "dir")
+		err = os.Mkdir(dirPath, 0777)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		dirPath1 := filepath.Join(runDir, "dir1")
+		err = os.Mkdir(dirPath1, 0777)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		entries := "dir/|dir1/"
+		checkDir(t, runDir, entries)
+
+		path2 := filepath.Join(runDir, "dir/dir2")
+		err = os.Rename(dirPath1, path2)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		entries = "dir/|dir/dir2/"
+		checkDir(t, runDir, entries)
+
+		path3 := filepath.Join(runDir, "dir/dir3")
+		err = os.Rename(path2, path3)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		entries = "dir/|dir/dir3/"
+		checkDir(t, runDir, entries)
+	})
+
+	// TODO fix Chtimes
+	//t.Run("dir mod time", func(t *testing.T) {
+	//	runDir := filepath.Join(mntDir, "runDir")
+	//	err := os.Mkdir(runDir, 0777)
+	//	require.NoError(t, err)
+	//
+	//	defer os.RemoveAll(runDir)
+	//
+	//	dirPath := filepath.Join(runDir, "dir")
+	//	err = os.Mkdir(dirPath, 0777)
+	//	require.NoError(t, err)
+	//
+	//	mtime := time.Date(2012, time.November, 18, 17, 32, 31, 0, time.UTC)
+	//	err = os.Chtimes(dirPath, mtime, mtime)
+	//	require.NoError(t, err)
+	//
+	//	info, err := os.Stat(dirPath)
+	//	require.NoError(t, err)
+	//	// avoid errors because of timezone differences
+	//	assert.Equal(t, info.ModTime().Unix(), mtime.Unix())
+	//})
+}
+
+// checkDir the dir entries
+func checkDir(t *testing.T, filePath, entries string) {
+	localDm := make(dirMap)
+	readLocal(t, localDm, filePath)
+	dm := newDirMap(filePath, entries)
+	if len(localDm) != len(dm) {
+		t.Fatal("checkDir failed")
+	}
+	for i, v := range dm {
+		size, ok := dm[i]
+		if !ok {
+			t.Fatal("checkDir failed: entry not found", i)
+		}
+		if v != size {
+			t.Fatal("checkDir failed: size mismatch", i)
+		}
+	}
+}
+
+// reads the local tree into dir
+func readLocal(t *testing.T, dir dirMap, filePath string) {
+	files, err := os.ReadDir(filePath)
+	if err != nil {
+		t.Log(filePath)
+		t.Fatal(err, filePath)
+	}
+	require.NoError(t, err)
+	for _, fi := range files {
+		name := filepath.Join(filePath, fi.Name())
+		fileinfo, err := os.Lstat(name)
+		if err != nil {
+			t.Log(name)
+			t.Fatal(err)
+		}
+		if fi.IsDir() {
+			dir[name] = 0
+			readLocal(t, dir, name)
+			fi.Info()
+			assert.Equal(t, os.FileMode(0777)&os.ModePerm, fileinfo.Mode().Perm())
+		} else {
+			dir[fmt.Sprintf("%s", name)] = fileinfo.Size()
+			assert.Equal(t, os.FileMode(0666)&os.ModePerm, fileinfo.Mode().Perm())
+		}
+	}
+}
+
+type dirMap map[string]int64
+
+// Create a dirMap from a string
+func newDirMap(base, dirString string) (dm dirMap) {
+	dm = make(dirMap)
+	for _, entry := range strings.Split(dirString, "|") {
+		if strings.HasSuffix(entry, "/") {
+			dm[filepath.Join(base, entry)] = 0
+		} else {
+			fEntries := strings.Split(entry, ":")
+			s, err := strconv.Atoi(fEntries[1])
+			if err == nil {
+				dm[filepath.Join(fEntries[0], entry)] = int64(s)
+			}
+		}
+	}
+	return dm
+}
+
+// Returns a dirmap with only the files in
+func (dm dirMap) filesOnly() dirMap {
+	newDm := make(dirMap)
+	for name := range dm {
+		if !strings.HasSuffix(name, "/") {
+			newDm[name] = 0
+		}
+	}
+	return newDm
+}
+
 func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
 	// create a temp file
 	fd, err := os.CreateTemp("", fileName)
@@ -421,4 +840,26 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compres
 
 	// upload  the temp file
 	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression)
+}
+
+func writeFile(filename string, data []byte, perm os.FileMode) error {
+	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, perm)
+	if err != nil {
+		err = os.Remove(filename)
+		if err != nil {
+			return err
+		}
+		f, err = os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, perm)
+		if err != nil {
+			return err
+		}
+	}
+	n, err := f.Write(data)
+	if err == nil && n < len(data) {
+		err = io.ErrShortWrite
+	}
+	if err1 := f.Close(); err == nil {
+		err = err1
+	}
+	return err
 }
