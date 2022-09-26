@@ -128,11 +128,12 @@ func (n *node_t) isDir() bool {
 
 type Ffdfs struct {
 	fuse.FileSystemBase
-	lock    sync.Mutex
-	log     logging.Logger
-	api     *api.DfsAPI
-	ino     uint64
-	openmap map[uint64]*node_t
+	lock              sync.Mutex
+	log               logging.Logger
+	api               *api.DfsAPI
+	ino               uint64
+	openmap           map[uint64]*node_t
+	ongoingWriteSizes map[string]int64
 }
 
 func New(username, password, pod string, logLevel logrus.Level, fc *api.FairOSConfig, createPod bool) (*Ffdfs, error) {
@@ -147,6 +148,7 @@ func New(username, password, pod string, logLevel logrus.Level, fc *api.FairOSCo
 		api: dfsApi,
 	}
 	f.openmap = map[uint64]*node_t{}
+	f.ongoingWriteSizes = map[string]int64{}
 	return f, nil
 }
 
@@ -328,6 +330,10 @@ func (f *Ffdfs) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errc int) {
 		return -fuse.ENOENT
 	}
 	*stat = node.stat
+	size, ok := f.ongoingWriteSizes[path]
+	if stat.Size == 0 && ok {
+		stat.Size = size
+	}
 	return 0
 }
 
@@ -401,6 +407,7 @@ func (f *Ffdfs) Write(path string, buff []byte, ofst int64, fh uint64) (n int) {
 	endofst := ofst + int64(len(buff))
 	if endofst > node.stat.Size {
 		node.stat.Size = endofst
+		f.ongoingWriteSizes[path] = node.stat.Size
 	}
 	bcopy := make([]byte, len(buff))
 	copy(bcopy, buff)
@@ -727,6 +734,7 @@ func (f *Ffdfs) closeNode(fh uint64) int {
 				return -fuse.EIO
 			}
 		}
+		delete(f.ongoingWriteSizes, node.id)
 		node.writesInFlight = nil
 		err := node.Close()
 		if err != nil {
