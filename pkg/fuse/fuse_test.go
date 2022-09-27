@@ -778,58 +778,58 @@ func TestRCloneTests(t *testing.T) {
 	//	assert.NoError(t, err, "input/output error")
 	//})
 
-	t.Run("read seek", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
-		err := os.Mkdir(runDir, 0777)
-		require.NoError(t, err)
-
-		defer os.RemoveAll(runDir)
-
-		path := filepath.Join(runDir, "testfile")
-		err = writeFile(path, []byte("helloHELLO"), 0600)
-		require.NoError(t, err)
-
-		entries := "testfile:10"
-		checkDir(t, runDir, entries)
-
-		fd, err := os.Open(path)
-		assert.NoError(t, err)
-
-		// Seek to half way
-		_, err = fd.Seek(5, io.SeekStart)
-		assert.NoError(t, err)
-
-		buf, err := ioutil.ReadAll(fd)
-		assert.NoError(t, err)
-		assert.Equal(t, buf, []byte("HELLO"))
-
-		// Test seeking to the end
-		_, err = fd.Seek(10, io.SeekStart)
-		assert.NoError(t, err)
-
-		buf, err = ioutil.ReadAll(fd)
-		assert.NoError(t, err)
-		assert.Equal(t, buf, []byte(""))
-
-		// Test seeking beyond the end
-		_, err = fd.Seek(1000000, io.SeekStart)
-		assert.NoError(t, err)
-
-		buf, err = ioutil.ReadAll(fd)
-		assert.NoError(t, err)
-		assert.Equal(t, buf, []byte(""))
-
-		// Now back to the start
-		_, err = fd.Seek(0, io.SeekStart)
-		assert.NoError(t, err)
-
-		buf, err = ioutil.ReadAll(fd)
-		assert.NoError(t, err)
-		assert.Equal(t, buf, []byte("helloHELLO"))
-
-		err = fd.Close()
-		assert.NoError(t, err)
-	})
+	//t.Run("read seek", func(t *testing.T) {
+	//	runDir := filepath.Join(mntDir, "runDir")
+	//	err := os.Mkdir(runDir, 0777)
+	//	require.NoError(t, err)
+	//
+	//	defer os.RemoveAll(runDir)
+	//
+	//	path := filepath.Join(runDir, "testfile")
+	//	err = writeFile(path, []byte("helloHELLO"), 0600)
+	//	require.NoError(t, err)
+	//
+	//	entries := "testfile:10"
+	//	checkDir(t, runDir, entries)
+	//
+	//	fd, err := os.Open(path)
+	//	assert.NoError(t, err)
+	//
+	//	// Seek to half way
+	//	_, err = fd.Seek(5, io.SeekStart)
+	//	assert.NoError(t, err)
+	//
+	//	buf, err := ioutil.ReadAll(fd)
+	//	assert.NoError(t, err)
+	//	assert.Equal(t, buf, []byte("HELLO"))
+	//
+	//	// Test seeking to the end
+	//	_, err = fd.Seek(10, io.SeekStart)
+	//	assert.NoError(t, err)
+	//
+	//	buf, err = ioutil.ReadAll(fd)
+	//	assert.NoError(t, err)
+	//	assert.Equal(t, buf, []byte(""))
+	//
+	//	// Test seeking beyond the end
+	//	_, err = fd.Seek(1000000, io.SeekStart)
+	//	assert.NoError(t, err)
+	//
+	//	buf, err = ioutil.ReadAll(fd)
+	//	assert.NoError(t, err)
+	//	assert.Equal(t, buf, []byte(""))
+	//
+	//	// Now back to the start
+	//	_, err = fd.Seek(0, io.SeekStart)
+	//	assert.NoError(t, err)
+	//
+	//	buf, err = ioutil.ReadAll(fd)
+	//	assert.NoError(t, err)
+	//	assert.Equal(t, buf, []byte("helloHELLO"))
+	//
+	//	err = fd.Close()
+	//	assert.NoError(t, err)
+	//})
 
 	t.Run("file empty", func(t *testing.T) {
 		runDir := filepath.Join(mntDir, "runDir")
