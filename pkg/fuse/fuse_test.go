@@ -3,14 +3,12 @@ package fuse
 import (
 	"bytes"
 	"crypto/rand"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"syscall"
 	"testing"
 	"testing/fstest"
 	"testing/iotest"
@@ -729,50 +727,51 @@ func TestRCloneTests(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("read double close", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
-		err := os.Mkdir(runDir, 0777)
-		require.NoError(t, err)
-
-		defer os.RemoveAll(runDir)
-
-		path := filepath.Join(runDir, "testdoubleclose")
-		err = writeFile(path, []byte("hello"), 0600)
-		require.NoError(t, err)
-
-		in, err := os.Open(path)
-		assert.NoError(t, err)
-		fd := in.Fd()
-
-		fd1, err := syscall.Dup(int(fd))
-		assert.NoError(t, err)
-
-		fd2, err := syscall.Dup(int(fd))
-		assert.NoError(t, err)
-
-		// close one of the dups - should produce no error
-		err = syscall.Close(fd1)
-		assert.NoError(t, err)
-
-		// read from the file
-		buf := make([]byte, 1)
-		_, err = in.Read(buf)
-		assert.NoError(t, err)
-
-		// close it
-		err = in.Close()
-		assert.NoError(t, err)
-
-		// read from the other dup - should produce no error as this
-		// file is now buffered
-		n, err := syscall.Read(fd2, buf)
-		assert.NoError(t, err)
-		assert.Equal(t, 1, n)
-
-		// close the dup - should not produce an error
-		err = syscall.Close(fd2)
-		assert.NoError(t, err, "input/output error")
-	})
+	// TODO not run on windows
+	//t.Run("read double close", func(t *testing.T) {
+	//	runDir := filepath.Join(mntDir, "runDir")
+	//	err := os.Mkdir(runDir, 0777)
+	//	require.NoError(t, err)
+	//
+	//	defer os.RemoveAll(runDir)
+	//
+	//	path := filepath.Join(runDir, "testdoubleclose")
+	//	err = writeFile(path, []byte("hello"), 0600)
+	//	require.NoError(t, err)
+	//
+	//	in, err := os.Open(path)
+	//	assert.NoError(t, err)
+	//	fd := in.Fd()
+	//
+	//	fd1, err := syscall.Dup(int(fd))
+	//	assert.NoError(t, err)
+	//
+	//	fd2, err := syscall.Dup(int(fd))
+	//	assert.NoError(t, err)
+	//
+	//	// close one of the dups - should produce no error
+	//	err = syscall.Close(fd1)
+	//	assert.NoError(t, err)
+	//
+	//	// read from the file
+	//	buf := make([]byte, 1)
+	//	_, err = in.Read(buf)
+	//	assert.NoError(t, err)
+	//
+	//	// close it
+	//	err = in.Close()
+	//	assert.NoError(t, err)
+	//
+	//	// read from the other dup - should produce no error as this
+	//	// file is now buffered
+	//	n, err := syscall.Read(fd2, buf)
+	//	assert.NoError(t, err)
+	//	assert.Equal(t, 1, n)
+	//
+	//	// close the dup - should not produce an error
+	//	err = syscall.Close(fd2)
+	//	assert.NoError(t, err, "input/output error")
+	//})
 
 	t.Run("read seek", func(t *testing.T) {
 		runDir := filepath.Join(mntDir, "runDir")
@@ -986,10 +985,9 @@ func readLocal(t *testing.T, dir dirMap, filePath string) {
 		if fi.IsDir() {
 			dir[name] = 0
 			readLocal(t, dir, name)
-			fi.Info()
 			assert.Equal(t, os.FileMode(0777)&os.ModePerm, fileinfo.Mode().Perm())
 		} else {
-			dir[fmt.Sprintf("%s", name)] = fileinfo.Size()
+			dir[name] = fileinfo.Size()
 			assert.Equal(t, os.FileMode(0666)&os.ModePerm, fileinfo.Mode().Perm())
 		}
 	}
@@ -1010,17 +1008,6 @@ func newDirMap(base, dirString string) (dm dirMap) {
 		}
 	}
 	return dm
-}
-
-// Returns a dirmap with only the files in
-func (dm dirMap) filesOnly() dirMap {
-	newDm := make(dirMap)
-	for name := range dm {
-		if !strings.HasSuffix(name, "/") {
-			newDm[name] = 0
-		}
-	}
-	return newDm
 }
 
 func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
