@@ -111,8 +111,12 @@ func (d *DfsAPI) GetPodInfo(podname, password string, createPod bool) error {
 func (d *DfsAPI) Inode(path string) (*dir.Inode, error) {
 	directory := d.Pod.GetDirectory()
 	parentPath := filepath.ToSlash(filepath.Dir(path))
-	path = filepath.Base(path)
-	inode := directory.GetDirFromDirectoryMap(utils.CombinePathAndFile(parentPath, path))
+	item := filepath.Base(path)
+	fmt.Println("Inode==========", path)
+	fmt.Println("Inode==========", parentPath)
+	fmt.Println("Inode==========", item)
+	fmt.Println("Inode==========", utils.CombinePathAndFile(parentPath, item))
+	inode := directory.GetDirFromDirectoryMap(utils.CombinePathAndFile(parentPath, item))
 	if inode == nil {
 		d.logger.Errorf("dir not found: %s", path)
 		return nil, fmt.Errorf("dir not found")
