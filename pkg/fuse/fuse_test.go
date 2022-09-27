@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -120,7 +121,11 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI) (*Ffdfs, string, func()) {
 	srv := fuse.NewFileSystemHost(f)
 	srv.SetCapReaddirPlus(true)
 	sched := make(chan struct{})
-	var fuseArgs = []string{"-onoappledouble"}
+	var fuseArgs = []string{}
+
+	if runtime.GOOS == "darwin" {
+		fuseArgs = append(fuseArgs, "-onoappledouble")
+	}
 
 	go func() {
 		close(sched)
