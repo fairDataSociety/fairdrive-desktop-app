@@ -115,7 +115,7 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI) (*Ffdfs, string, func()) {
 		mntDir string
 	)
 	if runtime.GOOS == "windows" {
-		mntDir = "X:\\"
+		mntDir = "X:/"
 	} else {
 		mntDir, err = os.MkdirTemp("", "tmpfuse")
 		require.NoError(t, err)
