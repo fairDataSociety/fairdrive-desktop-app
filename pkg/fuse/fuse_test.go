@@ -109,8 +109,17 @@ func setupFairos(t *testing.T) *api.DfsAPI {
 
 func newTestFs(t *testing.T, dfsApi *api.DfsAPI) (*Ffdfs, string, func()) {
 	logger := logging.New(os.Stdout, 5)
-	mntDir, err := os.MkdirTemp("", "tmpfuse")
-	require.NoError(t, err)
+
+	var (
+		err    error
+		mntDir string
+	)
+	if runtime.GOOS == "windows" {
+		mntDir = "X:"
+	} else {
+		mntDir, err = os.MkdirTemp("", "tmpfuse")
+		require.NoError(t, err)
+	}
 
 	f := &Ffdfs{
 		log: logger,
