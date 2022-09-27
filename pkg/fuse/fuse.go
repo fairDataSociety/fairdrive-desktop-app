@@ -759,7 +759,7 @@ func (f *Ffdfs) synchronize() func() {
 //lookupNode will get metadata from fairos
 func (f *Ffdfs) lookupNode(path string) (node *node_t) {
 	uid, gid, _ := fuse.Getcontext()
-	fStat, err := f.api.FileStat(f.api.Pod.GetPodName(), path, f.api.DfsSessionId)
+	fStat, err := f.api.FileStat(f.api.Pod.GetPodName(), filepath.ToSlash(path), f.api.DfsSessionId)
 	if err != nil {
 		dirInode, err := f.api.Inode(path)
 		if err != nil {

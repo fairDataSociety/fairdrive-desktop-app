@@ -112,10 +112,6 @@ func (d *DfsAPI) Inode(path string) (*dir.Inode, error) {
 	directory := d.Pod.GetDirectory()
 	parentPath := filepath.ToSlash(filepath.Dir(path))
 	item := filepath.ToSlash(filepath.Base(path))
-	fmt.Println("Inode==========", path)
-	fmt.Println("Inode==========", parentPath)
-	fmt.Println("Inode==========", item)
-	fmt.Println("Inode==========", utils.CombinePathAndFile(parentPath, item))
 	inode := directory.GetDirFromDirectoryMap(utils.CombinePathAndFile(parentPath, item))
 	if inode == nil {
 		d.logger.Errorf("dir not found: %s", path)
