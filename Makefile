@@ -16,7 +16,11 @@ linter:
 
 .PHONY: test
 test:
-	$(GO) test -v ./... -p 1
+	$(GO) test -v ./...
+
+.PHONY: test-race
+test-race:
+	$(GO) test -v ./... -race
 
 dist:
 	mkdir $@

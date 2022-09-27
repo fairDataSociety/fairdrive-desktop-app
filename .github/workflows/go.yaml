@@ -112,8 +112,10 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: make lint
       - name: Test
-        if: matrix.os != 'windows-latest'
         run: make test
+      - name: Race
+        if: matrix.os != 'windows-latest'
+        run: make test-race
       - name: Build
         run: make binary
       - uses: actions/upload-artifact@v3
