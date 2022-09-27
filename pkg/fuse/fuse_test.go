@@ -115,7 +115,7 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI) (*Ffdfs, string, func()) {
 		mntDir string
 	)
 	if runtime.GOOS == "windows" {
-		mntDir = "X:"
+		mntDir = "X:\\"
 	} else {
 		mntDir, err = os.MkdirTemp("", "tmpfuse")
 		require.NoError(t, err)
@@ -160,7 +160,7 @@ func TestList(t *testing.T) {
 	<-time.After(time.Second)
 	files, err := os.ReadDir(mntDir)
 	require.NoError(t, err)
-
+	t.Log(files)
 	if len(files) != 1 {
 		t.Fatal("list failed on root")
 	}
