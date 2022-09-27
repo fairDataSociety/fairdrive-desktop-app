@@ -111,7 +111,7 @@ func (d *DfsAPI) GetPodInfo(podname, password string, createPod bool) error {
 func (d *DfsAPI) Inode(path string) (*dir.Inode, error) {
 	directory := d.Pod.GetDirectory()
 	parentPath := filepath.ToSlash(filepath.Dir(path))
-	item := filepath.Base(path)
+	item := filepath.ToSlash(filepath.Base(path))
 	fmt.Println("Inode==========", path)
 	fmt.Println("Inode==========", parentPath)
 	fmt.Println("Inode==========", item)
