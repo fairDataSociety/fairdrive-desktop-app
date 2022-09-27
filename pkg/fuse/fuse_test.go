@@ -126,7 +126,7 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI) (*Ffdfs, string, func()) {
 	if runtime.GOOS == "darwin" {
 		fuseArgs = append(fuseArgs, "-onoappledouble")
 	}
-
+	t.Log("Mount at: ", mntDir)
 	go func() {
 		close(sched)
 		if !srv.Mount(mntDir, fuseArgs) {
