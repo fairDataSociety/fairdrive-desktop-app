@@ -3,7 +3,10 @@ package api
 import (
 	"fmt"
 	"io"
+	"path/filepath"
 	"strings"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
@@ -107,7 +110,9 @@ func (d *DfsAPI) GetPodInfo(podname, password string, createPod bool) error {
 
 func (d *DfsAPI) Inode(path string) (*dir.Inode, error) {
 	directory := d.Pod.GetDirectory()
-	inode := directory.GetDirFromDirectoryMap(path)
+	parentPath := filepath.ToSlash(filepath.Dir(path))
+	path = filepath.Base(path)
+	inode := directory.GetDirFromDirectoryMap(utils.CombinePathAndFile(parentPath, path))
 	if inode == nil {
 		d.logger.Errorf("dir not found: %s", path)
 		return nil, fmt.Errorf("dir not found")
