@@ -1,0 +1,76 @@
+project_name: fdfs
+env:
+  - GO111MODULE=on
+  - CGO_ENABLED=1
+before:
+  hooks:
+    - go mod download
+builds:
+  - id: fdfs-windows-amd64
+    hooks:
+      pre:
+        - sh -c 'mkdir -p /usr/local/include/winfsp && cp hack/winfsp_headers/* /usr/local/include/winfsp'
+    env:
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+    ldflags: -s -w -X github.com/datafund/fdfs.version={{.Version}} -X github.com/datafund/fdfs.commit={{.ShortCommit}}
+    flags:
+      - -buildmode
+      - exe
+    main: ./cmd
+    goos:
+      - windows
+    goarch:
+      - amd64
+  - id: fdfs-darwin-amd64
+    env:
+      - CC=o64-clang
+      - CXX=o64-clang++
+    ldflags: -s -w -X github.com/datafund/fdfs.version={{.Version}} -X github.com/datafund/fdfs.commit={{.ShortCommit}}
+    main: ./cmd
+    goos:
+      - darwin
+    goarch:
+      - amd64
+  - id: fdfs-darwin-arm64
+    env:
+      - CC=oa64-clang
+      - CXX=oa64-clang++
+    ldflags: -s -w -X github.com/datafund/fdfs.version={{.Version}} -X github.com/datafund/fdfs.commit={{.ShortCommit}}
+    main: ./cmd
+    goos:
+      - darwin
+    goarch:
+      - arm64
+  - id: fdfs-linux-amd64
+    env:
+      - CC=x86_64-linux-gnu-gcc
+      - CXX=x86_64-linux-gnu-g++
+    ldflags: -s -w -X github.com/datafund/fdfs.version={{.Version}} -X github.com/datafund/fdfs.commit={{.ShortCommit}} -linkmode external -extldflags '-static'
+    main: ./cmd
+    goos:
+      - linux
+    goarch:
+      - amd64
+  - id: fdfs-linux-arm64
+    env:
+      - CC=aarch64-linux-gnu-gcc
+      - CXX=aarch64-linux-gnu-g++
+    ldflags: -s -w -X github.com/datafund/fdfs.version={{.Version}} -X github.com/datafund/fdfs.commit={{.ShortCommit}}
+    main: ./cmd
+    goos:
+      - linux
+    goarch:
+      - arm64
+checksum:
+  name_template: 'checksums.txt'
+#snapshot:
+#  name_template: "{{ .Tag }}-next"
+#changelog:
+#  sort: asc
+#  filters:
+#    exclude:
+#      - '^docs:'
+#      - '^test:'
+archives:
+  - name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
