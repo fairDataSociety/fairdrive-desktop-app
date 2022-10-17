@@ -3,6 +3,7 @@ package dfs
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/datafund/fdfs/pkg/api"
@@ -90,14 +91,19 @@ var mountCmd = &cobra.Command{
 			fmt.Println("unknown verbosity level", v)
 			return fmt.Errorf("unknown verbosity level")
 		}
-		dfsFuse, err := dfuse.New(username, password, pod, level, fc, createPod)
+		ctx := cmd.Context()
+		dfsFuse, err := dfuse.New(ctx, username, password, pod, level, fc, createPod)
 		if err != nil {
 			return err
 		}
 		host := fuse.NewFileSystemHost(dfsFuse)
 		defer host.Unmount()
 		fmt.Printf("%s is accessable at %s\n", pod, mountpoint)
-		host.Mount("", []string{mountpoint})
+		var fuseArgs = []string{}
+		if runtime.GOOS == "darwin" {
+			fuseArgs = append(fuseArgs, "-onoappledouble")
+		}
+		host.Mount(mountpoint, fuseArgs)
 		return nil
 	},
 }

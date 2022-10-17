@@ -2,6 +2,7 @@ package fuse
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"os"
 	"path/filepath"
@@ -136,10 +137,10 @@ type Ffdfs struct {
 	ongoingWriteSizes map[string]int64
 }
 
-func New(username, password, pod string, logLevel logrus.Level, fc *api.FairOSConfig, createPod bool) (*Ffdfs, error) {
+func New(ctx context.Context, username, password, pod string, logLevel logrus.Level, fc *api.FairOSConfig, createPod bool) (*Ffdfs, error) {
 	logger := logging.New(os.Stdout, logLevel)
 	apiLogger := logging.New(os.Stdout, logLevel)
-	dfsApi, err := api.New(apiLogger, username, password, pod, fc, createPod)
+	dfsApi, err := api.New(ctx, apiLogger, username, password, pod, fc, createPod)
 	if err != nil {
 		return nil, err
 	}
@@ -756,7 +757,7 @@ func (f *Ffdfs) synchronize() func() {
 	}
 }
 
-//lookupNode will get metadata from fairos
+// lookupNode will get metadata from fairos
 func (f *Ffdfs) lookupNode(path string) (node *node_t) {
 	uid, gid, _ := fuse.Getcontext()
 	fStat, err := f.api.FileStat(f.api.Pod.GetPodName(), filepath.ToSlash(path), f.api.DfsSessionId)

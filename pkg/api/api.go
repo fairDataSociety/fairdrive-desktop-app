@@ -1,18 +1,18 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"path/filepath"
 	"strings"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 type DfsAPI struct {
@@ -30,7 +30,7 @@ type FairOSConfig struct {
 	Network string
 }
 
-func New(logger logging.Logger, username, password, pod string, fc *FairOSConfig, createPod bool) (*DfsAPI, error) {
+func New(ctx context.Context, logger logging.Logger, username, password, pod string, fc *FairOSConfig, createPod bool) (*DfsAPI, error) {
 	ensConfig := &contracts.Config{}
 	switch v := strings.ToLower(fc.Network); v {
 	case "mainnet":
@@ -61,7 +61,7 @@ func New(logger logging.Logger, username, password, pod string, fc *FairOSConfig
 	if err != nil {
 		return nil, err
 	}
-	err = d.GetPodInfo(pod, password, createPod)
+	err = d.GetPodInfo(ctx, pod, password, createPod)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func NewMockApi(logger logging.Logger, username, password, pod string, api *dfs.
 	if err != nil {
 		return nil, err
 	}
-	err = d.GetPodInfo(pod, password, createPod)
+	err = d.GetPodInfo(context.Background(), pod, password, createPod)
 	if err != nil {
 		return nil, err
 	}
@@ -97,12 +97,12 @@ func (d *DfsAPI) Login(username, password string) error {
 	return nil
 }
 
-func (d *DfsAPI) GetPodInfo(podname, password string, createPod bool) error {
+func (d *DfsAPI) GetPodInfo(ctx context.Context, podname, password string, createPod bool) error {
 	var err error
 	if createPod {
 		d.Pod, err = d.API.CreatePod(podname, password, d.DfsSessionId)
 	} else {
-		d.Pod, err = d.API.OpenPod(podname, password, d.DfsSessionId)
+		d.Pod, err = d.API.OpenPodAsync(ctx, podname, password, d.DfsSessionId)
 	}
 	d.logger.Debugf("got pod info of %s", podname)
 	return err

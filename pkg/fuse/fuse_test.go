@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -311,7 +310,7 @@ func TestMultiDirWithFiles(t *testing.T) {
 				if st.Size() != v.size {
 					t.Fatalf("expected size %d found %d", v.size, st.Size())
 				}
-				if got, err := ioutil.ReadFile(filepath.Join(mnt, v.path)); err != nil {
+				if got, err := os.ReadFile(filepath.Join(mnt, v.path)); err != nil {
 					t.Fatalf("ReadFile: %v", err)
 				} else if !bytes.Equal(got, v.content) {
 					t.Fatalf("ReadFile %s: got %q, want %q", filepath.Join(mnt, v.path), got[:30], v.content[:30])
