@@ -16,7 +16,7 @@ linter:
 
 .PHONY: test
 test:
-	$(GO) test -v ./... -timeout 20m
+	$(GO) test -v ./... -timeout 5m
 
 .PHONY: test-race
 test-race:

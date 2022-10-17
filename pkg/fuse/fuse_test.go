@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"testing/fstest"
 	"testing/iotest"
 	"time"
 
@@ -325,17 +324,16 @@ func TestMultiDirWithFiles(t *testing.T) {
 		verify(t, mntDir)
 	})
 
-	t.Run("fstest", func(t *testing.T) {
-		pathsToFind := []string{
-			"dir1", "dir2", "dir3", "file1", "dir1/file11",
-			"dir1/file12", "dir3/file31", "dir3/file32", "dir3/file33", "dir2/dir4", "dir2/dir4/dir5",
-			"dir2/dir4/file241", "dir2/dir4/dir5/file2451",
-		}
-		fuseMount := os.DirFS(mntDir)
-		err := fstest.TestFS(fuseMount, pathsToFind...)
-		require.NoError(t, err)
-
-	})
+	//t.Run("fstest", func(t *testing.T) {
+	//	pathsToFind := []string{
+	//		"dir1", "dir2", "dir3", "file1", "dir1/file11",
+	//		"dir1/file12", "dir3/file31", "dir3/file32", "dir3/file33", "dir2/dir4", "dir2/dir4/dir5",
+	//		"dir2/dir4/file241", "dir2/dir4/dir5/file2451",
+	//	}
+	//	fuseMount := os.DirFS(mntDir)
+	//	err := fstest.TestFS(fuseMount, pathsToFind...)
+	//	require.NoError(t, err)
+	//})
 
 	t.Run("iotest on files", func(t *testing.T) {
 		for _, v := range entries {
