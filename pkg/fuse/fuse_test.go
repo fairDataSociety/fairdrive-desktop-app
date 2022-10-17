@@ -14,6 +14,8 @@ import (
 	"testing/iotest"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/datafund/fdfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
@@ -107,7 +109,7 @@ func setupFairos(t *testing.T) *api.DfsAPI {
 }
 
 func newTestFs(t *testing.T, dfsApi *api.DfsAPI) (*Ffdfs, string, func()) {
-	logger := logging.New(os.Stdout, 3)
+	logger := logging.New(os.Stdout, logrus.ErrorLevel)
 
 	var (
 		err    error
