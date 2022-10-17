@@ -107,7 +107,7 @@ func setupFairos(t *testing.T) *api.DfsAPI {
 }
 
 func newTestFs(t *testing.T, dfsApi *api.DfsAPI) (*Ffdfs, string, func()) {
-	logger := logging.New(os.Stdout, 5)
+	logger := logging.New(os.Stdout, 3)
 
 	var (
 		err    error
