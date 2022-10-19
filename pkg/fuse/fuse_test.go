@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"testing/fstest"
+	"testing/iotest"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -323,50 +325,43 @@ func TestMultiDirWithFiles(t *testing.T) {
 		verify(t, mntDir)
 	})
 
-	//t.Run("fstest", func(t *testing.T) {
-	//	pathsToFind := []string{
-	//		filepath.Join("dir1"),
-	//		filepath.Join("dir2"),
-	//		filepath.Join("dir3"),
-	//		filepath.Join("file1"),
-	//		filepath.Join("dir1", "file11"),
-	//		filepath.Join("dir1", "file12"),
-	//		filepath.Join("dir3", "file31"),
-	//		filepath.Join("dir3", "file32"),
-	//		filepath.Join("dir3", "file33"),
-	//		filepath.Join("dir2", "dir4"),
-	//		filepath.Join("dir2", "dir4", "dir5"),
-	//		filepath.Join("dir2", "dir4", "file241"),
-	//		filepath.Join("dir2", "dir4", "dir5", "file2451"),
-	//	}
-	//	fuseMount := os.DirFS(mntDir)
-	//	err := fstest.TestFS(fuseMount, pathsToFind...)
-	//	require.NoError(t, err)
-	//})
-	//
-	//t.Run("iotest on files", func(t *testing.T) {
-	//	for _, v := range entries {
-	//		if !v.isDir {
-	//			f, err := os.Open(filepath.Join(mntDir, v.path))
-	//			require.NoError(t, err)
-	//
-	//			err = iotest.TestReader(f, v.content)
-	//			require.NoError(t, err)
-	//
-	//		}
-	//	}
-	//})
+	// TODO check why these take forever to run on windows
+	// https://github.com/datafund/fairos-fuse/issues/35
+	if runtime.GOOS != "windows" {
+		t.Run("fstest", func(t *testing.T) {
+			pathsToFind := []string{
+				filepath.Join("dir1"),
+				filepath.Join("dir2"),
+				filepath.Join("dir3"),
+				filepath.Join("file1"),
+				filepath.Join("dir1", "file11"),
+				filepath.Join("dir1", "file12"),
+				filepath.Join("dir3", "file31"),
+				filepath.Join("dir3", "file32"),
+				filepath.Join("dir3", "file33"),
+				filepath.Join("dir2", "dir4"),
+				filepath.Join("dir2", "dir4", "dir5"),
+				filepath.Join("dir2", "dir4", "file241"),
+				filepath.Join("dir2", "dir4", "dir5", "file2451"),
+			}
+			fuseMount := os.DirFS(mntDir)
+			err := fstest.TestFS(fuseMount, pathsToFind...)
+			require.NoError(t, err)
+		})
 
-	//t.Run("unmount and mount and verify", func(t *testing.T) {
-	//	closer()
-	//	time.Sleep(time.Second)
-	//	_, mntDir, closer, err = newTestFs(st)
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-	//	time.Sleep(time.Second)
-	//	verify(t, mntDir)
-	//})
+		t.Run("iotest on files", func(t *testing.T) {
+			for _, v := range entries {
+				if !v.isDir {
+					f, err := os.Open(filepath.Join(mntDir, v.path))
+					require.NoError(t, err)
+
+					err = iotest.TestReader(f, v.content)
+					require.NoError(t, err)
+
+				}
+			}
+		})
+	}
 }
 
 func TestRCloneTests(t *testing.T) {
