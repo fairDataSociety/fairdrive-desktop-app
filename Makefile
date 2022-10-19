@@ -16,7 +16,11 @@ linter:
 
 .PHONY: test
 test:
-	$(GO) test -v ./... -p 1
+	$(GO) test -v ./... -timeout 5m
+
+.PHONY: test-race
+test-race:
+	$(GO) test -v ./... -race -timeout 20m
 
 dist:
 	mkdir $@
@@ -33,3 +37,23 @@ binary: dist FORCE
 	$(GO) build -trimpath -ldflags "$(LDFLAGS)" -o dist/fdfs ./cmd
 
 FORCE:
+
+.PHONY: snapshot release
+snapshot:
+	docker run --rm --privileged \
+		-v ~/go/pkg/mod:/go/pkg/mod \
+		-v `pwd`:/go/src/github.com/datafund/fdfs \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-w /go/src/github.com/datafund/fdfs \
+		ghcr.io/goreleaser/goreleaser-cross:v1.19.1 release --rm-dist \
+		--skip-validate=true \
+		--skip-publish
+
+release:
+	docker run --rm --privileged \
+		--env-file .release-env \
+		-v ~/go/pkg/mod:/go/pkg/mod \
+		-v `pwd`:/go/src/github.com/datafund/fdfs \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-w /go/src/github.com/datafund/fdfs \
+		ghcr.io/goreleaser/goreleaser-cross:v1.19.1 release --rm-dist
