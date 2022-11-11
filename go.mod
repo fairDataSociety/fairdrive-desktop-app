@@ -3,7 +3,7 @@ module github.com/datafund/fdfs
 go 1.17
 
 require (
-	github.com/fairdatasociety/fairOS-dfs v0.8.2-rc6.0.20221014111327-ddbfc795e3e2
+	github.com/fairdatasociety/fairOS-dfs v0.8.2-rc6.0.20221111054709-b80266095729
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/plexsysio/taskmanager v0.0.0-20211220123746-de5ebdd49ae2
@@ -73,9 +73,9 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
-	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
-	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/net v0.1.0 // indirect
+	golang.org/x/sys v0.2.0 // indirect
+	golang.org/x/text v0.4.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

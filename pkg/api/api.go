@@ -124,5 +124,5 @@ func (d *DfsAPI) Inode(path string) (*dir.Inode, error) {
 func (d *DfsAPI) WriteAt(path string, update io.Reader, offset uint64, truncate bool) (int, error) {
 	d.logger.Debugf("writing to file %s", path)
 	file := d.Pod.GetFile()
-	return file.WriteAt(path, update, offset, truncate)
+	return file.WriteAt(path, d.Pod.GetPodPassword(), update, offset, truncate)
 }

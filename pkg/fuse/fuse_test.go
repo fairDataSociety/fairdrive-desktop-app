@@ -3,6 +3,7 @@ package fuse
 import (
 	"bytes"
 	"crypto/rand"
+	"encoding/hex"
 	"io"
 	"os"
 	"path/filepath"
@@ -13,6 +14,9 @@ import (
 	"testing/fstest"
 	"testing/iotest"
 	"time"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/sirupsen/logrus"
 
@@ -44,32 +48,34 @@ func setupFairosWithFs(t *testing.T) *api.DfsAPI {
 
 	pod1 := ui.GetPod()
 	podName1 := "test1"
-	pi, err := pod1.CreatePod(podName1, password, "")
+	podPasswordBytes, _ := utils.GetRandBytes(pod.PodPasswordLength)
+	podPassword := hex.EncodeToString(podPasswordBytes)
+	pi, err := pod1.CreatePod(podName1, password, "", podPassword)
 	if err != nil {
 		t.Fatalf("error creating pod %s : %s", podName1, err.Error())
 	}
 
 	dirObject := pi.GetDirectory()
 	fileObject := pi.GetFile()
-	err = dirObject.MkRootDir(podName1, pi.GetPodAddress(), pi.GetFeed())
+	err = dirObject.MkRootDir(podName1, podPassword, pi.GetPodAddress(), pi.GetFeed())
 	require.NoError(t, err)
 
-	err = dirObject.MkDir("/parentDir")
+	err = dirObject.MkDir("/parentDir", podPassword)
 	require.NoError(t, err)
 
-	err = dirObject.MkDir("/parentDir/subDir1")
+	err = dirObject.MkDir("/parentDir/subDir1", podPassword)
 	require.NoError(t, err)
 
-	_, err = uploadFile(t, fileObject, "/parentDir", "file1", "", 100, 10)
+	_, err = uploadFile(t, fileObject, "/parentDir", podPassword, "file1", "", 100, 10)
 	require.NoError(t, err)
 
-	err = dirObject.AddEntryToDir("/parentDir", "file1", true)
+	err = dirObject.AddEntryToDir("/parentDir", podPassword, "file1", true)
 	require.NoError(t, err)
 
-	_, err = uploadFile(t, fileObject, "/parentDir/subDir1", "file1", "", 100, 10)
+	_, err = uploadFile(t, fileObject, "/parentDir/subDir1", podPassword, "file1", "", 100, 10)
 	require.NoError(t, err)
 
-	err = dirObject.AddEntryToDir("/parentDir/subDir1", "file1", true)
+	err = dirObject.AddEntryToDir("/parentDir/subDir1", podPassword, "file1", true)
 	require.NoError(t, err)
 
 	mockDfs := dfs.NewMockDfsAPI(mockClient, userObject, logger, "/")
@@ -92,13 +98,15 @@ func setupFairos(t *testing.T) *api.DfsAPI {
 
 	pod1 := ui.GetPod()
 	podName1 := "test1"
-	pi, err := pod1.CreatePod(podName1, password, "")
+	podPasswordBytes, _ := utils.GetRandBytes(pod.PodPasswordLength)
+	podPassword := hex.EncodeToString(podPasswordBytes)
+	pi, err := pod1.CreatePod(podName1, password, "", podPassword)
 	if err != nil {
 		t.Fatalf("error creating pod %s : %s", podName1, err.Error())
 	}
 
 	dirObject := pi.GetDirectory()
-	err = dirObject.MkRootDir(podName1, pi.GetPodAddress(), pi.GetFeed())
+	err = dirObject.MkRootDir(podName1, podPassword, pi.GetPodAddress(), pi.GetFeed())
 	require.NoError(t, err)
 
 	mockDfs := dfs.NewMockDfsAPI(mockClient, userObject, logger, "/")
@@ -1027,7 +1035,7 @@ func newDirMap(base, dirString string) (dm dirMap) {
 	return dm
 }
 
-func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
+func uploadFile(t *testing.T, fileObject *file.File, filePath, podPassword, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
 	// create a temp file
 	fd, err := os.CreateTemp("", fileName)
 	if err != nil {
@@ -1059,7 +1067,7 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compres
 	}
 
 	// upload  the temp file
-	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression)
+	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression, podPassword)
 }
 
 func writeFile(filename string, data []byte, perm os.FileMode) error {

@@ -393,6 +393,7 @@ func (f *Ffdfs) Read(path string, buff []byte, ofst int64, fh uint64) (n int) {
 		return -fuse.EIO
 	}
 	if ofst+int64(n) == node.stat.Size {
+		node.readsInFlight.Close()
 		node.readsInFlight = nil
 	}
 	return copy(buff, dBuf[:n])
