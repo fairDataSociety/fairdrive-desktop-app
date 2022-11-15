@@ -1,5 +1,6 @@
 import {useState} from 'react';
 import logo from './assets/images/logo-universal.png';
+import Button from '@material-ui/core/Button';
 import './App.css';
 import {Greet} from "../wailsjs/go/main/App";
 
@@ -20,6 +21,7 @@ function App() {
             <div id="input" className="input-box">
                 <input id="name" className="input" onChange={updateName} autoComplete="off" name="input" type="text"/>
                 <button className="btn" onClick={greet}>Greet</button>
+                <Button variant="contained">Hello World</Button>
             </div>
         </div>
     )

@@ -2,16 +2,9 @@ package dfs
 
 import (
 	"fmt"
-	"os"
-	"runtime"
-	"strings"
 
-	"github.com/datafund/fdfs/pkg/api"
-	dfuse "github.com/datafund/fdfs/pkg/fuse"
 	"github.com/manifoldco/promptui"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/winfsp/cgofuse/fuse"
 )
 
 var (
@@ -50,60 +43,60 @@ var mountCmd = &cobra.Command{
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		fmt.Println(message)
-		fmt.Println()
-		fmt.Println(cfgFile)
-		if _, err := os.Stat(cfgFile); err != nil {
-			// if there is no configFile, write it
-			err = setupConfig()
-			if err != nil {
-				return err
-			}
-		} else {
-			config.SetConfigFile(cfgFile)
-			if err := config.ReadInConfig(); err != nil {
-				return err
-			}
-		}
-		fc := &api.FairOSConfig{
-			IsProxy: config.GetBool(optionIsGatewayProxy),
-			Bee:     config.GetString(optionBeeApi),
-			Batch:   config.GetString(optionBeePostageBatchId),
-			RPC:     config.GetString(optionRPC),
-			Network: config.GetString(optionNetwork),
-		}
-		verbosity := config.GetString(optionVerbosity)
-		var level logrus.Level
-		switch v := strings.ToLower(verbosity); v {
-		case "0", "silent":
-			level = 0
-		case "1", "error":
-			level = logrus.ErrorLevel
-		case "2", "warn":
-			level = logrus.WarnLevel
-		case "3", "info":
-			level = logrus.InfoLevel
-		case "4", "debug":
-			level = logrus.DebugLevel
-		case "5", "trace":
-			level = logrus.TraceLevel
-		default:
-			fmt.Println("unknown verbosity level", v)
-			return fmt.Errorf("unknown verbosity level")
-		}
-		ctx := cmd.Context()
-		dfsFuse, err := dfuse.New(ctx, username, password, pod, level, fc, createPod)
-		if err != nil {
-			return err
-		}
-		host := fuse.NewFileSystemHost(dfsFuse)
-		defer host.Unmount()
-		fmt.Printf("%s is accessable at %s\n", pod, mountpoint)
-		var fuseArgs = []string{}
-		if runtime.GOOS == "darwin" {
-			fuseArgs = append(fuseArgs, "-onoappledouble")
-		}
-		host.Mount(mountpoint, fuseArgs)
+		//fmt.Println(message)
+		//fmt.Println()
+		//fmt.Println(cfgFile)
+		//if _, err := os.Stat(cfgFile); err != nil {
+		//	// if there is no configFile, write it
+		//	err = setupConfig()
+		//	if err != nil {
+		//		return err
+		//	}
+		//} else {
+		//	config.SetConfigFile(cfgFile)
+		//	if err := config.ReadInConfig(); err != nil {
+		//		return err
+		//	}
+		//}
+		//fc := &api.FairOSConfig{
+		//	IsProxy: config.GetBool(optionIsGatewayProxy),
+		//	Bee:     config.GetString(optionBeeApi),
+		//	Batch:   config.GetString(optionBeePostageBatchId),
+		//	RPC:     config.GetString(optionRPC),
+		//	Network: config.GetString(optionNetwork),
+		//}
+		//verbosity := config.GetString(optionVerbosity)
+		//var level logrus.Level
+		//switch v := strings.ToLower(verbosity); v {
+		//case "0", "silent":
+		//	level = 0
+		//case "1", "error":
+		//	level = logrus.ErrorLevel
+		//case "2", "warn":
+		//	level = logrus.WarnLevel
+		//case "3", "info":
+		//	level = logrus.InfoLevel
+		//case "4", "debug":
+		//	level = logrus.DebugLevel
+		//case "5", "trace":
+		//	level = logrus.TraceLevel
+		//default:
+		//	fmt.Println("unknown verbosity level", v)
+		//	return fmt.Errorf("unknown verbosity level")
+		//}
+		//ctx := cmd.Context()
+		//dfsFuse, err := dfuse.New(ctx, username, password, level, fc, createPod)
+		//if err != nil {
+		//	return err
+		//}
+		//host := fuse.NewFileSystemHost(dfsFuse)
+		//defer host.Unmount()
+		//fmt.Printf("%s is accessable at %s\n", pod, mountpoint)
+		//var fuseArgs = []string{}
+		//if runtime.GOOS == "darwin" {
+		//	fuseArgs = append(fuseArgs, "-onoappledouble")
+		//}
+		//host.Mount(mountpoint, fuseArgs)
 		return nil
 	},
 }

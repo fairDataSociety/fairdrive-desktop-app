@@ -1,9 +1,9 @@
 module github.com/datafund/fdfs
 
-go 1.17
+go 1.18
 
 require (
-	github.com/fairdatasociety/fairOS-dfs v0.8.2-rc6.0.20221111054709-b80266095729
+	github.com/fairdatasociety/fairOS-dfs v0.8.2-rc6.0.20221115075436-3007175b9b03
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/plexsysio/taskmanager v0.0.0-20211220123746-de5ebdd49ae2

@@ -2,18 +2,17 @@ package fuse
 
 import (
 	"bytes"
-	"context"
 	"io"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+
 	"github.com/datafund/fdfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	"github.com/sirupsen/logrus"
 	"github.com/winfsp/cgofuse/fuse"
 )
 
@@ -132,21 +131,19 @@ type Ffdfs struct {
 	lock              sync.Mutex
 	log               logging.Logger
 	api               *api.DfsAPI
+	sessionId         string
 	ino               uint64
 	openmap           map[uint64]*node_t
 	ongoingWriteSizes map[string]int64
+	pod               *pod.Info
 }
 
-func New(ctx context.Context, username, password, pod string, logLevel logrus.Level, fc *api.FairOSConfig, createPod bool) (*Ffdfs, error) {
-	logger := logging.New(os.Stdout, logLevel)
-	apiLogger := logging.New(os.Stdout, logLevel)
-	dfsApi, err := api.New(ctx, apiLogger, username, password, pod, fc, createPod)
-	if err != nil {
-		return nil, err
-	}
+func New(sessionId string, pod *pod.Info, api *api.DfsAPI, logger logging.Logger) (*Ffdfs, error) {
 	f := &Ffdfs{
-		log: logger,
-		api: dfsApi,
+		log:       logger,
+		api:       api,
+		pod:       pod,
+		sessionId: sessionId,
 	}
 	f.openmap = map[uint64]*node_t{}
 	f.ongoingWriteSizes = map[string]int64{}
@@ -240,13 +237,13 @@ func (f *Ffdfs) Rename(oldpath string, newpath string) (errc int) {
 
 	oldnode.id = newpath
 	if oldnode.isDir() {
-		err := f.api.API.RenameDir(f.api.Pod.GetPodName(), oldpath, newpath, f.api.DfsSessionId)
+		err := f.api.API.RenameDir(f.pod.GetPodName(), oldpath, newpath, f.sessionId)
 		if err != nil {
 			f.log.Errorf("failed renaming dir %v", err)
 			return -fuse.EIO
 		}
 	} else {
-		err := f.api.API.RenameFile(f.api.Pod.GetPodName(), oldpath, newpath, f.api.DfsSessionId)
+		err := f.api.API.RenameFile(f.pod.GetPodName(), oldpath, newpath, f.sessionId)
 		if err != nil {
 			f.log.Errorf("failed renaming file %v", err)
 			return -fuse.EIO
@@ -345,7 +342,7 @@ func (f *Ffdfs) Truncate(path string, size int64, fh uint64) int {
 	if nil == node {
 		return -fuse.ENOENT
 	}
-	_, err := f.api.WriteAt(node.id, bytes.NewReader([]byte{}), uint64(0), true)
+	_, err := f.api.WriteAtFile(f.pod.GetPodName(), node.id, f.sessionId, bytes.NewReader([]byte{}), uint64(0), true)
 	if err != nil {
 		f.log.Errorf("truncate :failed write %v", err)
 		return -fuse.EIO
@@ -369,7 +366,7 @@ func (f *Ffdfs) Read(path string, buff []byte, ofst int64, fh uint64) (n int) {
 	}
 
 	if node.readsInFlight == nil {
-		r, _, err := f.api.ReadSeekCloser(f.api.Pod.GetPodName(), path, f.api.DfsSessionId)
+		r, _, err := f.api.ReadSeekCloser(f.pod.GetPodName(), path, f.sessionId)
 		if err != nil {
 			f.log.Errorf("read: download failed %s: %s", path, err.Error())
 			return -fuse.EIO
@@ -628,13 +625,13 @@ func (f *Ffdfs) makeNode(path string, mode uint32, dev uint64, data []byte) int 
 	prntPath := filepath.Dir(path)
 	flnm := filepath.Base(path)
 	if mode&fuse.S_IFDIR > 0 {
-		err := f.api.API.Mkdir(f.api.Pod.GetPodName(), path, f.api.DfsSessionId)
+		err := f.api.API.Mkdir(f.pod.GetPodName(), path, f.sessionId)
 		if err != nil {
 			f.log.Errorf("failed creating dir at %s: %v", path, err)
 			return -fuse.EIO
 		}
 	} else {
-		err := f.api.API.UploadFile(f.api.Pod.GetPodName(), flnm, f.api.DfsSessionId, int64(len(data)), bytes.NewReader(data), prntPath, "", uint32(fdsBlockSize))
+		err := f.api.API.UploadFile(f.pod.GetPodName(), flnm, f.sessionId, int64(len(data)), bytes.NewReader(data), prntPath, "", uint32(fdsBlockSize))
 		if err != nil {
 			return -fuse.EIO
 		}
@@ -690,13 +687,13 @@ func (f *Ffdfs) removeNode(path string, dir bool) int {
 	prnt.stat.Mtim = tmsp
 
 	if dir {
-		err := f.api.API.RmDir(f.api.Pod.GetPodName(), path, f.api.DfsSessionId)
+		err := f.api.API.RmDir(f.pod.GetPodName(), path, f.sessionId)
 		if err != nil {
 			f.log.Errorf("failed removing dir at %s: %v", path, err)
 			return -fuse.EIO
 		}
 	}
-	err := f.api.API.DeleteFile(f.api.Pod.GetPodName(), path, f.api.DfsSessionId)
+	err := f.api.API.DeleteFile(f.pod.GetPodName(), path, f.sessionId)
 	if err != nil {
 		f.log.Errorf("failed removing file at %s: %v", path, err)
 		return -fuse.EIO
@@ -730,7 +727,7 @@ func (f *Ffdfs) closeNode(fh uint64) int {
 	if 0 == node.opencnt {
 		for _, op := range node.writesInFlight {
 			f.log.Debugf("write: file %s from %d to %d", node.id, uint64(op.start), len(op.buf))
-			_, err := f.api.WriteAt(node.id, bytes.NewReader(op.buf), uint64(op.start), false)
+			_, err := f.api.WriteAtFile(f.pod.GetPodName(), node.id, f.sessionId, bytes.NewReader(op.buf), uint64(op.start), false)
 			if err != nil {
 				f.log.Errorf("failed write %v", err)
 				return -fuse.EIO
@@ -761,9 +758,9 @@ func (f *Ffdfs) synchronize() func() {
 // lookupNode will get metadata from fairos
 func (f *Ffdfs) lookupNode(path string) (node *node_t) {
 	uid, gid, _ := fuse.Getcontext()
-	fStat, err := f.api.FileStat(f.api.Pod.GetPodName(), filepath.ToSlash(path), f.api.DfsSessionId)
+	fStat, err := f.api.FileStat(f.pod.GetPodName(), filepath.ToSlash(path), f.sessionId)
 	if err != nil {
-		dirInode, err := f.api.Inode(path)
+		dirInode, err := f.api.DirectoryInode(f.pod.GetPodName(), filepath.ToSlash(path), f.sessionId)
 		if err != nil {
 			f.log.Warningf("lookup failed for %s: %s", path, err.Error())
 			return
