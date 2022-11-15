@@ -57,3 +57,18 @@ After mount is successful, you will be able to see the content of your pod at th
 - [cobra](github.com/spf13/cobra)
 - [fairOS-dfs](github.com/fairdatasociety/fairOS-dfs)
 - [promptui](github.com/manifoldco/promptui)
+
+
+## Windows build environment
+
+1.install go 
+2.install https://jmeubank.github.io/tdm-gcc/ 
+3.download and install https://winfsp.dev/rel/ 
+don't forget to check "Developer tools" 
+### Add environment variables
+
+CPATH C:\Program Files (x86)\WinFsp\inc\fuse
+LIBRARY_PATH C:\Program Files (x86)\WinFsp\lib
+CPLUS_INCLUDE_PATH C:\Program Files (x86)\WinFsp\inc\fuse
+
+
