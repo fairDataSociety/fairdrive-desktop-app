@@ -61,14 +61,25 @@ After mount is successful, you will be able to see the content of your pod at th
 
 ## Windows build environment
 
-1.install go 
-2.install https://jmeubank.github.io/tdm-gcc/ 
-3.download and install https://winfsp.dev/rel/ 
-don't forget to check "Developer tools" 
+### Requirements
+
+### Tools 
+  1.install go
+
+  2.install gcc https://jmeubank.github.io/tdm-gcc/ 
+
+  3.download and install https://winfsp.dev/rel/ and don't forget to check "Developer tools" 
+
 ### Add environment variables
 
-CPATH C:\Program Files (x86)\WinFsp\inc\fuse
-LIBRARY_PATH C:\Program Files (x86)\WinFsp\lib
-CPLUS_INCLUDE_PATH C:\Program Files (x86)\WinFsp\inc\fuse
+set `CPATH` to `C:\Program Files (x86)\WinFsp\inc\fuse`
 
+set `LIBRARY_PATH` to `C:\Program Files (x86)\WinFsp\lib`
 
+set `CPLUS_INCLUDE_PATH` to `C:\Program Files (x86)\WinFsp\inc\fuse`
+
+### Problems with npm
+
+Installing frontend dependencies: npm ERR! Unexpected token '.'
+
+This could be a problem to various reasons why your node,npm,nvm installation is corrupt. Probably because you used old nvm (prior to version 1.1.10) which wrongly creates symbolic links. You will have to uninstall nvm and reinstall new node version. 

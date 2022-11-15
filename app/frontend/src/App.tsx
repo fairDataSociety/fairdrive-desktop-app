@@ -1,6 +1,6 @@
 import {useState} from 'react';
 import logo from './assets/images/logo-universal.png';
-import Button from '@material-ui/core/Button';
+import Button from '@mui/material/Button'
 import './App.css';
 import {Greet} from "../wailsjs/go/main/App";
 
