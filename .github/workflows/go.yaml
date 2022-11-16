@@ -116,15 +116,15 @@ jobs:
       - name: Race
         if: matrix.os != 'windows-latest'
         run: make test-race
-      - name: Build
-        run: make binary
-      - uses: actions/upload-artifact@v3
-        if: matrix.os != 'windows-latest'
-        with:
-          name: fdfs-${{ matrix.os }}-${{ matrix.arch }}
-          path: dist/fdfs
-      - uses: actions/upload-artifact@v3
-        if: matrix.os == 'windows-latest'
-        with:
-          name: fdfs-${{ matrix.os }}-${{ matrix.arch }}.exe
-          path: dist/fdfs
+#      - name: Build
+#        run: make binary
+#      - uses: actions/upload-artifact@v3
+#        if: matrix.os != 'windows-latest'
+#        with:
+#          name: fdfs-${{ matrix.os }}-${{ matrix.arch }}
+#          path: dist/fdfs
+#      - uses: actions/upload-artifact@v3
+#        if: matrix.os == 'windows-latest'
+#        with:
+#          name: fdfs-${{ matrix.os }}-${{ matrix.arch }}.exe
+#          path: dist/fdfs
