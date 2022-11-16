@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"embed"
-	"fmt"
 	"os"
 	"runtime"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	wRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 //go:embed all:frontend/dist
@@ -26,6 +26,7 @@ func main() {
 		println("Error:", err.Error())
 	}
 	cnf := &conf{}
+	var startContext context.Context
 	// Create application with options
 	app := application.NewWithOptions(&options.App{
 		Title:  "app",
@@ -39,7 +40,8 @@ func main() {
 			dfsHandler,
 			cnf,
 		},
-		OnStartup: func(_ context.Context) {
+		OnStartup: func(ctx context.Context) {
+			startContext = ctx
 			err := cnf.ReadConfig()
 			if err != nil {
 				println("read config failed ", err.Error())
@@ -60,7 +62,7 @@ func main() {
 	appMenu := menu.NewMenu()
 	fileMenu := appMenu.AddSubmenu("File")
 	fileMenu.AddText("Preferences", keys.CmdOrCtrl(","), func(_ *menu.CallbackData) {
-		fmt.Println("Preferences")
+		wRuntime.EventsEmit(startContext, "preferences")
 	})
 	fileMenu.AddSeparator()
 	fileMenu.AddText("Quit", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
@@ -70,6 +72,7 @@ func main() {
 		appMenu.Append(menu.EditMenu()) // on macos platform, we should append EditMenu to enable Cmd+C,Cmd+V,Cmd+Z... shortcut
 	}
 	app.SetApplicationMenu(appMenu)
+
 	if err := app.Run(); err != nil {
 		println("Error:", err.Error())
 	}
