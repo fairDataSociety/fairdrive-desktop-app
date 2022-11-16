@@ -17,11 +17,11 @@ type DfsAPI struct {
 }
 
 type FairOSConfig struct {
-	IsProxy bool
-	Bee     string
-	Batch   string
-	RPC     string
-	Network string
+	IsProxy bool   `json:"isProxy"`
+	Bee     string `json:"bee"`
+	Batch   string `json:"batch"`
+	RPC     string `json:"rpc"`
+	Network string `json:"network"`
 }
 
 func New(logger logging.Logger, fc *FairOSConfig) (*DfsAPI, error) {

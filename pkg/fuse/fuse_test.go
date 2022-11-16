@@ -88,39 +88,6 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 	return dfsApi, pi2, ui.GetSessionId()
 }
 
-func setupFairos(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
-	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(os.Stdout, 5)
-	ens := mock2.NewMockNamespaceManager()
-	tm := taskmanager.New(1, 10, time.Second*15, logger)
-	userObject := user.NewUsers("", mockClient, ens, logger)
-	password := "password1"
-	username := "fdfs"
-	_, _, _, _, ui, err := userObject.CreateNewUserV2(username, password, "", "", tm)
-	require.NoError(t, err)
-
-	pod1 := ui.GetPod()
-	podName1 := "test1"
-	podPasswordBytes, _ := utils.GetRandBytes(pod.PodPasswordLength)
-	podPassword := hex.EncodeToString(podPasswordBytes)
-	pi, err := pod1.CreatePod(podName1, password, "", podPassword)
-	if err != nil {
-		t.Fatalf("error creating pod %s : %s", podName1, err.Error())
-	}
-
-	dirObject := pi.GetDirectory()
-	err = dirObject.MkRootDir(podName1, podPassword, pi.GetPodAddress(), pi.GetFeed())
-	require.NoError(t, err)
-
-	mockDfs := dfs.NewMockDfsAPI(mockClient, userObject, logger, "/")
-	dfsApi, err := api.NewMockApi(logger, mockDfs)
-	require.NoError(t, err)
-	pi2, err := dfsApi.GetPodInfo(context.Background(), podName1, password, ui.GetSessionId(), false)
-	require.NoError(t, err)
-
-	return dfsApi, pi2, ui.GetSessionId()
-}
-
 func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string) (*Ffdfs, string, func()) {
 	logger := logging.New(os.Stdout, logrus.ErrorLevel)
 
@@ -171,7 +138,7 @@ func TestWrite(t *testing.T) {
 	t.Run("list", func(t *testing.T) {
 		files, err := os.ReadDir(mntDir)
 		require.NoError(t, err)
-		
+
 		if len(files) != 1 {
 			t.Fatal("list failed on root")
 		}
