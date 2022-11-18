@@ -51,7 +51,7 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 	podName1 := "test1"
 	podPasswordBytes, _ := utils.GetRandBytes(pod.PodPasswordLength)
 	podPassword := hex.EncodeToString(podPasswordBytes)
-	pi, err := pod1.CreatePod(podName1, password, "", podPassword)
+	pi, err := pod1.CreatePod(podName1, "", podPassword)
 	if err != nil {
 		t.Fatalf("error creating pod %s : %s", podName1, err.Error())
 	}
@@ -82,7 +82,7 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 	mockDfs := dfs.NewMockDfsAPI(mockClient, userObject, logger, "/")
 	dfsApi, err := api.NewMockApi(logger, mockDfs)
 	require.NoError(t, err)
-	pi2, err := dfsApi.GetPodInfo(context.Background(), podName1, password, ui.GetSessionId(), false)
+	pi2, err := dfsApi.GetPodInfo(context.Background(), podName1, ui.GetSessionId(), false)
 	require.NoError(t, err)
 
 	return dfsApi, pi2, ui.GetSessionId()
