@@ -49,7 +49,7 @@ func (h *Handler) Login(username, password string) (string, error) {
 	return h.api.Login(username, password)
 }
 
-func (h *Handler) Mount(pod, password, sessionId, mountPoint string, createPod bool) error {
+func (h *Handler) Mount(pod, sessionId, mountPoint string, createPod bool) error {
 	if h.api == nil {
 		return ErrFairOsNotInitialised
 	}
@@ -60,7 +60,7 @@ func (h *Handler) Mount(pod, password, sessionId, mountPoint string, createPod b
 		return fmt.Errorf("%s is already mounted", pod)
 	}
 	ctx := context.Background()
-	pi, err := h.api.GetPodInfo(ctx, pod, password, sessionId, createPod)
+	pi, err := h.api.GetPodInfo(ctx, pod, sessionId, createPod)
 	if err != nil {
 		return err
 	}
