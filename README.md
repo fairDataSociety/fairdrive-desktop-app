@@ -59,18 +59,18 @@ After mount is successful, you will be able to see the content of your pod at th
 - [promptui](github.com/manifoldco/promptui)
 
 
-## Windows build environment
+## Building on Windows
 
 ### Requirements
 
-### Tools 
+#### Tools 
   1.install go
 
   2.install gcc https://jmeubank.github.io/tdm-gcc/ 
 
   3.download and install https://winfsp.dev/rel/ and don't forget to check "Developer tools" 
 
-### Add environment variables
+#### Add environment variables
 
 set `CPATH` to `C:\Program Files (x86)\WinFsp\inc\fuse`
 
@@ -78,7 +78,7 @@ set `LIBRARY_PATH` to `C:\Program Files (x86)\WinFsp\lib`
 
 set `CPLUS_INCLUDE_PATH` to `C:\Program Files (x86)\WinFsp\inc\fuse`
 
-### Problems with npm
+#### Problems with npm
 
 Installing frontend dependencies: npm ERR! Unexpected token '.'
 
