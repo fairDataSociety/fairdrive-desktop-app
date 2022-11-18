@@ -14,8 +14,8 @@ export function Login(arg1, arg2) {
   return window['go']['handler']['Handler']['Login'](arg1, arg2);
 }
 
-export function Mount(arg1, arg2, arg3, arg4, arg5) {
-  return window['go']['handler']['Handler']['Mount'](arg1, arg2, arg3, arg4, arg5);
+export function Mount(arg1, arg2, arg3, arg4) {
+  return window['go']['handler']['Handler']['Mount'](arg1, arg2, arg3, arg4);
 }
 
 export function Start(arg1) {

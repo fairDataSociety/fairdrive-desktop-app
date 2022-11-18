@@ -72,9 +72,9 @@ func (d *DfsAPI) Login(username, password string) (string, error) {
 	return ui.GetSessionId(), nil
 }
 
-func (d *DfsAPI) GetPodInfo(ctx context.Context, podname, password, sessionId string, createPod bool) (*pod.Info, error) {
+func (d *DfsAPI) GetPodInfo(ctx context.Context, podname, sessionId string, createPod bool) (*pod.Info, error) {
 	if createPod {
-		return d.API.CreatePod(podname, password, sessionId)
+		return d.API.CreatePod(podname, sessionId)
 	}
-	return d.API.OpenPodAsync(ctx, podname, password, sessionId)
+	return d.API.OpenPodAsync(ctx, podname, sessionId)
 }
