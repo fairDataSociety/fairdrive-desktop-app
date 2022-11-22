@@ -476,13 +476,13 @@ func (f *Ffdfs) Readdir(path string,
 	fill(".", &node.stat, 0)
 	fill("..", nil, 0)
 	for _, chld := range node.dirs {
-		nd := f.lookupNode(filepath.Join(path, chld))
+		nd := f.lookup(filepath.Join(path, chld), true)
 		if nd != nil && !fill(chld, &nd.stat, 0) {
 			break
 		}
 	}
 	for _, chld := range node.files {
-		nd := f.lookupNode(filepath.Join(path, chld))
+		nd := f.lookup(filepath.Join(path, chld), false)
 		if nd != nil && !fill(chld, &nd.stat, 0) {
 			break
 		}
