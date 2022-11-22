@@ -20,16 +20,16 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest
-            arch: amd64
-            cgo: 1
-            cpath: C:\Program Files (x86)\WinFsp\inc\fuse
+#          - os: windows-latest
+#            arch: amd64
+#            cgo: 1
+#            cpath: C:\Program Files (x86)\WinFsp\inc\fuse
           - os: ubuntu-latest
             arch: amd64
             cgo: 1
-          - os: macos-10.15
-            arch: amd64
-            cgo: 1
+#          - os: macos-10.15
+#            arch: amd64
+#            cgo: 1
       fail-fast: false
 
     steps:
@@ -113,9 +113,12 @@ jobs:
         run: make lint
       - name: Test
         run: make test
-      - name: Race
-        if: matrix.os != 'windows-latest'
-        run: make test-race
+      - name: Install wails
+        run: |
+          go install github.com/wailsapp/wails/v2/cmd/wails@latest
+#      - name: Race
+#        if: matrix.os != 'windows-latest'
+#        run: make test-race
 #      - name: Build
 #        run: make binary
 #      - uses: actions/upload-artifact@v3
