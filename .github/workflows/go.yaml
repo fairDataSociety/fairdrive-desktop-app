@@ -108,8 +108,8 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
-      - name: Test
-        run: make test
+#      - name: Test
+#        run: make test
       - name: Install wails
         run: |
           GO111MODULE=on go install github.com/wailsapp/wails/v2/cmd/wails@latest
@@ -118,9 +118,9 @@ jobs:
 #        run: make test-race
       - name: Build
         run: make binary
-      - name: Lint
-        if: matrix.os == 'ubuntu-latest'
-        run: make lint
+#      - name: Lint
+#        if: matrix.os == 'ubuntu-latest'
+#        run: make lint
 #      - uses: actions/upload-artifact@v3
 #        if: matrix.os != 'windows-latest'
 #        with:
