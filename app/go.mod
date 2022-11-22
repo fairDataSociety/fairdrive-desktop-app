@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/datafund/fdfs v0.0.0-00010101000000-000000000000
-	github.com/fairdatasociety/fairOS-dfs v0.8.2-rc6.0.20221117110710-7696298b999f
+	github.com/fairdatasociety/fairOS-dfs v0.9.0-rc2
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/spf13/viper v1.13.0
 	github.com/wailsapp/wails/v2 v2.2.0
