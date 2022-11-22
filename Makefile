@@ -16,11 +16,11 @@ linter:
 
 .PHONY: test
 test:
-	$(GO) test -v ./... -timeout 5m
+	$(GO) test -v ./pkg/fuse -timeout 5m
 
 .PHONY: test-race
 test-race:
-	$(GO) test -v ./... -race -timeout 20m
+	$(GO) test -v ./pkg/fuse -race -timeout 20m
 
 dist:
 	mkdir $@
