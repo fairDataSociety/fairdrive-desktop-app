@@ -61,8 +61,5 @@ func (c *conf) GetConfig() *api.FairOSConfig {
 }
 
 func (c *conf) IsSet() bool {
-	if c.fc != nil {
-		return true
-	}
-	return false
+	return c.fc != nil
 }

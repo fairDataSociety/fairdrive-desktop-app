@@ -108,9 +108,6 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
-      - name: Lint
-        if: matrix.os == 'ubuntu-latest'
-        run: make lint
       - name: Test
         run: make test
       - name: Install wails
@@ -119,8 +116,11 @@ jobs:
 #      - name: Race
 #        if: matrix.os != 'windows-latest'
 #        run: make test-race
-#      - name: Build
-#        run: make binary
+      - name: Build
+        run: make binary
+      - name: Lint
+        if: matrix.os == 'ubuntu-latest'
+        run: make lint
 #      - uses: actions/upload-artifact@v3
 #        if: matrix.os != 'windows-latest'
 #        with:
