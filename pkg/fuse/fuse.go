@@ -183,7 +183,7 @@ func (f *Ffdfs) Unlink(path string) int {
 	defer f.synchronize()()
 
 	f.log.Debugf("unlink: removing file: %s", path)
-	return 0
+	return f.removeNode(path, false)
 }
 
 // Rmdir removes a directory.

@@ -396,7 +396,7 @@ func TestRCloneTests(t *testing.T) {
 		err = f.Close()
 		require.NoError(t, err)
 
-		err = os.Rename(path, path+"bla")
+		err = os.Rename(path, path+"ble")
 		require.NoError(t, err)
 
 		localDm := make(dirMap)
@@ -405,7 +405,7 @@ func TestRCloneTests(t *testing.T) {
 		if len(localDm) != 1 {
 			t.Fatal("rename failed")
 		}
-		size, ok := localDm[path+"bla"]
+		size, ok := localDm[path+"ble"]
 		if !ok {
 			t.Fatal("rename failed")
 		}
@@ -413,7 +413,7 @@ func TestRCloneTests(t *testing.T) {
 			t.Fatal("content mismatch")
 		}
 
-		err = os.Remove(path + "bla")
+		err = os.Remove(path + "ble")
 		require.NoError(t, err)
 
 		// Wait for file to disappear from listing
