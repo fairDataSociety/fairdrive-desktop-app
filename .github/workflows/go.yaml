@@ -112,7 +112,7 @@ jobs:
         run: make test
       - name: Install wails
         run: |
-          go install github.com/wailsapp/wails/v2/cmd/wails@latest
+          GO111MODULE=on go install github.com/wailsapp/wails/v2/cmd/wails@latest
 #      - name: Race
 #        if: matrix.os != 'windows-latest'
 #        run: make test-race
