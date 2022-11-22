@@ -63,7 +63,7 @@ jobs:
         run: |
           sudo apt-get -qq install libfuse-dev
           sudo apt-get -qq install libacl1-dev
-          sudo apt-get install build-essential libgtk-3-dev libwebkit2gtk-4.0-dev
+          sudo apt-get install build-essential libgtk-3-0 libwebkit2gtk-4.0-37
           git clone -q https://github.com/billziss-gh/secfs.test.git secfs.test
           git -C secfs.test checkout -q edf5eb4a108bfb41073f765aef0cdd32bb3ee1ed
           mkdir -p secfs.test/tools/bin
