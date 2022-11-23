@@ -49,16 +49,19 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           $releases = Invoke-WebRequest https://api.github.com/repos/winfsp/winfsp/releases | `
-           ConvertFrom-Json
+              ConvertFrom-Json
+
           $asseturi = $releases[0].assets.browser_download_url | `
-           Where-Object { $_ -match "winfsp-.*\.msi" }
+              Where-Object { $_ -match "winfsp-.*\.msi" }
           Invoke-WebRequest -Uri $asseturi -Out winfsp.msi
           Start-Process -NoNewWindow -Wait msiexec "/i winfsp.msi /qn INSTALLLEVEL=1000"
+
           $asseturi = $releases[0].assets.browser_download_url | `
-           Where-Object { $_ -match "winfsp-tests-.*\.zip" }
+              Where-Object { $_ -match "winfsp-tests-.*\.zip" }
           Invoke-WebRequest -Uri $asseturi -Out winfsp-tests.zip
           Expand-Archive -Path winfsp-tests.zip
           Copy-Item "C:\Program Files (x86)\WinFsp\bin\winfsp-x64.dll" winfsp-tests
+
 
       - name: Install FUSE and secfs.test (Linux)
         if: runner.os == 'Linux'
