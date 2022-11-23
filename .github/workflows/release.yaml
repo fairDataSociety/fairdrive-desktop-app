@@ -146,13 +146,13 @@ jobs:
         with:
           name: mac
           path: build/bin/mac
-      - uses: actions/download-artifact@v3
-        with:
-          name: linux
-          path: build/bin/linux
+#      - uses: actions/download-artifact@v3
+#        with:
+#          name: linux
+#          path: build/bin/linux
       - name: Display structure of downloaded files
         run: ls -R
-      - run: mv build/bin/linux/app build/bin/fda
+#      - run: mv build/bin/linux/app build/bin/fda
       - shell: bash
         run: |
           chmod +x add-cert.sh && ./add-osx-cert.sh
