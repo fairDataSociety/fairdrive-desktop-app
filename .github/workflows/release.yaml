@@ -155,8 +155,8 @@ jobs:
 #      - run: mv build/bin/linux/app build/bin/fda
       - shell: bash
         run: |
-          chmod +x add-cert.sh && ./add-osx-cert.sh
-          chmod +x gon-config.sh && ./gon-config.sh
+          chmod +x scripts/add-cert.sh && ./scripts/add-osx-cert.sh
+          chmod +x scripts/gon-config.sh && ./scripts/gon-config.sh
           brew tap mitchellh/gon
           brew install mitchellh/gon/gon
           gon -log-level=info -log-json build/bin/config.json
