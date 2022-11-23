@@ -109,6 +109,7 @@ jobs:
           name: fda.app
           path: build/bin/app.app
   job2:
+    needs: job1
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
