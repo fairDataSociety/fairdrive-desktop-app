@@ -26,9 +26,9 @@ jobs:
 #            arch: amd64
 #            cgo: 1
 #            cpath: C:\Program Files (x86)\WinFsp\inc\fuse
-          - os: ubuntu-latest
-            arch: amd64
-            cgo: 1
+#          - os: ubuntu-latest
+#            arch: amd64
+#            cgo: 1
           - os: macos-10.15
             arch: amd64
             cgo: 1
@@ -153,12 +153,14 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -R
       - run: mv build/bin/linux/app build/bin/fda
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - run: npm install --global create-dmg
-      - run: create-dmg build/bin/mac/app.app build/bin
-      - run: mv 'build/bin/FDA 1.0.0.dmg' build/bin/fda.dmg
+      - shell: bash
+        run: |
+          chmod +x add-cert.sh && ./add-osx-cert.sh
+          chmod +x gon-config.sh && ./gon-config.sh
+          brew tap mitchellh/gon
+          brew install mitchellh/gon/gon
+          gon -log-level=info -log-json build/bin/config.json
+          ls -al build/bin
 
       - name : Run GoReleaser
         uses: goreleaser/goreleaser-action@v2

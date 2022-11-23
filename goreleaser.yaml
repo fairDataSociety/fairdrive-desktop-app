@@ -3,7 +3,7 @@ project_name: fda
 release:
   prerelease: auto
   extra_files:
-    - glob: ./build/bin/fda
+#    - glob: ./build/bin/fda
     - glob: ./build/bin/fda.dmg
 builds:
   - skip: true
