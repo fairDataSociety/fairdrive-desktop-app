@@ -12,7 +12,7 @@ on:
       - 'v*.*.*'
 
 jobs:
-  goreleaser:
+  build:
     name: Build
     runs-on: ${{ matrix.os }}
     env:
@@ -23,16 +23,16 @@ jobs:
     strategy:
       matrix:
         include:
-          #          - os: windows-latest
-          #            arch: amd64
-          #            cgo: 1
-          #            cpath: C:\Program Files (x86)\WinFsp\inc\fuse
+          - os: windows-latest
+            arch: amd64
+            cgo: 1
+            cpath: C:\Program Files (x86)\WinFsp\inc\fuse
           - os: ubuntu-latest
             arch: amd64
             cgo: 1
-      #          - os: macos-10.15
-      #            arch: amd64
-      #            cgo: 1
+          - os: macos-10.15
+            arch: amd64
+            cgo: 1
       fail-fast: false
 
     steps:
@@ -69,26 +69,13 @@ jobs:
           sudo apt-get -qq install libacl1-dev
           sudo apt-get install build-essential libgtk-3-dev libwebkit2gtk-4.0-dev libwebkit2gtk-4.0-37-gtk2
 
-      - name: Install FUSE and secfs.test (macOS)
+      - name: Install FUSE (macOS)
         if: runner.os == 'macOS'
         run: |
           # requires macos-10.15; does not work on macos-latest
           # see https://github.com/actions/virtual-environments/issues/4731
           brew install macfuse
-          git clone -q https://github.com/billziss-gh/secfs.test.git secfs.test
-          git -C secfs.test checkout -q edf5eb4a108bfb41073f765aef0cdd32bb3ee1ed
-          mkdir -p secfs.test/tools/bin
-          touch secfs.test/tools/bin/bonnie++
-          touch secfs.test/tools/bin/iozone
-          make -C secfs.test
-          # configure fstest for cgofuse
-          sed -e 's/^fs=.*$/fs="cgofuse"/' -i ""  secfs.test/fstest/fstest/tests/conf
-          # monkey-patch/disable some tests for macOS
-          rm secfs.test/fstest/fstest/tests/rmdir/12.t
-          sed -e 's/lchmod)/lchmod) return 1/' -i "" secfs.test/fstest/fstest/tests/misc.sh
-          # remove irrelevant tests
-          rm -rf secfs.test/fstest/fstest/tests/xacl
-          rm -rf secfs.test/fstest/fstest/tests/zzz_ResourceFork
+
       - name: Set git to use LF
         # make sure that line endings are not converted on windows
         # as gofmt linter will report that they need to be changed
@@ -107,10 +94,12 @@ jobs:
           GO111MODULE=on go install github.com/wailsapp/wails/v2/cmd/wails@latest
       - name: Build
         run: make binary
-      - uses: goreleaser/goreleaser-action@v2
-        with:
-          distribution: goreleaser
-          version: latest
-          args: release --rm-dist
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  release:
+    - needs: build
+      uses: goreleaser/goreleaser-action@v2
+      with:
+        distribution: goreleaser
+        version: latest
+        args: release --rm-dist
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
