@@ -143,13 +143,13 @@ jobs:
 #        with:
 #          name: fda.exe
       - uses: actions/download-artifact@v3
-#        with:
-#          name: fda.app
-#          path: build/bin/fda.app
-#      - uses: actions/download-artifact@v3
-#        with:
-#          name: fda
-#          path: build/bin/fda
+        with:
+          name: fda.app
+          path: build/bin/fda.app
+      - uses: actions/download-artifact@v3
+        with:
+          name: fda
+          path: build/bin/fda
       - name: Display structure of downloaded files
         run: ls -R
       - name : Run GoReleaser
