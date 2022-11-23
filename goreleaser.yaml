@@ -3,7 +3,7 @@ project_name: fda
 release:
   prerelease: auto
   extra_files:
-    - glob: ./build/bin/app
+    - glob: ./build/bin/*
 builds:
   - skip: true
 
