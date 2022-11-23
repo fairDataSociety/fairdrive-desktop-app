@@ -8,7 +8,7 @@ LDFLAGS ?= -s -w -X github.com/datafund/fdfs.commit="$(COMMIT)" -X github.com/da
 
 .PHONY: lint
 lint: linter
-	$(GOLANGCI_LINT) run
+	$(GOLANGCI_LINT) run --skip-dirs frontend/dist
 
 .PHONY: linter
 linter:
