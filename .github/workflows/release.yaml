@@ -93,9 +93,34 @@ jobs:
           GO111MODULE=on go install github.com/wailsapp/wails/v2/cmd/wails@latest
       - name: Build
         run: make binary
+      - uses: actions/upload-artifact@v3
+        if: matrix.os == 'windows-latest'
+        with:
+          name: fda.exe
+          path: build/bin/app.exe
+      - uses: actions/upload-artifact@v3
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          name: fda
+          path: build/bin/app
+      - uses: actions/upload-artifact@v3
+        if: matrix.os == 'macos-10.15'
+        with:
+          name: fda.app
+          path: build/bin/app.app
   job2:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: fda.exe
+      - uses: actions/download-artifact@v2
+        with:
+          name: fda.app
+      - uses: actions/download-artifact@v2
+        with:
+          name: fda
       - name : Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
