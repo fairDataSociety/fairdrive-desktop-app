@@ -6,51 +6,24 @@ pod on your own user space and interact with your data.
 ## Requirements
 You need [FUSE](http://github.com/libfuse/libfuse) for your OS.
 
-## Install 
-Download fdfs from the release section, or you can clone and build on your own binary by running `make binary`. The binary will be generated in `dist` folder.
-
 You will need a bee node running with a valid stamp id.
+## About
 
-## Running
-```
-$ ./dist/fdfs -h
-fdfs is a FUSE client for fairOS-dfs. It lets you mount your 
-pod on your own user space and interact with your data.
+This is the official Wails React-TS template.
 
-Usage:
-  fdfs [command]
+You can configure the project by editing `wails.json`. More information about the project settings can be found
+here: https://wails.io/docs/reference/project-config
 
-Available Commands:
-  completion  Generate the autocompletion script for the specified shell
-  help        Help about any command
-  mount       Mount a pod into a specified mount point
-  version     prints version
+## Live Development
 
-Flags:
-  -h, --help   help for fdfs
-```
+To run in live development mode, run `wails dev` in the project directory. This will run a Vite development
+server that will provide very fast hot reload of your frontend changes. If you want to develop in a browser
+and have access to your Go methods, there is also a dev server that runs on http://localhost:34115. Connect
+to this in your browser, and you can call your Go code from devtools.
 
-You need to run `mount` command to mount a pod
-```
-$./dist/fdfs mount -h
-Mount a pod into a specified mount point
+## Building
 
-Usage:
-  fdfs mount [flags]
-
-Flags:
-  -h, --help                help for mount
-  -f, --mountpoint string   mountpoint
-  -p, --password string     password
-  -d, --pod string          pod to mount
-  -u, --username string     fdp username
-```
-
-`mount` command will automatically detect if you have a config file for fdfs. It will be created on the fly if it is not present in your home folder.
-
-![fdfs](https://user-images.githubusercontent.com/15252513/190614895-bd1a9aff-8bf5-4c47-b747-c042e1adbf61.gif)
-
-After mount is successful, you will be able to see the content of your pod at the given mount-point.
+To build a redistributable, production mode package, use `wails build`.
 
 ## Dependencies
 - [cgofuse](https://github.com/billziss-gh/cgofuse)

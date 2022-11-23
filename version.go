@@ -1,4 +1,4 @@
-package fdfs
+package main
 
 var (
 	version = "dev"

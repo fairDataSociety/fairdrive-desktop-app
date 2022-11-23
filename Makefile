@@ -8,7 +8,7 @@ LDFLAGS ?= -s -w -X github.com/datafund/fdfs.commit="$(COMMIT)" -X github.com/da
 
 .PHONY: lint
 lint: linter
-	$(GOLANGCI_LINT) run
+	$(GOLANGCI_LINT) run --skip-dirs frontend/dist
 
 .PHONY: linter
 linter:
@@ -16,11 +16,11 @@ linter:
 
 .PHONY: test
 test:
-	$(GO) test -v ./... -timeout 5m
+	$(GO) test -v ./pkg/fuse -timeout 5m
 
 .PHONY: test-race
 test-race:
-	$(GO) test -v ./... -race -timeout 20m
+	$(GO) test -v ./pkg/fuse -race -timeout 20m
 
 dist:
 	mkdir $@
@@ -34,26 +34,6 @@ clean:
 binary: export CGO_ENABLED=1
 binary: dist FORCE
 	$(GO) version
-	$(GO) build -trimpath -ldflags "$(LDFLAGS)" -o dist/fdfs ./cmd
+	wails build -trimpath -ldflags "$(LDFLAGS)"
 
 FORCE:
-
-.PHONY: snapshot release
-snapshot:
-	docker run --rm --privileged \
-		-v ~/go/pkg/mod:/go/pkg/mod \
-		-v `pwd`:/go/src/github.com/datafund/fdfs \
-		-v /var/run/docker.sock:/var/run/docker.sock \
-		-w /go/src/github.com/datafund/fdfs \
-		ghcr.io/goreleaser/goreleaser-cross:v1.19.1 release --rm-dist \
-		--skip-validate=true \
-		--skip-publish
-
-release:
-	docker run --rm --privileged \
-		--env-file .release-env \
-		-v ~/go/pkg/mod:/go/pkg/mod \
-		-v `pwd`:/go/src/github.com/datafund/fdfs \
-		-v /var/run/docker.sock:/var/run/docker.sock \
-		-w /go/src/github.com/datafund/fdfs \
-		ghcr.io/goreleaser/goreleaser-cross:v1.19.1 release --rm-dist

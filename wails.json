@@ -12,8 +12,7 @@
   },
   "Info": {
     "companyName": "FairDataSociety",
-    "productName": "FairOS Fuse",
-    "productVersion": "1.0.0",
+    "productName": "FDA",
     "copyright": "FFA Copyright FDS 2021",
     "comments": "Built using Wails (https://wails.io)"
   }
