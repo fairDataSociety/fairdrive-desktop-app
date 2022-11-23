@@ -127,12 +127,12 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: matrix.os == 'ubuntu-latest'
         with:
-          name: fda
+          name: linux
           path: build/bin/*
       - uses: actions/upload-artifact@v3
         if: matrix.os == 'macos-10.15'
         with:
-          name: fda.app
+          name: mac
           path: build/bin/*
   job2:
     needs: job1
@@ -144,20 +144,20 @@ jobs:
 #          name: fda.exe
       - uses: actions/download-artifact@v3
         with:
-          name: fda.app
-          path: build/bin/fda.app
+          name: mac
+          path: build/bin/mac
       - uses: actions/download-artifact@v3
         with:
-          name: fda
-          path: build/bin/fda
+          name: linux
+          path: build/bin/linux
       - name: Display structure of downloaded files
         run: ls -R
-      - run: mv build/bin/app build/bin/fda
+      - run: mv build/bin/linux/app build/bin/fda
       - uses: actions/setup-node@v3
         with:
           node-version: 18
       - run: npm install --global create-dmg
-      - run: create-dmg build/bin/fda.app/app.app build/bin
+      - run: create-dmg build/bin/mac/app.app build/bin
       - run: mv 'build/bin/FDA 1.0.0.dmg' build/bin/fda.dmg
 
       - name : Run GoReleaser
