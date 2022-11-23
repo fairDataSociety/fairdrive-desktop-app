@@ -1,5 +1,8 @@
 project_name: fda
 
+builds:
+  - skip: true
+
 archives:
   - id: binary
     builds:
@@ -19,9 +22,6 @@ archives:
       - build/bin/app
       - build/bin/app.app
       - build/bin/app.ext
-      - docs/*
-      - design/*.png
-      - templates/**/*
       # a more complete example, check the globbing deep dive below
       - src: '*.md'
         dst: docs
