@@ -12,8 +12,7 @@ on:
       - 'v*.*.*'
 
 jobs:
-  build:
-    name: Build
+  job1:
     runs-on: ${{ matrix.os }}
     env:
       GOARCH: ${{ matrix.arch }}
@@ -94,12 +93,14 @@ jobs:
           GO111MODULE=on go install github.com/wailsapp/wails/v2/cmd/wails@latest
       - name: Build
         run: make binary
-  release:
-    - needs: build
-      uses: goreleaser/goreleaser-action@v2
-      with:
-        distribution: goreleaser
-        version: latest
-        args: release --rm-dist
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  job2:
+    runs-on: ubuntu-latest
+    steps:
+      - name : Run GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
