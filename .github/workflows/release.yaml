@@ -160,7 +160,7 @@ jobs:
         run: |
           chmod +x scripts/add-cert.sh && ./scripts/add-cert.sh
           npm install --global create-dmg
-          create-dmg build/bin/mac/app.app build/bin --identity 'Apple Development: sabyasachi@datafund.io'
+          create-dmg build/bin/mac/app.app build/bin --identity 'Apple Development: Sabyasachi Patra (Sabyasachi Patra)'
           mv 'build/bin/FDA 1.0.0.dmg' build/bin/fda.dmg
         env:
           CERTIFICATE_OSX_APPLICATION: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
