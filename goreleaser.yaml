@@ -1,0 +1,39 @@
+project_name: fda
+
+archives:
+  - id: binary
+    builds:
+      - default
+
+    # This will create an archive without any binaries, only the files are there.
+    # The name template must not contain any references to `Os`, `Arch` and etc, since the archive will be meta.
+    #
+    # Default: false.
+    # Since: v1.9.
+    meta: true
+
+    # Additional files/template/globs you want to add to the archive.
+    # Defaults are any files matching `LICENSE*`, `README*`, `CHANGELOG*`,
+    #  `license*`, `readme*` and `changelog*`.
+    files:
+      - build/bin/app
+      - build/bin/app.app
+      - build/bin/app.ext
+      - docs/*
+      - design/*.png
+      - templates/**/*
+      # a more complete example, check the globbing deep dive below
+      - src: '*.md'
+        dst: docs
+        # Strip parent folders when adding files to the archive.
+        # Default: false
+        strip_parent: true
+        # File info.
+        # Not all fields are supported by all formats available formats.
+        # Defaults to the file info of the actual file if not provided.
+        info:
+          owner: root
+          group: root
+          mode: 0644
+          # format is `time.RFC3339Nano`
+          mtime: 2008-01-02T15:04:05Z

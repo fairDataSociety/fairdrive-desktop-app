@@ -120,6 +120,13 @@ jobs:
 #        run: make test-race
       - name: Build
         run: make binary
+      - uses: goreleaser/goreleaser-action@v2
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --rm-dist
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #      - name: Lint
 #        if: matrix.os == 'ubuntu-latest'
 #        run: make lint
