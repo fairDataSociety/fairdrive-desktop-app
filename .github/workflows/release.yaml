@@ -22,13 +22,13 @@ jobs:
     strategy:
       matrix:
         include:
-#          - os: windows-latest
-#            arch: amd64
-#            cgo: 1
-#            cpath: C:\Program Files (x86)\WinFsp\inc\fuse
-#          - os: ubuntu-latest
-#            arch: amd64
-#            cgo: 1
+          - os: windows-latest
+            arch: amd64
+            cgo: 1
+            cpath: C:\Program Files (x86)\WinFsp\inc\fuse
+          - os: ubuntu-latest
+            arch: amd64
+            cgo: 1
           - os: macos-10.15
             arch: amd64
             cgo: 1
@@ -122,8 +122,8 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: matrix.os == 'windows-latest'
         with:
-          name: fda.exe
-          path: build/bin/app.exe
+          name: windows
+          path: build/bin/*
       - uses: actions/upload-artifact@v3
         if: matrix.os == 'ubuntu-latest'
         with:
@@ -139,20 +139,21 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
-#      - uses: actions/download-artifact@v3
-#        with:
-#          name: fda.exe
+      - uses: actions/download-artifact@v3
+        with:
+          name: fda.exe
       - uses: actions/download-artifact@v3
         with:
           name: mac
           path: build/bin/mac
-#      - uses: actions/download-artifact@v3
-#        with:
-#          name: linux
-#          path: build/bin/linux
+      - uses: actions/download-artifact@v3
+        with:
+          name: linux
+          path: build/bin/linux
       - name: Display structure of downloaded files
         run: ls -R
-#      - run: mv build/bin/linux/app build/bin/fda
+      - run: mv build/bin/linux/app build/bin/fda
+      - run: mv build/bin/windows/app.exe build/bin/fda.exe
       - uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -160,6 +161,7 @@ jobs:
         run: |
           chmod +x scripts/add-cert.sh && ./scripts/add-cert.sh
           npm install --global create-dmg
+          chmod +x build/bin/mac/app.app/Contents/MacOS/app
           create-dmg build/bin/mac/app.app build/bin --identity '${{ secrets.ID }}'
           mv 'build/bin/FDA 1.0.0.dmg' build/bin/fda.dmg
         env:
