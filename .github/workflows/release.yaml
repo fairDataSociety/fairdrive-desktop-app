@@ -60,6 +60,7 @@ jobs:
           Invoke-WebRequest -Uri $asseturi -Out winfsp-tests.zip
           Expand-Archive -Path winfsp-tests.zip
           Copy-Item "C:\Program Files (x86)\WinFsp\bin\winfsp-x64.dll" winfsp-tests
+        shell: powershell
 
       - name: Install FUSE and secfs.test (Linux)
         if: runner.os == 'Linux'
