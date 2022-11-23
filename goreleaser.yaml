@@ -1,12 +1,16 @@
 project_name: fda
 
+release:
+  prerelease: auto
+  extra_files:
+    - glob: ./build/bin/app
 builds:
   - skip: true
 
-archives:
-  - id: binary
-    meta: true
-    files:
-      - build/bin/app
+#archives:
+#  - id: binary
+#    meta: true
+#    files:
+#      - build/bin/app
 #      - build/bin/app.app
 #      - build/bin/app.exe
