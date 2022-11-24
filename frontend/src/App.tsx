@@ -2,7 +2,7 @@ import {forwardRef, SyntheticEvent, useEffect, useState} from 'react'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 import logo from './assets/images/logo-universal.png'
 import './App.css'
-import {Login, Mount, GetPodsList, Unmount, Start, Close} from "../wailsjs/go/handler/Handler"
+import {Login, Mount, GetPodsList, Unmount, Start, Close, Logout} from "../wailsjs/go/handler/Handler"
 import {SetupConfig, IsSet, GetConfig} from "../wailsjs/go/main/conf"
 import {RememberPassword, HasRemembered, ForgetPassword, Get} from "../wailsjs/go/main/Account"
 
@@ -14,13 +14,28 @@ import {
     FormControlLabel,
     FormLabel,
     RadioGroup,
-    Radio, MenuItem, Select, Container, Box, Grid, Link, Modal, Tooltip, IconButton, Stack, Snackbar, AlertProps
+    Radio,
+    MenuItem,
+    Select,
+    Container,
+    Box,
+    Grid,
+    Link,
+    Modal,
+    Tooltip,
+    IconButton,
+    Stack,
+    Snackbar,
+    AlertProps,
+    Dialog,
+    DialogTitle, DialogContent, Typography, styled
 } from "@mui/material"
-import MuiAlert  from '@mui/material/Alert';
+import MuiAlert  from '@mui/material/Alert'
 
 import {api} from "../wailsjs/go/models"
 import {EventsOn} from "../wailsjs/runtime"
 import {Info} from "@mui/icons-material"
+import CloseIcon from '@mui/icons-material/Close'
 
 const theme = createTheme()
 const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(
@@ -29,13 +44,18 @@ const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(
 ) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
+
+const AboutDialog = styled(Dialog)(({ theme }) => ({
+    '& .MuiDialogContent-root': {
+        padding: theme.spacing(2),
+    },
+    '& .MuiDialogActions-root': {
+        padding: theme.spacing(1),
+    },
+}));
+
 function App() {
     const [open, setOpen] = useState(false);
-
-    const handleClick = () => {
-        setOpen(true);
-    };
-
     const handleClose = (event?: SyntheticEvent | Event, reason?: string) => {
         if (reason === 'clickaway') {
             return;
@@ -43,8 +63,15 @@ function App() {
 
         setOpen(false);
     };
+
+    const [showAbout, setShowAbout] = useState<boolean>(false)
+    const handleAboutClose = () => {
+        setShowAbout(false);
+    };
+
     const [showConfig, setShowConfig] = useState<boolean>(false)
     const [showLogin, setShowLogin] = useState<boolean>(true)
+    const [showPods, setShowPods] = useState<boolean>(true)
 
     const [username, setName] = useState('')
     const [password, setPassword] = useState('')
@@ -55,6 +82,24 @@ function App() {
         EventsOn("preferences", ()=> {
             setShowConfig(true)
         })
+        EventsOn("about", ()=> {
+            setShowAbout(true)
+        })
+        EventsOn("logout", async ()=> {
+            try {
+                setShowLogin(true)
+                setShowPods(false)
+
+                await Logout(sessionId)
+                setSessionId("")
+                setPods([])
+
+                await ForgetPassword()
+            } catch(e: any) {
+                showError(e)
+            }
+        })
+
         IsSet().then((isSet) => {
             console.log("isSet", isSet)
             if (!isSet) {
@@ -81,7 +126,6 @@ function App() {
                                 setName(acc.Username)
                                 setPassword(acc.Password)
                                 let sId = await Login(acc.Username, acc.Password)
-                                console.log()
                                 setShowLogin(false)
                                 setSessionId(sId)
                                 let p = await GetPodsList(sId)
@@ -200,12 +244,17 @@ function App() {
 
     return (
         <div id="App">
+            {/*shows error*/}
             <Snackbar open={open} onClose={handleClose}>
                 <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
                     {message}
                 </Alert>
             </Snackbar>
+
+            {/*logo*/}
             <img src={logo} id="logo" alt="logo"/>
+
+            {/*settings modal*/}
             <Modal
                 open={showConfig}
                 aria-labelledby="modal-modal-title"
@@ -333,7 +382,49 @@ function App() {
                 </Box>
             </Modal>
 
+            {/*about dialog*/}
+
             {(() => {
+                if (showAbout) {
+                    return (
+                        <AboutDialog
+                            aria-labelledby="customized-dialog-title"
+                            open={showAbout}
+                        >
+                            <DialogTitle sx={{ m: 0, p: 2 }} >
+                                About
+                                <IconButton
+                                    aria-label="close"
+                                    onClick={handleAboutClose}
+                                    sx={{
+                                        position: 'absolute',
+                                        right: 8,
+                                        top: 8,
+                                        color: (theme) => theme.palette.grey[500],
+                                    }}
+                                >
+                                    <CloseIcon />
+                                </IconButton>
+                            </DialogTitle>
+                            <DialogContent dividers>
+                                <Typography gutterBottom>
+                                    Cras mattis consectetur purus sit amet fermentum. Cras justo odio,
+                                    dapibus ac facilisis in, egestas eget quam. Morbi leo risus, porta ac
+                                    consectetur ac, vestibulum at eros.
+                                </Typography>
+                                <Typography gutterBottom>
+                                    Praesent commodo cursus magna, vel scelerisque nisl consectetur et.
+                                    Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor.
+                                </Typography>
+                                <Typography gutterBottom>
+                                    Aenean lacinia bibendum nulla sed consectetur. Praesent commodo cursus
+                                    magna, vel scelerisque nisl consectetur et. Donec sed odio dui. Donec
+                                    ullamcorper nulla non metus auctor fringilla.
+                                </Typography>
+                            </DialogContent>
+                        </AboutDialog>
+                    )
+                }
                 if (showLogin) {
                     return (
                         <ThemeProvider theme={theme}>
@@ -370,7 +461,7 @@ function App() {
                                         />
                                         <FormControlLabel
                                             control={<Checkbox color="primary" onChange={updateRemember} />}
-                                            label="Remember me"
+                                            label="Remember and Keep me logged-in"
                                         />
                                         <Button
                                             fullWidth
@@ -395,21 +486,26 @@ function App() {
                         </ThemeProvider>
                     )
                 }
+                if (showPods) {
+                    return (
+                        <ThemeProvider theme={theme}>
+                            <Container component="main" maxWidth="xs">
+                                <FormGroup>
+                                    {pods.map((pod) => (
+                                        <Grid container>
+                                            <Grid item>
+                                                <FormControlLabel
+                                                    control={<Checkbox onChange={mount} value={pod} color="primary"/>}
+                                                    label={pod}/>
+                                            </Grid>
+                                        </Grid>
+                                    ))}
+                                </FormGroup>
+                            </Container>
+                        </ThemeProvider>
+                    )
+                }
             })()}
-
-            <ThemeProvider theme={theme}>
-                <Container component="main" maxWidth="xs">
-                    <FormGroup>
-                        {pods.map((pod) => (
-                            <Grid container>
-                                <Grid item>
-                                    <FormControlLabel control={<Checkbox onChange={mount} value={pod} color="primary"/>} label={pod} />
-                                </Grid>
-                            </Grid>
-                        ))}
-                    </FormGroup>
-                </Container>
-            </ThemeProvider>
         </div>
     )
 }

@@ -68,7 +68,7 @@ func main() {
 		prefShortcut = keys.Combo(",", keys.CmdOrCtrlKey, keys.ShiftKey)
 	}
 	fileMenu.AddText("About", nil, func(_ *menu.CallbackData) {
-		// TODO trigger about event
+		wRuntime.EventsEmit(startContext, "about")
 	})
 	fileMenu.AddText("Check for updates...", nil, func(_ *menu.CallbackData) {
 		// TODO check for update
@@ -84,7 +84,9 @@ func main() {
 	}
 	fileMenu.AddText("Logout", keys.Combo("W", keys.ShiftKey, keys.CmdOrCtrlKey), func(item *menu.CallbackData) {
 		fmt.Println("logout clicked")
-		// TODO trigger logout event
+		wRuntime.EventsEmit(startContext, "logout")
+		// TODO disable or hide item
+		// it does not work currently asked on slack for the problem
 		fmt.Printf("%+v\n", item.MenuItem)
 		item.MenuItem.Disabled = true
 		fmt.Printf("%+v\n", item.MenuItem)
