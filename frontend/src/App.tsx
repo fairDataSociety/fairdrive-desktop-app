@@ -1,10 +1,9 @@
 import {useEffect, useState} from 'react'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
-import DeleteIcon from '@mui/icons-material/Delete';
 import logo from './assets/images/logo-universal.png'
 import './App.css'
-import {Login, Mount, GetPodsList, Unmount, Start} from "../wailsjs/go/handler/Handler"
-import {SetupConfig, IsSet} from "../wailsjs/go/main/conf"
+import {Login, Mount, GetPodsList, Unmount, Start, Close} from "../wailsjs/go/handler/Handler"
+import {SetupConfig, IsSet, GetConfig} from "../wailsjs/go/main/conf"
 import {RememberPassword, HasRemembered, ForgetPassword, Get} from "../wailsjs/go/main/Account"
 
 import {
@@ -16,11 +15,11 @@ import {
     FormLabel,
     RadioGroup,
     Radio,
-    InputLabel, MenuItem, Select, Container, Box, Grid, Link, Modal, Tooltip, IconButton
+    InputLabel, MenuItem, Select, Container, Box, Grid, Link, Modal, Tooltip, IconButton, Stack
 } from "@mui/material"
 import {api} from "../wailsjs/go/models"
 import {EventsOn} from "../wailsjs/runtime"
-import {Info} from "@mui/icons-material";
+import {Info} from "@mui/icons-material"
 
 const theme = createTheme()
 
@@ -34,7 +33,7 @@ const style = {
     border: '2px solid #000',
     boxShadow: 24,
     p: 4,
-};
+}
 
 function App() {
 
@@ -55,6 +54,17 @@ function App() {
                 setShowConfig(true)
             }
         })
+        GetConfig().then((c) => {
+            console.log("c", c)
+            if (c !== null) {
+                c.isProxy ? setProxyValue("yes") : setProxyValue("no")
+                setProxy(c.isProxy)
+                setBee(c.bee)
+                setBatch(c.batch)
+                setNetwork(c.network)
+                setRPC(c.rpc)
+            }
+        })
         HasRemembered().then((isSet) => {
             console.log("HasRemembered", isSet)
             if (!isSet) {
@@ -68,13 +78,13 @@ function App() {
             }
             setName(acc.Username)
             setPassword(acc.Password)
-            let sId = await Login(acc.Username, acc.Password);
+            let sId = await Login(acc.Username, acc.Password)
             setShowLogin(false)
             setSessionId(sId)
             let p = await GetPodsList(sId)
             setPods(p)
         })
-    }, []);
+    }, [])
     const [pods, setPods] = useState<string[]>([])
     const updateName = (e: any) => setName(e.target.value)
     const updatePassword = (e: any) => setPassword(e.target.value)
@@ -88,25 +98,33 @@ function App() {
             await Unmount(e.target.value, sessionId)
         }
     }
-    const [isProxy, setProxy] = useState<boolean>(false);
-    const [bee, setBee] = useState('http://localhost:1633');
-    const [batch, setBatch] = useState('');
-    const [rpc, setRPC] = useState('http://localhost:9545');
-    const [network, setNetwork] = useState('play');
+    const [isProxy, setProxy] = useState<boolean>(true)
+    const [proxyValue, setProxyValue] = useState('yes')
+    const [bee, setBee] = useState('https://bee-1.dev.fairdatasociety.org')
+    const [batch, setBatch] = useState('')
+    const [rpc, setRPC] = useState('https://xdai.dev.fairdatasociety.org')
+    const [network, setNetwork] = useState('testnet')
     const updateProxy = (e: any) => {
         if (e.target.value=== "no") {
             setProxy(false)
         } else {
             setProxy(true)
         }
-    };
+    }
 
-    const updateBee = (e: any) => setBee(e.target.value);
-    const updateBatch = (e: any) => setBatch(e.target.value);
-    const updateRPC = (e: any) => setRPC(e.target.value);
-    const updateNetwork = (e: any) => setNetwork(e.target.value);
+    const updateBee = (e: any) => setBee(e.target.value)
+    const updateBatch = (e: any) => setBatch(e.target.value)
+    const updateRPC = (e: any) => setRPC(e.target.value)
+    const updateNetwork = (e: any) => setNetwork(e.target.value)
+
+    async function closeSettings() {
+        setShowConfig(false)
+    }
 
     async function initFairOs() {
+        if (remember) {
+            await Close()
+        }
         let cfg: api.FairOSConfig = {
             "isProxy": isProxy,
             "bee": bee,
@@ -120,7 +138,7 @@ function App() {
     }
 
     async function login() {
-        let sId = await Login(username, password);
+        let sId = await Login(username, password)
         setSessionId(sId)
         setShowLogin(false)
         let p = await GetPodsList(sId)
@@ -158,6 +176,7 @@ function App() {
                             aria-labelledby="demo-controlled-radio-buttons-group"
                             name="controlled-radio-buttons-group"
                             onChange={updateProxy}
+                            value={proxyValue}
                         >
                             <Grid container>
                                 <Grid item>
@@ -171,6 +190,7 @@ function App() {
                         <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
                             <TextField
                                 margin="normal"
+                                value={bee}
                                 required
                                 fullWidth
                                 id="bee"
@@ -188,6 +208,7 @@ function App() {
                         <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
                             <TextField
                                 margin="normal"
+                                value={batch}
                                 required
                                 fullWidth
                                 id="batch"
@@ -205,6 +226,7 @@ function App() {
                         <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
                             <TextField
                                 margin="normal"
+                                value={rpc}
                                 required
                                 fullWidth
                                 id="rpc"
@@ -226,8 +248,10 @@ function App() {
                                 label="Network"
                                 onChange={updateNetwork}
                                 displayEmpty={true}
+                                value={network}
                             >
                                 <MenuItem value={"testnet"}>Testnet</MenuItem>
+                                <MenuItem value={"play"}>FDP play</MenuItem>
                             </Select>
                             <Tooltip title="Specify Network type for ENS based authentication">
                                 <IconButton>
@@ -235,15 +259,23 @@ function App() {
                                 </IconButton>
                             </Tooltip>
                         </Box>
-
-                        <Button
-                            fullWidth
-                            variant="contained"
-                            sx={{ mt: 3, mb: 2 }}
-                            onClick={initFairOs}
-                        >
-                            Start
-                        </Button>
+                        <Stack mt={3} mb={3} spacing={2} direction="row">
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                onClick={closeSettings}
+                            >
+                                Close
+                            </Button>
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                sx={{ mt: 3, mb: 2 }}
+                                onClick={initFairOs}
+                            >
+                                Start
+                            </Button>
+                        </Stack>
                     </FormGroup>
                 </Box>
             </Modal>

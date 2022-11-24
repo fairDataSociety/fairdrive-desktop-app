@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/datafund/fdfs/pkg/api"
 	"github.com/datafund/fdfs/pkg/handler"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/wailsapp/wails/v2/pkg/application"
@@ -50,9 +51,13 @@ func main() {
 				println("read config failed ", err.Error())
 			}
 			c := cnf.GetConfig()
-
 			if c == nil {
-				return
+				c = &api.FairOSConfig{
+					IsProxy: true,
+					Bee:     "https://bee-1.dev.fairdatasociety.org",
+					RPC:     "https://xdai.dev.fairdatasociety.org",
+					Network: "testnet",
+				}
 			}
 			err = dfsHandler.Start(c)
 			if err != nil {
