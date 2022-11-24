@@ -71,6 +71,27 @@ function App() {
                     }
                     Start(c).catch(err => {
                         showError(err)
+                    }).then(res => {
+                        Get().then(async (acc) => {
+                            console.log(acc)
+                            if (acc.Username === "" || acc.Password === "") {
+                                return
+                            }
+                            try {
+                                setName(acc.Username)
+                                setPassword(acc.Password)
+                                let sId = await Login(acc.Username, acc.Password)
+                                console.log()
+                                setShowLogin(false)
+                                setSessionId(sId)
+                                let p = await GetPodsList(sId)
+                                setPods(p)
+                            }
+                            catch(e: any) {
+                                console.log(e)
+                                showError(e)
+                            }
+                        })
                     })
                 })
             }
@@ -81,26 +102,6 @@ function App() {
             if (!isSet) {
                 setRemember(true)
             }
-        })
-        Get().then(async (acc) => {
-            console.log(acc)
-            if (acc.Username === "" || acc.Password === "") {
-                return
-            }
-            try {
-                setName(acc.Username)
-                setPassword(acc.Password)
-                let sId = await Login(acc.Username, acc.Password)
-                setShowLogin(false)
-                setSessionId(sId)
-                let p = await GetPodsList(sId)
-                setPods(p)
-            }
-            catch(e: any) {
-                console.log(e)
-                showError(e)
-            }
-
         })
     }, [])
     const [pods, setPods] = useState<string[]>([])
@@ -133,6 +134,7 @@ function App() {
     const [rpc, setRPC] = useState('https://xdai.dev.fairdatasociety.org')
     const [network, setNetwork] = useState('testnet')
     const updateProxy = (e: any) => {
+        setProxyValue(e.target.value)
         if (e.target.value=== "no") {
             setProxy(false)
         } else {

@@ -16,14 +16,18 @@ import (
 	wRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-//go:embed all:frontend/dist
-var assets embed.FS
+var (
+	//go:embed all:frontend/dist
+	assets embed.FS
+)
 
 func main() {
+
 	logger := logging.New(os.Stdout, 5)
 	dfsHandler, err := handler.New(logger)
 	if err != nil {
 		println("Error:", err.Error())
+		return
 	}
 	cnf := &conf{}
 	acc := NewAccount()
@@ -48,6 +52,7 @@ func main() {
 			err := cnf.ReadConfig()
 			if err != nil {
 				println("read config failed ", err.Error())
+				return
 			}
 		},
 		OnShutdown: func(_ context.Context) {
@@ -57,11 +62,14 @@ func main() {
 	appMenu := menu.NewMenu()
 	fileMenu := appMenu.AddSubmenu("File")
 
-	fileMenu.AddText("Preferences", keys.CmdOrCtrl(","), func(_ *menu.CallbackData) {
+	prefShortcut := keys.CmdOrCtrl(",")
+	if runtime.GOOS == "windows" {
+		prefShortcut = keys.Combo(",", keys.CmdOrCtrlKey, keys.ShiftKey)
+	}
+	fileMenu.AddText("Preferences", prefShortcut, func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "preferences")
 	})
 	fileMenu.AddSeparator()
-
 	if runtime.GOOS == "darwin" {
 		appMenu.Append(menu.EditMenu()) // on macos platform, we should append EditMenu to enable Cmd+C,Cmd+V,Cmd+Z... shortcut
 	}
@@ -72,5 +80,6 @@ func main() {
 
 	if err := app.Run(); err != nil {
 		println("Error:", err.Error())
+		return
 	}
 }

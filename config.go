@@ -10,6 +10,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	settings = ".fda.yaml"
+)
+
 type conf struct {
 	fc *api.FairOSConfig
 }
@@ -26,7 +30,7 @@ func (c *conf) SetupConfig(beeEndpoint, beeBatch, network, rpc string, beeGatewa
 	if err != nil {
 		return err
 	}
-	cfgFile := filepath.Join(home, ".fdfs.yaml")
+	cfgFile := filepath.Join(home, settings)
 	return config.WriteConfigAs(cfgFile)
 }
 
@@ -37,7 +41,7 @@ func (c *conf) ReadConfig() error {
 		return err
 
 	}
-	cfgFile := filepath.Join(home, ".fdfs.yaml")
+	cfgFile := filepath.Join(home, settings)
 	if _, err := os.Stat(cfgFile); err != nil {
 		return fmt.Errorf("config not found")
 	} else {
