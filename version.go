@@ -1,14 +1,17 @@
 package main
 
 var (
-	version = "dev"
-	commit  string
-
-	// Version is used to print dfs version
-	Version = func() string {
-		if commit != "" {
-			return version + "-" + commit
-		}
-		return version
-	}()
+	version        = "dev"
+	commit         = "n/a"
+	buildTimestamp = "n/a"
 )
+
+type about struct{}
+
+func (*about) Version() string {
+	return version + "-" + commit
+}
+
+func (*about) BuildTime() string {
+	return buildTimestamp
+}

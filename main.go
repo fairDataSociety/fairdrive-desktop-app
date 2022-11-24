@@ -32,6 +32,7 @@ func main() {
 	}
 	cnf := &conf{}
 	acc := NewAccount()
+	abt := &about{}
 	var startContext context.Context
 	// Create application with options
 	app := application.NewWithOptions(&options.App{
@@ -47,6 +48,7 @@ func main() {
 			dfsHandler,
 			cnf,
 			acc,
+			abt,
 		},
 		OnStartup: func(ctx context.Context) {
 			startContext = ctx

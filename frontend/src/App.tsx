@@ -36,6 +36,7 @@ import {api} from "../wailsjs/go/models"
 import {EventsOn} from "../wailsjs/runtime"
 import {Info} from "@mui/icons-material"
 import CloseIcon from '@mui/icons-material/Close'
+import {BuildTime, Version} from "../wailsjs/go/main/about";
 
 const theme = createTheme()
 const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(
@@ -68,6 +69,8 @@ function App() {
     const handleAboutClose = () => {
         setShowAbout(false);
     };
+    const [version, setVersion] = useState('')
+    const [buildTime, setTime] = useState('')
 
     const [showConfig, setShowConfig] = useState<boolean>(false)
     const [showLogin, setShowLogin] = useState<boolean>(true)
@@ -100,6 +103,12 @@ function App() {
             }
         })
 
+        Version().then(res => {
+            setVersion(res)
+        })
+        BuildTime().then(res => {
+            setTime(res)
+        })
         IsSet().then((isSet) => {
             console.log("isSet", isSet)
             if (!isSet) {
@@ -383,16 +392,15 @@ function App() {
             </Modal>
 
             {/*about dialog*/}
-
             {(() => {
                 if (showAbout) {
                     return (
                         <AboutDialog
-                            aria-labelledby="customized-dialog-title"
+                            aria-labelledby="about-title"
                             open={showAbout}
                         >
-                            <DialogTitle sx={{ m: 0, p: 2 }} >
-                                About
+                            <DialogTitle sx={{ m: 0, p: 2, fontSize: "small" }}>
+                                About FDA
                                 <IconButton
                                     aria-label="close"
                                     onClick={handleAboutClose}
@@ -407,19 +415,27 @@ function App() {
                                 </IconButton>
                             </DialogTitle>
                             <DialogContent dividers>
-                                <Typography gutterBottom>
-                                    Cras mattis consectetur purus sit amet fermentum. Cras justo odio,
-                                    dapibus ac facilisis in, egestas eget quam. Morbi leo risus, porta ac
-                                    consectetur ac, vestibulum at eros.
+                                <Typography gutterBottom variant="h6" align="left">
+                                    Fairdrive Desktop App
                                 </Typography>
-                                <Typography gutterBottom>
-                                    Praesent commodo cursus magna, vel scelerisque nisl consectetur et.
-                                    Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor.
+                                <Typography gutterBottom align="left">
+                                    Version {version}
                                 </Typography>
-                                <Typography gutterBottom>
-                                    Aenean lacinia bibendum nulla sed consectetur. Praesent commodo cursus
-                                    magna, vel scelerisque nisl consectetur et. Donec sed odio dui. Donec
-                                    ullamcorper nulla non metus auctor fringilla.
+                                <Typography gutterBottom align="left">
+                                    Built on {buildTime}
+                                </Typography>
+                                <Typography gutterBottom align="left">
+                                    <Link href="#" variant="body2">
+                                        License
+                                    </Link>
+                                </Typography>
+                                <Typography gutterBottom align="left">
+                                    <Link href="#" variant="body2">
+                                        Powered by ORG
+                                    </Link>
+                                </Typography>
+                                <Typography gutterBottom align="left">
+                                    FFA Copyright FDS 2021
                                 </Typography>
                             </DialogContent>
                         </AboutDialog>
