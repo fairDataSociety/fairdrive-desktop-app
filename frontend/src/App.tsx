@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
-
+import DeleteIcon from '@mui/icons-material/Delete';
 import logo from './assets/images/logo-universal.png'
 import './App.css'
 import {Login, Mount, GetPodsList, Unmount, Start} from "../wailsjs/go/handler/Handler"
@@ -16,10 +16,11 @@ import {
     FormLabel,
     RadioGroup,
     Radio,
-    InputLabel, MenuItem, Select, Container, Box, Grid, Link, Modal
+    InputLabel, MenuItem, Select, Container, Box, Grid, Link, Modal, Tooltip, IconButton
 } from "@mui/material"
 import {api} from "../wailsjs/go/models"
 import {EventsOn} from "../wailsjs/runtime"
+import {Info} from "@mui/icons-material";
 
 const theme = createTheme()
 
@@ -167,46 +168,73 @@ function App() {
                                 </Grid>
                             </Grid>
                         </RadioGroup>
-                        <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            id="bee"
-                            label="Bee"
-                            onChange={updateBee}
-                            autoComplete="off"
-                        />
+                        <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                            <TextField
+                                margin="normal"
+                                required
+                                fullWidth
+                                id="bee"
+                                label="Bee"
+                                onChange={updateBee}
+                                autoComplete="off"
+                            />
+                            <Tooltip title="Bee API endpoint">
+                                <IconButton>
+                                    <Info />
+                                </IconButton>
+                            </Tooltip>
+                        </Box>
 
-                        <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            id="batch"
-                            label="BatchID"
-                            onChange={updateBatch}
-                            autoComplete="off"
-                        />
+                        <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                            <TextField
+                                margin="normal"
+                                required
+                                fullWidth
+                                id="batch"
+                                label="BatchID"
+                                onChange={updateBatch}
+                                autoComplete="off"
+                            />
+                            <Tooltip title="BatchID to use for uploads">
+                                <IconButton>
+                                    <Info />
+                                </IconButton>
+                            </Tooltip>
+                        </Box>
 
-                        <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            id="rpc"
-                            label="RPC"
-                            onChange={updateRPC}
-                            autoComplete="off"
-                        />
-                        <Select
-                            required
-                            fullWidth
-                            id="network"
-                            label="Network"
-                            onChange={updateNetwork}
-                            displayEmpty={true}
-                        >
-                            <MenuItem value={"testnet"}>Testnet</MenuItem>
-                            <MenuItem value={"play"}>FDP-Play</MenuItem>
-                        </Select>
+                        <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                            <TextField
+                                margin="normal"
+                                required
+                                fullWidth
+                                id="rpc"
+                                label="RPC"
+                                onChange={updateRPC}
+                                autoComplete="off"
+                            />
+                            <Tooltip title="RPC Endpoint for ENS based authentication">
+                                <IconButton>
+                                    <Info />
+                                </IconButton>
+                            </Tooltip>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                            <Select
+                                required
+                                fullWidth
+                                id="network"
+                                label="Network"
+                                onChange={updateNetwork}
+                                displayEmpty={true}
+                            >
+                                <MenuItem value={"testnet"}>Testnet</MenuItem>
+                            </Select>
+                            <Tooltip title="Specify Network type for ENS based authentication">
+                                <IconButton>
+                                    <Info />
+                                </IconButton>
+                            </Tooltip>
+                        </Box>
 
                         <Button
                             fullWidth
