@@ -49,6 +49,13 @@ func (h *Handler) Login(username, password string) (string, error) {
 	return h.api.Login(username, password)
 }
 
+func (h *Handler) Logout(sessionId string) error {
+	if h.api == nil {
+		return ErrFairOsNotInitialised
+	}
+	return h.api.LogoutUser(sessionId)
+}
+
 func (h *Handler) Mount(pod, sessionId, mountPoint string, createPod bool) error {
 	if h.api == nil {
 		return ErrFairOsNotInitialised

@@ -14,6 +14,10 @@ export function Login(arg1, arg2) {
   return window['go']['handler']['Handler']['Login'](arg1, arg2);
 }
 
+export function Logout(arg1) {
+  return window['go']['handler']['Handler']['Logout'](arg1);
+}
+
 export function Mount(arg1, arg2, arg3, arg4) {
   return window['go']['handler']['Handler']['Mount'](arg1, arg2, arg3, arg4);
 }

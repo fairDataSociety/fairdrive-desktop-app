@@ -8,6 +8,8 @@ export function GetPodsList(arg1:string):Promise<Array<string>>;
 
 export function Login(arg1:string,arg2:string):Promise<string>;
 
+export function Logout(arg1:string):Promise<Error>;
+
 export function Mount(arg1:string,arg2:string,arg3:string,arg4:boolean):Promise<Error>;
 
 export function Start(arg1:api.FairOSConfig):Promise<Error>;

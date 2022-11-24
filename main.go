@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"fmt"
 	"os"
 	"runtime"
 
@@ -66,6 +67,14 @@ func main() {
 	if runtime.GOOS == "windows" {
 		prefShortcut = keys.Combo(",", keys.CmdOrCtrlKey, keys.ShiftKey)
 	}
+	fileMenu.AddText("About", nil, func(_ *menu.CallbackData) {
+		// TODO trigger about event
+	})
+	fileMenu.AddText("Check for updates...", nil, func(_ *menu.CallbackData) {
+		// TODO check for update
+	})
+	fileMenu.AddSeparator()
+
 	fileMenu.AddText("Preferences", prefShortcut, func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "preferences")
 	})
@@ -73,8 +82,28 @@ func main() {
 	if runtime.GOOS == "darwin" {
 		appMenu.Append(menu.EditMenu()) // on macos platform, we should append EditMenu to enable Cmd+C,Cmd+V,Cmd+Z... shortcut
 	}
+	fileMenu.AddText("Logout", keys.Combo("W", keys.ShiftKey, keys.CmdOrCtrlKey), func(item *menu.CallbackData) {
+		fmt.Println("logout clicked")
+		// TODO trigger logout event
+		fmt.Printf("%+v\n", item.MenuItem)
+		item.MenuItem.Disabled = true
+		fmt.Printf("%+v\n", item.MenuItem)
+		item.MenuItem.Hidden = true
+		fmt.Printf("%+v\n", item.MenuItem)
+	})
 	fileMenu.AddText("Quit", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
 		app.Quit()
+	})
+	podMenu := appMenu.AddSubmenu("Pod")
+	podMenu.AddText("New", keys.CmdOrCtrl("n"), func(_ *menu.CallbackData) {
+		// TODO Create a new pod
+	})
+	helpMenu := appMenu.AddSubmenu("Help")
+	helpMenu.AddText("Report a problem", nil, func(_ *menu.CallbackData) {
+		// TODO Report a problem
+	})
+	helpMenu.AddText("Fairdrive Help", nil, func(_ *menu.CallbackData) {
+		// TODO redirect to FAQ
 	})
 	app.SetApplicationMenu(appMenu)
 
