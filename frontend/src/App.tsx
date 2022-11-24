@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react'
+import {forwardRef, SyntheticEvent, useEffect, useState} from 'react'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 import logo from './assets/images/logo-universal.png'
 import './App.css'
@@ -14,29 +14,35 @@ import {
     FormControlLabel,
     FormLabel,
     RadioGroup,
-    Radio,
-    InputLabel, MenuItem, Select, Container, Box, Grid, Link, Modal, Tooltip, IconButton, Stack
+    Radio, MenuItem, Select, Container, Box, Grid, Link, Modal, Tooltip, IconButton, Stack, Snackbar, AlertProps
 } from "@mui/material"
+import MuiAlert  from '@mui/material/Alert';
+
 import {api} from "../wailsjs/go/models"
 import {EventsOn} from "../wailsjs/runtime"
 import {Info} from "@mui/icons-material"
 
 const theme = createTheme()
-
-const style = {
-    position: 'absolute' as 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 400,
-    bgcolor: 'background.paper',
-    border: '2px solid #000',
-    boxShadow: 24,
-    p: 4,
-}
-
+const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(
+    props,
+    ref,
+) {
+    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 function App() {
+    const [open, setOpen] = useState(false);
 
+    const handleClick = () => {
+        setOpen(true);
+    };
+
+    const handleClose = (event?: SyntheticEvent | Event, reason?: string) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        setOpen(false);
+    };
     const [showConfig, setShowConfig] = useState<boolean>(false)
     const [showLogin, setShowLogin] = useState<boolean>(true)
 
@@ -44,6 +50,7 @@ function App() {
     const [password, setPassword] = useState('')
     const [sessionId, setSessionId] = useState('')
     const [remember, setRemember] = useState<boolean>(false)
+    const [message, setMessage] = useState('')
     useEffect(() => {
         EventsOn("preferences", ()=> {
             setShowConfig(true)
@@ -52,19 +59,23 @@ function App() {
             console.log("isSet", isSet)
             if (!isSet) {
                 setShowConfig(true)
+            } else {
+                GetConfig().then((c) => {
+                    if (c !== null) {
+                        c.isProxy ? setProxyValue("yes") : setProxyValue("no")
+                        setProxy(c.isProxy)
+                        setBee(c.bee)
+                        setBatch(c.batch)
+                        setNetwork(c.network)
+                        setRPC(c.rpc)
+                    }
+                    Start(c).catch(err => {
+                        showError(err)
+                    })
+                })
             }
         })
-        GetConfig().then((c) => {
-            console.log("c", c)
-            if (c !== null) {
-                c.isProxy ? setProxyValue("yes") : setProxyValue("no")
-                setProxy(c.isProxy)
-                setBee(c.bee)
-                setBatch(c.batch)
-                setNetwork(c.network)
-                setRPC(c.rpc)
-            }
-        })
+
         HasRemembered().then((isSet) => {
             console.log("HasRemembered", isSet)
             if (!isSet) {
@@ -76,13 +87,20 @@ function App() {
             if (acc.Username === "" || acc.Password === "") {
                 return
             }
-            setName(acc.Username)
-            setPassword(acc.Password)
-            let sId = await Login(acc.Username, acc.Password)
-            setShowLogin(false)
-            setSessionId(sId)
-            let p = await GetPodsList(sId)
-            setPods(p)
+            try {
+                setName(acc.Username)
+                setPassword(acc.Password)
+                let sId = await Login(acc.Username, acc.Password)
+                setShowLogin(false)
+                setSessionId(sId)
+                let p = await GetPodsList(sId)
+                setPods(p)
+            }
+            catch(e: any) {
+                console.log(e)
+                showError(e)
+            }
+
         })
     }, [])
     const [pods, setPods] = useState<string[]>([])
@@ -93,9 +111,19 @@ function App() {
     const mount = async  (e: any) => {
         if (e.target.checked) {
             // TODO need to check how mount point can be passed for Windows and linux
-            await Mount(e.target.value, sessionId, "/tmp/"+e.target.value, false)
+            try {
+                await Mount(e.target.value, sessionId, "/tmp/"+e.target.value, false)
+            }
+            catch(e: any) {
+                showError(e)
+            }
         } else {
-            await Unmount(e.target.value, sessionId)
+            try {
+                await Unmount(e.target.value, sessionId)
+            }
+            catch(e: any) {
+                showError(e)
+            }
         }
     }
     const [isProxy, setProxy] = useState<boolean>(true)
@@ -132,26 +160,49 @@ function App() {
             "rpc": rpc,
             "network": network,
         }
-        await SetupConfig(bee, batch, network, rpc, isProxy)
-        await Start(cfg)
-        setShowConfig(false)
+        try {
+            await SetupConfig(bee, batch, network, rpc, isProxy)
+            await Start(cfg)
+            setShowConfig(false)
+        } catch (e: any) {
+            showError(e)
+        }
     }
 
     async function login() {
-        let sId = await Login(username, password)
-        setSessionId(sId)
-        setShowLogin(false)
-        let p = await GetPodsList(sId)
-        setPods(p)
-        if (remember) {
-            await RememberPassword(username, password)
-        } else {
-            await ForgetPassword()
+        try {
+            let sId = await Login(username, password)
+            setSessionId(sId)
+            setShowLogin(false)
+            let p = await GetPodsList(sId)
+            setPods(p)
+            if (remember) {
+                await RememberPassword(username, password)
+            } else {
+                await ForgetPassword()
+            }
         }
+        catch(e: any) {
+            showError(e)
+        }
+    }
+
+    function showError(error: any) {
+        if (typeof error === "string") {
+            setMessage(error.toUpperCase())
+        } else if (error instanceof Error) {
+            setMessage(error.message) // works, `e` narrowed to Error
+        }
+        setOpen(true);
     }
 
     return (
         <div id="App">
+            <Snackbar open={open} onClose={handleClose}>
+                <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
+                    {message}
+                </Alert>
+            </Snackbar>
             <img src={logo} id="logo" alt="logo"/>
             <Modal
                 open={showConfig}
@@ -329,6 +380,7 @@ function App() {
                                         </Button>
                                         <Grid container>
                                             <Grid item>
+                                                {/*TODO add create account website and fairdrive */}
                                                 <Link href="#" variant="body2">
                                                     {"Don't have an account? Sign Up"}
                                                 </Link>
