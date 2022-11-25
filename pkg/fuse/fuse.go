@@ -2,18 +2,17 @@ package fuse
 
 import (
 	"bytes"
-	"context"
 	"io"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+
 	"github.com/datafund/fdfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	"github.com/sirupsen/logrus"
 	"github.com/winfsp/cgofuse/fuse"
 )
 
@@ -34,7 +33,8 @@ type node_t struct {
 	id             string
 	stat           fuse.Stat_t
 	xatr           map[string][]byte
-	chldrn         []string
+	files          []string
+	dirs           []string
 	opencnt        int
 	writesInFlight []*ops
 	readsInFlight  io.ReadSeekCloser
@@ -118,7 +118,8 @@ func newNode(id string, dev uint64, ino uint64, mode uint32, uid uint32, gid uin
 		opencnt: 0,
 	}
 	if fuse.S_IFDIR == self.stat.Mode&fuse.S_IFMT {
-		self.chldrn = []string{}
+		self.dirs = []string{}
+		self.files = []string{}
 	}
 	return &self
 }
@@ -132,21 +133,19 @@ type Ffdfs struct {
 	lock              sync.Mutex
 	log               logging.Logger
 	api               *api.DfsAPI
+	sessionId         string
 	ino               uint64
 	openmap           map[uint64]*node_t
 	ongoingWriteSizes map[string]int64
+	pod               *pod.Info
 }
 
-func New(ctx context.Context, username, password, pod string, logLevel logrus.Level, fc *api.FairOSConfig, createPod bool) (*Ffdfs, error) {
-	logger := logging.New(os.Stdout, logLevel)
-	apiLogger := logging.New(os.Stdout, logLevel)
-	dfsApi, err := api.New(ctx, apiLogger, username, password, pod, fc, createPod)
-	if err != nil {
-		return nil, err
-	}
+func New(sessionId string, pod *pod.Info, api *api.DfsAPI, logger logging.Logger) (*Ffdfs, error) {
 	f := &Ffdfs{
-		log: logger,
-		api: dfsApi,
+		log:       logger,
+		api:       api,
+		pod:       pod,
+		sessionId: sessionId,
 	}
 	f.openmap = map[uint64]*node_t{}
 	f.ongoingWriteSizes = map[string]int64{}
@@ -203,6 +202,12 @@ func (f *Ffdfs) Rename(oldpath string, newpath string) (errc int) {
 		return 0
 	}
 
+	// This is a very dirty way to prevent "chunk already exist" on timestamped feed updated
+	// The above happens when we try to update matadata in the same timestamp
+	// TODO fix this by saving the last rename request timestamp and path in the fdfs instance
+	// and wait only if both matches the current request
+	<-time.After(time.Second)
+
 	oldnode := f.lookupNode(oldpath)
 	if nil == oldnode {
 		return -fuse.ENOENT
@@ -228,25 +233,38 @@ func (f *Ffdfs) Rename(oldpath string, newpath string) (errc int) {
 	if nil == newprnt {
 		return -fuse.ENOENT
 	}
-	if nil == newnode {
-		newprnt.chldrn = append(newprnt.chldrn, filepath.Base(newpath))
+	if nil != newnode {
+		if oldnode.isDir() {
+			newprnt.dirs = append(newprnt.dirs, filepath.Base(newpath))
+		} else {
+			newprnt.files = append(newprnt.files, filepath.Base(newpath))
+		}
 	}
-	for idx, chld := range oldprnt.chldrn {
-		if chld == filepath.Base(oldpath) {
-			oldprnt.chldrn = append(oldprnt.chldrn[:idx], oldprnt.chldrn[idx+1:]...)
-			break
+	if oldnode.isDir() {
+		for idx, chld := range oldprnt.dirs {
+			if chld == filepath.Base(oldpath) {
+				oldprnt.dirs = append(oldprnt.dirs[:idx], oldprnt.dirs[idx+1:]...)
+				break
+			}
+		}
+	} else {
+		for idx, chld := range oldprnt.files {
+			if chld == filepath.Base(oldpath) {
+				oldprnt.files = append(oldprnt.files[:idx], oldprnt.files[idx+1:]...)
+				break
+			}
 		}
 	}
 
 	oldnode.id = newpath
 	if oldnode.isDir() {
-		err := f.api.API.RenameDir(f.api.Pod.GetPodName(), oldpath, newpath, f.api.DfsSessionId)
+		err := f.api.API.RenameDir(f.pod.GetPodName(), oldpath, newpath, f.sessionId)
 		if err != nil {
 			f.log.Errorf("failed renaming dir %v", err)
 			return -fuse.EIO
 		}
 	} else {
-		err := f.api.API.RenameFile(f.api.Pod.GetPodName(), oldpath, newpath, f.api.DfsSessionId)
+		err := f.api.API.RenameFile(f.pod.GetPodName(), oldpath, newpath, f.sessionId)
 		if err != nil {
 			f.log.Errorf("failed renaming file %v", err)
 			return -fuse.EIO
@@ -345,7 +363,7 @@ func (f *Ffdfs) Truncate(path string, size int64, fh uint64) int {
 	if nil == node {
 		return -fuse.ENOENT
 	}
-	_, err := f.api.WriteAt(node.id, bytes.NewReader([]byte{}), uint64(0), true)
+	_, err := f.api.WriteAtFile(f.pod.GetPodName(), node.id, f.sessionId, bytes.NewReader([]byte{}), uint64(0), true)
 	if err != nil {
 		f.log.Errorf("truncate :failed write %v", err)
 		return -fuse.EIO
@@ -369,7 +387,7 @@ func (f *Ffdfs) Read(path string, buff []byte, ofst int64, fh uint64) (n int) {
 	}
 
 	if node.readsInFlight == nil {
-		r, _, err := f.api.ReadSeekCloser(f.api.Pod.GetPodName(), path, f.api.DfsSessionId)
+		r, _, err := f.api.ReadSeekCloser(f.pod.GetPodName(), path, f.sessionId)
 		if err != nil {
 			f.log.Errorf("read: download failed %s: %s", path, err.Error())
 			return -fuse.EIO
@@ -457,8 +475,14 @@ func (f *Ffdfs) Readdir(path string,
 
 	fill(".", &node.stat, 0)
 	fill("..", nil, 0)
-	for _, chld := range node.chldrn {
-		nd := f.lookupNode(filepath.Join(path, chld))
+	for _, chld := range node.dirs {
+		nd := f.lookup(filepath.Join(path, chld), true)
+		if nd != nil && !fill(chld, &nd.stat, 0) {
+			break
+		}
+	}
+	for _, chld := range node.files {
+		nd := f.lookup(filepath.Join(path, chld), false)
 		if nd != nil && !fill(chld, &nd.stat, 0) {
 			break
 		}
@@ -628,24 +652,25 @@ func (f *Ffdfs) makeNode(path string, mode uint32, dev uint64, data []byte) int 
 	prntPath := filepath.Dir(path)
 	flnm := filepath.Base(path)
 	if mode&fuse.S_IFDIR > 0 {
-		err := f.api.API.Mkdir(f.api.Pod.GetPodName(), path, f.api.DfsSessionId)
+		err := f.api.API.Mkdir(f.pod.GetPodName(), path, f.sessionId)
 		if err != nil {
 			f.log.Errorf("failed creating dir at %s: %v", path, err)
 			return -fuse.EIO
 		}
+		prnt.dirs = append(prnt.dirs, filepath.Base(path))
 	} else {
-		err := f.api.API.UploadFile(f.api.Pod.GetPodName(), flnm, f.api.DfsSessionId, int64(len(data)), bytes.NewReader(data), prntPath, "", uint32(fdsBlockSize))
+		err := f.api.API.UploadFile(f.pod.GetPodName(), flnm, f.sessionId, int64(len(data)), bytes.NewReader(data), prntPath, "", uint32(fdsBlockSize), false)
 		if err != nil {
 			return -fuse.EIO
 		}
 		node.stat.Size = int64(len(data))
+		prnt.files = append(prnt.files, filepath.Base(path))
 	}
 
 	if err := node.Close(); err != nil {
 		return -fuse.EIO
 	}
 
-	prnt.chldrn = append(prnt.chldrn, filepath.Base(path))
 	prnt.stat.Ctim = node.stat.Ctim
 	prnt.stat.Mtim = node.stat.Ctim
 	return 0
@@ -678,25 +703,36 @@ func (f *Ffdfs) removeNode(path string, dir bool) int {
 	//	return -fuse.ENOTEMPTY
 	//}
 	node.stat.Nlink--
-	for idx, chld := range prnt.chldrn {
-		if chld == filepath.Base(path) {
-			prnt.chldrn = append(prnt.chldrn[:idx], prnt.chldrn[idx+1:]...)
-			break
+	if dir {
+		for idx, chld := range prnt.dirs {
+			if chld == filepath.Base(path) {
+				prnt.dirs = append(prnt.dirs[:idx], prnt.dirs[idx+1:]...)
+				break
+			}
+		}
+	} else {
+		for idx, chld := range prnt.files {
+			if chld == filepath.Base(path) {
+				prnt.files = append(prnt.files[:idx], prnt.files[idx+1:]...)
+				break
+			}
 		}
 	}
+
 	tmsp := fuse.Now()
 	node.stat.Ctim = tmsp
 	prnt.stat.Ctim = tmsp
 	prnt.stat.Mtim = tmsp
 
 	if dir {
-		err := f.api.API.RmDir(f.api.Pod.GetPodName(), path, f.api.DfsSessionId)
+		err := f.api.API.RmDir(f.pod.GetPodName(), path, f.sessionId)
 		if err != nil {
 			f.log.Errorf("failed removing dir at %s: %v", path, err)
 			return -fuse.EIO
 		}
+		return 0
 	}
-	err := f.api.API.DeleteFile(f.api.Pod.GetPodName(), path, f.api.DfsSessionId)
+	err := f.api.API.DeleteFile(f.pod.GetPodName(), path, f.sessionId)
 	if err != nil {
 		f.log.Errorf("failed removing file at %s: %v", path, err)
 		return -fuse.EIO
@@ -730,7 +766,7 @@ func (f *Ffdfs) closeNode(fh uint64) int {
 	if 0 == node.opencnt {
 		for _, op := range node.writesInFlight {
 			f.log.Debugf("write: file %s from %d to %d", node.id, uint64(op.start), len(op.buf))
-			_, err := f.api.WriteAt(node.id, bytes.NewReader(op.buf), uint64(op.start), false)
+			_, err := f.api.WriteAtFile(f.pod.GetPodName(), node.id, f.sessionId, bytes.NewReader(op.buf), uint64(op.start), false)
 			if err != nil {
 				f.log.Errorf("failed write %v", err)
 				return -fuse.EIO
@@ -761,21 +797,101 @@ func (f *Ffdfs) synchronize() func() {
 // lookupNode will get metadata from fairos
 func (f *Ffdfs) lookupNode(path string) (node *node_t) {
 	uid, gid, _ := fuse.Getcontext()
-	fStat, err := f.api.FileStat(f.api.Pod.GetPodName(), filepath.ToSlash(path), f.api.DfsSessionId)
+	fStat, err := f.api.FileStat(f.pod.GetPodName(), filepath.ToSlash(path), f.sessionId)
 	if err != nil {
-		dirInode, err := f.api.Inode(path)
+		dirInode, err := f.api.DirectoryInode(f.pod.GetPodName(), filepath.ToSlash(path), f.sessionId)
 		if err != nil {
 			f.log.Warningf("lookup failed for %s: %s", path, err.Error())
 			return
 		}
-		fileOrDirNames := []string{}
+		files := []string{}
+		dirs := []string{}
 		for _, fileOrDirName := range dirInode.FileOrDirNames {
 			if strings.HasPrefix(fileOrDirName, "_D_") {
 				dirName := strings.TrimPrefix(fileOrDirName, "_D_")
-				fileOrDirNames = append(fileOrDirNames, dirName)
+				dirs = append(dirs, dirName)
 			} else if strings.HasPrefix(fileOrDirName, "_F_") {
 				fileName := strings.TrimPrefix(fileOrDirName, "_F_")
-				fileOrDirNames = append(fileOrDirNames, fileName)
+				files = append(files, fileName)
+			}
+		}
+		f.ino++
+		f.ino++
+		node = &node_t{
+			id: path,
+			stat: fuse.Stat_t{
+				Ino:      f.ino,
+				Mode:     fuse.S_IFDIR | 0777,
+				Nlink:    1,
+				Atim:     fuse.NewTimespec(time.Unix(dirInode.Meta.AccessTime, 0)),
+				Mtim:     fuse.NewTimespec(time.Unix(dirInode.Meta.ModificationTime, 0)),
+				Birthtim: fuse.NewTimespec(time.Unix(dirInode.Meta.CreationTime, 0)),
+				Flags:    0,
+				Uid:      uid,
+				Gid:      gid,
+			},
+			xatr:    nil,
+			files:   files,
+			dirs:    dirs,
+			opencnt: 0,
+		}
+		return
+	}
+	accTime, err := strconv.ParseInt(fStat.AccessTime, 10, 64)
+	if err != nil {
+		f.log.Warningf("lookup failed for %s: %s", path, err.Error())
+		return
+	}
+	modTime, err := strconv.ParseInt(fStat.ModificationTime, 10, 64)
+	if err != nil {
+		f.log.Warningf("lookup failed for %s: %s", path, err.Error())
+		return
+	}
+	creationTime, err := strconv.ParseInt(fStat.ModificationTime, 10, 64)
+	if err != nil {
+		f.log.Warningf("lookup failed for %s: %s", path, err.Error())
+		return
+	}
+	f.ino++
+
+	node = &node_t{
+		id: path,
+		stat: fuse.Stat_t{
+			Ino:      f.ino,
+			Mode:     fuse.S_IFREG | 0666,
+			Nlink:    1,
+			Atim:     fuse.NewTimespec(time.Unix(accTime, 0)),
+			Mtim:     fuse.NewTimespec(time.Unix(modTime, 0)),
+			Birthtim: fuse.NewTimespec(time.Unix(creationTime, 0)),
+			Flags:    0,
+			Uid:      uid,
+			Gid:      gid,
+		},
+		xatr:    nil,
+		opencnt: 0,
+	}
+	node.stat.Size, _ = strconv.ParseInt(fStat.FileSize, 10, 64)
+	return
+}
+
+// lookup will get metadata from fairos
+func (f *Ffdfs) lookup(path string, isDir bool) (node *node_t) {
+	uid, gid, _ := fuse.Getcontext()
+	if isDir {
+		dirInode, err := f.api.DirectoryInode(f.pod.GetPodName(), filepath.ToSlash(path), f.sessionId)
+		if err != nil {
+			f.log.Warningf("lookup failed for %s: %s", path, err.Error())
+			return
+		}
+		files := []string{}
+		dirs := []string{}
+		for _, fileOrDirName := range dirInode.FileOrDirNames {
+			if strings.HasPrefix(fileOrDirName, "_D_") {
+				dirName := strings.TrimPrefix(fileOrDirName, "_D_")
+				dirs = append(dirs, dirName)
+			} else if strings.HasPrefix(fileOrDirName, "_F_") {
+				fileName := strings.TrimPrefix(fileOrDirName, "_F_")
+				files = append(files, fileName)
 			}
 		}
 		f.ino++
@@ -793,9 +909,15 @@ func (f *Ffdfs) lookupNode(path string) (node *node_t) {
 				Gid:      gid,
 			},
 			xatr:    nil,
-			chldrn:  fileOrDirNames,
+			files:   files,
+			dirs:    dirs,
 			opencnt: 0,
 		}
+		return
+	}
+	fStat, err := f.api.FileStat(f.pod.GetPodName(), filepath.ToSlash(path), f.sessionId)
+	if err != nil {
+		f.log.Warningf("lookup failed for %s: %s", path, err.Error())
 		return
 	}
 	accTime, err := strconv.ParseInt(fStat.AccessTime, 10, 64)

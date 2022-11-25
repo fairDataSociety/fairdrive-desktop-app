@@ -2,6 +2,7 @@ package fuse
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"io"
@@ -35,7 +36,7 @@ import (
 
 type dirMap map[string]int64
 
-func setupFairosWithFs(t *testing.T) *api.DfsAPI {
+func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(os.Stdout, 5)
 	ens := mock2.NewMockNamespaceManager()
@@ -50,7 +51,7 @@ func setupFairosWithFs(t *testing.T) *api.DfsAPI {
 	podName1 := "test1"
 	podPasswordBytes, _ := utils.GetRandBytes(pod.PodPasswordLength)
 	podPassword := hex.EncodeToString(podPasswordBytes)
-	pi, err := pod1.CreatePod(podName1, password, "", podPassword)
+	pi, err := pod1.CreatePod(podName1, "", podPassword)
 	if err != nil {
 		t.Fatalf("error creating pod %s : %s", podName1, err.Error())
 	}
@@ -79,44 +80,15 @@ func setupFairosWithFs(t *testing.T) *api.DfsAPI {
 	require.NoError(t, err)
 
 	mockDfs := dfs.NewMockDfsAPI(mockClient, userObject, logger, "/")
-	dfsApi, err := api.NewMockApi(logger, username, password, podName1, mockDfs, false)
+	dfsApi, err := api.NewMockApi(logger, mockDfs)
+	require.NoError(t, err)
+	pi2, err := dfsApi.GetPodInfo(context.Background(), podName1, ui.GetSessionId(), false)
 	require.NoError(t, err)
 
-	return dfsApi
+	return dfsApi, pi2, ui.GetSessionId()
 }
 
-func setupFairos(t *testing.T) *api.DfsAPI {
-	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(os.Stdout, 5)
-	ens := mock2.NewMockNamespaceManager()
-	tm := taskmanager.New(1, 10, time.Second*15, logger)
-	userObject := user.NewUsers("", mockClient, ens, logger)
-	password := "password1"
-	username := "fdfs"
-	_, _, _, _, ui, err := userObject.CreateNewUserV2(username, password, "", "", tm)
-	require.NoError(t, err)
-
-	pod1 := ui.GetPod()
-	podName1 := "test1"
-	podPasswordBytes, _ := utils.GetRandBytes(pod.PodPasswordLength)
-	podPassword := hex.EncodeToString(podPasswordBytes)
-	pi, err := pod1.CreatePod(podName1, password, "", podPassword)
-	if err != nil {
-		t.Fatalf("error creating pod %s : %s", podName1, err.Error())
-	}
-
-	dirObject := pi.GetDirectory()
-	err = dirObject.MkRootDir(podName1, podPassword, pi.GetPodAddress(), pi.GetFeed())
-	require.NoError(t, err)
-
-	mockDfs := dfs.NewMockDfsAPI(mockClient, userObject, logger, "/")
-	dfsApi, err := api.NewMockApi(logger, username, password, podName1, mockDfs, false)
-	require.NoError(t, err)
-
-	return dfsApi
-}
-
-func newTestFs(t *testing.T, dfsApi *api.DfsAPI) (*Ffdfs, string, func()) {
+func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string) (*Ffdfs, string, func()) {
 	logger := logging.New(os.Stdout, logrus.ErrorLevel)
 
 	var (
@@ -129,11 +101,8 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI) (*Ffdfs, string, func()) {
 		mntDir, err = os.MkdirTemp("", "tmpfuse")
 		require.NoError(t, err)
 	}
-
-	f := &Ffdfs{
-		log: logger,
-		api: dfsApi,
-	}
+	f, err := New(sessionId, pi, dfsApi, logger)
+	require.NoError(t, err)
 	f.openmap = map[uint64]*node_t{}
 	f.ongoingWriteSizes = map[string]int64{}
 	srv := fuse.NewFileSystemHost(f)
@@ -161,55 +130,52 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI) (*Ffdfs, string, func()) {
 	}
 }
 
-func TestList(t *testing.T) {
-	dfsApi := setupFairosWithFs(t)
-	_, mntDir, closer := newTestFs(t, dfsApi)
-	defer closer()
-
-	<-time.After(time.Second)
-	files, err := os.ReadDir(mntDir)
-	t.Log(files, err)
-	require.NoError(t, err)
-	if len(files) != 1 {
-		t.Fatal("list failed on root")
-	}
-	if files[0].Name() != "parentDir" && !files[0].IsDir() {
-		t.Fatal("parentDir not fount")
-	}
-
-	entries := "parentDir/|parentDir/subDir1/|parentDir/file1:100|parentDir/subDir1/file1:100"
-	checkDir(t, mntDir, entries)
-}
-
 func TestWrite(t *testing.T) {
-	dfsApi := setupFairosWithFs(t)
-	_, mntDir, closer := newTestFs(t, dfsApi)
+	dfsApi, pi, sessionId := setupFairosWithFs(t)
+	_, mntDir, closer := newTestFs(t, dfsApi, pi, sessionId)
 	defer closer()
 
-	fd, err := os.Create(filepath.Join(mntDir, "file1"))
-	require.NoError(t, err)
+	t.Run("list", func(t *testing.T) {
+		files, err := os.ReadDir(mntDir)
+		require.NoError(t, err)
 
-	defer os.Remove(fd.Name())
+		if len(files) != 1 {
+			t.Fatal("list failed on root")
+		}
+		if files[0].Name() != "parentDir" && !files[0].IsDir() {
+			t.Fatal("parentDir not fount")
+		}
 
-	if _, err = fd.Write([]byte("check check check")); err != nil {
-		t.Fatal(err)
-	}
+		entries := "parentDir/|parentDir/subDir1/|parentDir/file1:100|parentDir/subDir1/file1:100"
+		checkDir(t, mntDir, entries)
+	})
 
-	fd.Close()
-	<-time.After(time.Second)
-	err = os.WriteFile(filepath.Join(mntDir, "file1"), []byte("asdasd"), 0666)
-	require.NoError(t, err)
+	t.Run("write", func(t *testing.T) {
+		fd, err := os.Create(filepath.Join(mntDir, "file1"))
+		require.NoError(t, err)
 
-	fd2, err := os.Open(filepath.Join(mntDir, "file1"))
-	require.NoError(t, err)
+		defer os.Remove(fd.Name())
 
-	data, err := io.ReadAll(fd2)
-	require.NoError(t, err)
+		if _, err = fd.Write([]byte("check check check")); err != nil {
+			t.Fatal(err)
+		}
 
-	fd2.Close()
-	if string(data) != "asdasd" {
-		t.Fatal("truncate write failed")
-	}
+		fd.Close()
+		<-time.After(time.Second)
+		err = os.WriteFile(filepath.Join(mntDir, "file1"), []byte("asdasd"), 0666)
+		require.NoError(t, err)
+
+		fd2, err := os.Open(filepath.Join(mntDir, "file1"))
+		require.NoError(t, err)
+
+		data, err := io.ReadAll(fd2)
+		require.NoError(t, err)
+
+		fd2.Close()
+		if string(data) != "asdasd" {
+			t.Fatal("truncate write failed")
+		}
+	})
 }
 
 func TestMultiDirWithFiles(t *testing.T) {
@@ -273,8 +239,8 @@ func TestMultiDirWithFiles(t *testing.T) {
 		},
 	}
 
-	dfsApi := setupFairos(t)
-	_, mntDir, closer := newTestFs(t, dfsApi)
+	dfsApi, pi, sessionId := setupFairosWithFs(t)
+	_, mntDir, closer := newTestFs(t, dfsApi, pi, sessionId)
 	defer closer()
 
 	for idx, v := range entries {
@@ -373,8 +339,8 @@ func TestMultiDirWithFiles(t *testing.T) {
 }
 
 func TestRCloneTests(t *testing.T) {
-	dfsApi := setupFairos(t)
-	_, mntDir, closer := newTestFs(t, dfsApi)
+	dfsApi, pi, sessionId := setupFairosWithFs(t)
+	_, mntDir, closer := newTestFs(t, dfsApi, pi, sessionId)
 	defer closer()
 
 	t.Run("touch and delete", func(t *testing.T) {
@@ -430,7 +396,7 @@ func TestRCloneTests(t *testing.T) {
 		err = f.Close()
 		require.NoError(t, err)
 
-		err = os.Rename(path, path+"bla")
+		err = os.Rename(path, path+"ble")
 		require.NoError(t, err)
 
 		localDm := make(dirMap)
@@ -439,7 +405,7 @@ func TestRCloneTests(t *testing.T) {
 		if len(localDm) != 1 {
 			t.Fatal("rename failed")
 		}
-		size, ok := localDm[path+"bla"]
+		size, ok := localDm[path+"ble"]
 		if !ok {
 			t.Fatal("rename failed")
 		}
@@ -447,7 +413,7 @@ func TestRCloneTests(t *testing.T) {
 			t.Fatal("content mismatch")
 		}
 
-		err = os.Remove(path + "bla")
+		err = os.Remove(path + "ble")
 		require.NoError(t, err)
 
 		// Wait for file to disappear from listing
@@ -952,13 +918,13 @@ func TestRCloneTests(t *testing.T) {
 		err = fh.Close()
 		require.NoError(t, err)
 
-		fh, err = os.OpenFile(path, os.O_WRONLY|os.O_APPEND, 0666)
+		fh1, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND, 0666)
 		require.NoError(t, err)
 
-		_, err = fh.Write(appendData)
+		_, err = fh1.Write(appendData)
 		require.NoError(t, err)
 
-		err = fh.Close()
+		err = fh1.Close()
 		require.NoError(t, err)
 
 		info, err := os.Stat(path)
@@ -988,7 +954,6 @@ func checkDir(t *testing.T, filePath, entries string) {
 		if !ok {
 			t.Fatal("checkDir failed: entry not found", i)
 		}
-		t.Log(i, v, size)
 
 		if v != size {
 			t.Fatal("checkDir failed: size mismatch", i)

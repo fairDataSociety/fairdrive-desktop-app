@@ -9,8 +9,8 @@ on:
       - '**'
 
 jobs:
-  build:
-    name: Build
+  test:
+    name: Test & Lint
     runs-on: ${{ matrix.os }}
     env:
       GOARCH: ${{ matrix.arch }}
@@ -41,9 +41,9 @@ jobs:
         uses: actions/setup-go@v2
         with:
           stable: true
-          go-version: 1.17.*
+          go-version: 1.18.*
 
-      - name: Install winfsp and winfsp-tests (Windows)
+      - name: Install winfsp (Windows)
         if: runner.os == 'Windows'
         run: |
           $releases = Invoke-WebRequest https://api.github.com/repos/winfsp/winfsp/releases | `
@@ -52,52 +52,23 @@ jobs:
            Where-Object { $_ -match "winfsp-.*\.msi" }
           Invoke-WebRequest -Uri $asseturi -Out winfsp.msi
           Start-Process -NoNewWindow -Wait msiexec "/i winfsp.msi /qn INSTALLLEVEL=1000"
-          $asseturi = $releases[0].assets.browser_download_url | `
-           Where-Object { $_ -match "winfsp-tests-.*\.zip" }
-          Invoke-WebRequest -Uri $asseturi -Out winfsp-tests.zip
-          Expand-Archive -Path winfsp-tests.zip
-          Copy-Item "C:\Program Files (x86)\WinFsp\bin\winfsp-x64.dll" winfsp-tests
+        shell: powershell
 
-      - name: Install FUSE and secfs.test (Linux)
+      - name: Install FUSE (Linux)
         if: runner.os == 'Linux'
         run: |
+          sudo apt-get update
           sudo apt-get -qq install libfuse-dev
           sudo apt-get -qq install libacl1-dev
-          git clone -q https://github.com/billziss-gh/secfs.test.git secfs.test
-          git -C secfs.test checkout -q edf5eb4a108bfb41073f765aef0cdd32bb3ee1ed
-          mkdir -p secfs.test/tools/bin
-          touch secfs.test/tools/bin/bonnie++
-          touch secfs.test/tools/bin/iozone
-          make -C secfs.test
-          # configure fstest for cgofuse
-          sed -e 's/^fs=.*$/fs="cgofuse"/' -i""  secfs.test/fstest/fstest/tests/conf
-          # remove irrelevant tests
-          rm -rf secfs.test/fstest/fstest/tests/xacl
-          rm -rf secfs.test/fstest/fstest/tests/zzz_ResourceFork
 
-      - name: Install FUSE and secfs.test (macOS)
+      - name: Install FUSE (macOS)
         if: runner.os == 'macOS'
         run: |
           # requires macos-10.15; does not work on macos-latest
           # see https://github.com/actions/virtual-environments/issues/4731
           brew install macfuse
-          git clone -q https://github.com/billziss-gh/secfs.test.git secfs.test
-          git -C secfs.test checkout -q edf5eb4a108bfb41073f765aef0cdd32bb3ee1ed
-          mkdir -p secfs.test/tools/bin
-          touch secfs.test/tools/bin/bonnie++
-          touch secfs.test/tools/bin/iozone
-          make -C secfs.test
-          # configure fstest for cgofuse
-          sed -e 's/^fs=.*$/fs="cgofuse"/' -i ""  secfs.test/fstest/fstest/tests/conf
-          # monkey-patch/disable some tests for macOS
-          rm secfs.test/fstest/fstest/tests/rmdir/12.t
-          sed -e 's/lchmod)/lchmod) return 1/' -i "" secfs.test/fstest/fstest/tests/misc.sh
-          # remove irrelevant tests
-          rm -rf secfs.test/fstest/fstest/tests/xacl
-          rm -rf secfs.test/fstest/fstest/tests/zzz_ResourceFork
+
       - name: Set git to use LF
-        # make sure that line endings are not converted on windows
-        # as gofmt linter will report that they need to be changed
         run: git config --global core.autocrlf false
       - name: Cache Go modules
         uses: actions/cache@v1
@@ -108,23 +79,17 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
+      # to avoid no matching files found for go:embed all:frontend/dist in main.go
+      - run: |
+          mkdir frontend/dist
+          touch frontend/dist/index.html
       - name: Lint
         if: matrix.os == 'ubuntu-latest'
-        run: make lint
+        run:
+          make lint
       - name: Test
         run: make test
       - name: Race
         if: matrix.os != 'windows-latest'
         run: make test-race
-      - name: Build
-        run: make binary
-      - uses: actions/upload-artifact@v3
-        if: matrix.os != 'windows-latest'
-        with:
-          name: fdfs-${{ matrix.os }}-${{ matrix.arch }}
-          path: dist/fdfs
-      - uses: actions/upload-artifact@v3
-        if: matrix.os == 'windows-latest'
-        with:
-          name: fdfs-${{ matrix.os }}-${{ matrix.arch }}.exe
-          path: dist/fdfs
+
