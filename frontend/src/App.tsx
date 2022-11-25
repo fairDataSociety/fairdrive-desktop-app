@@ -1,8 +1,8 @@
-import {useEffect, useState} from 'react'
+import {forwardRef, SyntheticEvent, useEffect, useState} from 'react'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 import logo from './assets/images/logo-universal.png'
 import './App.css'
-import {Login, Mount, GetPodsList, Unmount, Start, Close} from "../wailsjs/go/handler/Handler"
+import {Login, Mount, GetPodsList, Unmount, Start, Close, Logout, CreatePod} from "../wailsjs/go/handler/Handler"
 import {SetupConfig, IsSet, GetConfig} from "../wailsjs/go/main/conf"
 import {RememberPassword, HasRemembered, ForgetPassword, Get} from "../wailsjs/go/main/Account"
 
@@ -15,74 +15,168 @@ import {
     FormLabel,
     RadioGroup,
     Radio,
-    InputLabel, MenuItem, Select, Container, Box, Grid, Link, Modal, Tooltip, IconButton, Stack
+    MenuItem,
+    Select,
+    Container,
+    Box,
+    Grid,
+    Link,
+    Modal,
+    Tooltip,
+    IconButton,
+    Stack,
+    Snackbar,
+    AlertProps,
+    Dialog,
+    DialogTitle, DialogContent, Typography, styled, DialogContentText, DialogActions
 } from "@mui/material"
+import MuiAlert  from '@mui/material/Alert'
+
 import {api} from "../wailsjs/go/models"
-import {EventsOn} from "../wailsjs/runtime"
+import {EventsEmit, EventsOn} from "../wailsjs/runtime"
 import {Info} from "@mui/icons-material"
+import CloseIcon from '@mui/icons-material/Close'
+import {BuildTime, Version} from "../wailsjs/go/main/about";
 
 const theme = createTheme()
+const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(
+    props,
+    ref,
+) {
+    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
-const style = {
-    position: 'absolute' as 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 400,
-    bgcolor: 'background.paper',
-    border: '2px solid #000',
-    boxShadow: 24,
-    p: 4,
-}
+const AboutDialog = styled(Dialog)(({ theme }) => ({
+    '& .MuiDialogContent-root': {
+        padding: theme.spacing(2),
+    },
+    '& .MuiDialogActions-root': {
+        padding: theme.spacing(1),
+    },
+}));
 
 function App() {
+    const [open, setOpen] = useState(false);
+    const handleClose = (event?: SyntheticEvent | Event, reason?: string) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        setOpen(false);
+    };
+
+    const [showAbout, setShowAbout] = useState<boolean>(false)
+    const handleAboutClose = () => {
+        setShowAbout(false);
+    };
+
+    const [showPodNew, setPodNew] = useState<boolean>(false)
+    const handlePodNewClose = () => {
+        setPodNew(false);
+    };
+    const [newPodName, setNewPodName] = useState('')
+
+    const handlePodNew = async () => {
+        try {
+            if (newPodName !== "") {
+                await CreatePod(newPodName)
+                setPodNew(false);
+                setNewPodName('')
+                let p = await GetPodsList()
+                setPods(p)
+                setShowPods(true)
+            }
+        } catch(e: any) {
+            showError(e)
+        }
+    };
+
+    const [version, setVersion] = useState('')
+    const [buildTime, setTime] = useState('')
 
     const [showConfig, setShowConfig] = useState<boolean>(false)
     const [showLogin, setShowLogin] = useState<boolean>(true)
+    const [showPods, setShowPods] = useState<boolean>(true)
 
     const [username, setName] = useState('')
     const [password, setPassword] = useState('')
-    const [sessionId, setSessionId] = useState('')
     const [remember, setRemember] = useState<boolean>(false)
+    const [message, setMessage] = useState('')
     useEffect(() => {
         EventsOn("preferences", ()=> {
             setShowConfig(true)
+        })
+        EventsOn("podNew", ()=> {
+            setPodNew(true)
+        })
+        EventsOn("about", ()=> {
+            setShowAbout(true)
+        })
+        EventsOn("logout", async ()=> {
+            try {
+                await Logout()
+                EventsEmit("disableMenus")
+                setShowLogin(true)
+                setShowPods(false)
+                setPods([])
+                await ForgetPassword()
+            } catch(e: any) {
+                showError(e)
+            }
+        })
+
+        Version().then(res => {
+            setVersion(res)
+        })
+        BuildTime().then(res => {
+            setTime(res)
         })
         IsSet().then((isSet) => {
             console.log("isSet", isSet)
             if (!isSet) {
                 setShowConfig(true)
+            } else {
+                GetConfig().then((c) => {
+                    if (c !== null) {
+                        c.isProxy ? setProxyValue("yes") : setProxyValue("no")
+                        setProxy(c.isProxy)
+                        setBee(c.bee)
+                        setBatch(c.batch)
+                        setNetwork(c.network)
+                        setRPC(c.rpc)
+                    }
+                    Start(c).catch(err => {
+                        showError(err)
+                    }).then(res => {
+                        Get().then(async (acc) => {
+                            console.log(acc)
+                            if (acc.Username === "" || acc.Password === "") {
+                                EventsEmit("disableMenus")
+                                return
+                            }
+                            try {
+                                setName(acc.Username)
+                                setPassword(acc.Password)
+                                await Login(acc.Username, acc.Password)
+                                setShowLogin(false)
+                                let p = await GetPodsList()
+                                setPods(p)
+                            }
+                            catch(e: any) {
+                                EventsEmit("disableMenus")
+                                showError(e)
+                            }
+                        })
+                    })
+                })
             }
         })
-        GetConfig().then((c) => {
-            console.log("c", c)
-            if (c !== null) {
-                c.isProxy ? setProxyValue("yes") : setProxyValue("no")
-                setProxy(c.isProxy)
-                setBee(c.bee)
-                setBatch(c.batch)
-                setNetwork(c.network)
-                setRPC(c.rpc)
-            }
-        })
+
         HasRemembered().then((isSet) => {
             console.log("HasRemembered", isSet)
             if (!isSet) {
                 setRemember(true)
             }
-        })
-        Get().then(async (acc) => {
-            console.log(acc)
-            if (acc.Username === "" || acc.Password === "") {
-                return
-            }
-            setName(acc.Username)
-            setPassword(acc.Password)
-            let sId = await Login(acc.Username, acc.Password)
-            setShowLogin(false)
-            setSessionId(sId)
-            let p = await GetPodsList(sId)
-            setPods(p)
         })
     }, [])
     const [pods, setPods] = useState<string[]>([])
@@ -93,9 +187,19 @@ function App() {
     const mount = async  (e: any) => {
         if (e.target.checked) {
             // TODO need to check how mount point can be passed for Windows and linux
-            await Mount(e.target.value, sessionId, "/tmp/"+e.target.value, false)
+            try {
+                await Mount(e.target.value, "/tmp/"+e.target.value, false)
+            }
+            catch(e: any) {
+                showError(e)
+            }
         } else {
-            await Unmount(e.target.value, sessionId)
+            try {
+                await Unmount(e.target.value)
+            }
+            catch(e: any) {
+                showError(e)
+            }
         }
     }
     const [isProxy, setProxy] = useState<boolean>(true)
@@ -105,6 +209,7 @@ function App() {
     const [rpc, setRPC] = useState('https://xdai.dev.fairdatasociety.org')
     const [network, setNetwork] = useState('testnet')
     const updateProxy = (e: any) => {
+        setProxyValue(e.target.value)
         if (e.target.value=== "no") {
             setProxy(false)
         } else {
@@ -116,6 +221,7 @@ function App() {
     const updateBatch = (e: any) => setBatch(e.target.value)
     const updateRPC = (e: any) => setRPC(e.target.value)
     const updateNetwork = (e: any) => setNetwork(e.target.value)
+    const updateNewPodName = (e: any) => setNewPodName(e.target.value)
 
     async function closeSettings() {
         setShowConfig(false)
@@ -132,27 +238,56 @@ function App() {
             "rpc": rpc,
             "network": network,
         }
-        await SetupConfig(bee, batch, network, rpc, isProxy)
-        await Start(cfg)
-        setShowConfig(false)
+        try {
+            await SetupConfig(bee, batch, network, rpc, isProxy)
+            await Start(cfg)
+            setShowConfig(false)
+        } catch (e: any) {
+            showError(e)
+        }
     }
 
     async function login() {
-        let sId = await Login(username, password)
-        setSessionId(sId)
-        setShowLogin(false)
-        let p = await GetPodsList(sId)
-        setPods(p)
-        if (remember) {
-            await RememberPassword(username, password)
-        } else {
-            await ForgetPassword()
+        try {
+            await Login(username, password)
+            setShowLogin(false)
+            let p = await GetPodsList()
+            setPods(p)
+            setShowPods(true)
+            if (remember) {
+                await RememberPassword(username, password)
+            } else {
+                await ForgetPassword()
+            }
+            EventsEmit("enableMenus")
         }
+        catch(e: any) {
+            showError(e)
+        }
+    }
+
+    function showError(error: any) {
+        if (typeof error === "string") {
+            setMessage(error.toUpperCase())
+        } else if (error instanceof Error) {
+            setMessage(error.message) // works, `e` narrowed to Error
+        }
+        setOpen(true);
     }
 
     return (
         <div id="App">
+            {/*shows error*/}
+            <Snackbar open={open} onClose={handleClose}>
+                <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
+                    {message}
+                </Alert>
+            </Snackbar>
+
+            {/*logo*/}
             <img src={logo} id="logo" alt="logo"/>
+
+            {/*settings modal*/}
             <Modal
                 open={showConfig}
                 aria-labelledby="modal-modal-title"
@@ -280,7 +415,81 @@ function App() {
                 </Box>
             </Modal>
 
+            {/*about dialog*/}
             {(() => {
+                if (showAbout) {
+                    return (
+                        <AboutDialog
+                            aria-labelledby="about-title"
+                            open={showAbout}
+                        >
+                            <DialogTitle sx={{ m: 0, p: 2, fontSize: "small" }}>
+                                About FDA
+                                <IconButton
+                                    aria-label="close"
+                                    onClick={handleAboutClose}
+                                    sx={{
+                                        position: 'absolute',
+                                        right: 8,
+                                        top: 8,
+                                        color: (theme) => theme.palette.grey[500],
+                                    }}
+                                >
+                                    <CloseIcon />
+                                </IconButton>
+                            </DialogTitle>
+                            <DialogContent dividers>
+                                <Typography gutterBottom variant="h6" align="left">
+                                    Fairdrive Desktop App
+                                </Typography>
+                                <Typography gutterBottom align="left">
+                                    Version {version}
+                                </Typography>
+                                <Typography gutterBottom align="left">
+                                    Built on {buildTime}
+                                </Typography>
+                                <Typography gutterBottom align="left">
+                                    <Link href="#" variant="body2">
+                                        License
+                                    </Link>
+                                </Typography>
+                                <Typography gutterBottom align="left">
+                                    <Link href="#" variant="body2">
+                                        Powered by ORG
+                                    </Link>
+                                </Typography>
+                                <Typography gutterBottom align="left">
+                                    FFA Copyright FDS 2021
+                                </Typography>
+                            </DialogContent>
+                        </AboutDialog>
+                    )
+                }
+
+                {/*pod new dialog*/}
+                if (showPodNew) {
+                    return (
+                        <Dialog open={showPodNew} onClose={handlePodNewClose}>
+                            <DialogTitle>Create new Pod</DialogTitle>
+                            <DialogContent>
+                                <TextField
+                                    autoFocus
+                                    margin="dense"
+                                    id="podName"
+                                    label="Pod Name"
+                                    fullWidth
+                                    variant="standard"
+                                    onChange={updateNewPodName}
+                                />
+                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={handlePodNewClose}>Cancel</Button>
+                                <Button onClick={handlePodNew}>Create</Button>
+                            </DialogActions>
+                        </Dialog>
+                    )
+                }
+
                 if (showLogin) {
                     return (
                         <ThemeProvider theme={theme}>
@@ -317,7 +526,7 @@ function App() {
                                         />
                                         <FormControlLabel
                                             control={<Checkbox color="primary" onChange={updateRemember} />}
-                                            label="Remember me"
+                                            label="Remember and Keep me logged-in"
                                         />
                                         <Button
                                             fullWidth
@@ -329,6 +538,7 @@ function App() {
                                         </Button>
                                         <Grid container>
                                             <Grid item>
+                                                {/*TODO add create account website and fairdrive */}
                                                 <Link href="#" variant="body2">
                                                     {"Don't have an account? Sign Up"}
                                                 </Link>
@@ -341,21 +551,26 @@ function App() {
                         </ThemeProvider>
                     )
                 }
+                if (showPods) {
+                    return (
+                        <ThemeProvider theme={theme}>
+                            <Container component="main" maxWidth="xs">
+                                <FormGroup>
+                                    {pods.map((pod) => (
+                                        <Grid container>
+                                            <Grid item>
+                                                <FormControlLabel
+                                                    control={<Checkbox onChange={mount} value={pod} color="primary"/>}
+                                                    label={pod}/>
+                                            </Grid>
+                                        </Grid>
+                                    ))}
+                                </FormGroup>
+                            </Container>
+                        </ThemeProvider>
+                    )
+                }
             })()}
-
-            <ThemeProvider theme={theme}>
-                <Container component="main" maxWidth="xs">
-                    <FormGroup>
-                        {pods.map((pod) => (
-                            <Grid container>
-                                <Grid item>
-                                    <FormControlLabel control={<Checkbox onChange={mount} value={pod} color="primary"/>} label={pod} />
-                                </Grid>
-                            </Grid>
-                        ))}
-                    </FormGroup>
-                </Container>
-            </ThemeProvider>
         </div>
     )
 }

@@ -9,6 +9,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	creds = ".fda.remember.yaml"
+)
+
 type Account struct {
 	Username string
 	Password string
@@ -21,7 +25,7 @@ func NewAccount() *Account {
 	if err != nil {
 		return acc
 	}
-	cfgFile := filepath.Join(home, ".fdfs.remember.yaml")
+	cfgFile := filepath.Join(home, creds)
 	if _, err := os.Stat(cfgFile); err == nil {
 		config.SetConfigFile(cfgFile)
 		if err := config.ReadInConfig(); err != nil {
@@ -53,7 +57,7 @@ func (a *Account) RememberPassword(username, password string) error {
 	if err != nil {
 		return err
 	}
-	cfgFile := filepath.Join(home, ".fdfs.remember.yaml")
+	cfgFile := filepath.Join(home, creds)
 	return config.WriteConfigAs(cfgFile)
 }
 
@@ -62,11 +66,11 @@ func (a *Account) ForgetPassword() error {
 	if err != nil {
 		return err
 	}
-	cfgFile := filepath.Join(home, ".fdfs.remember.yaml")
+	cfgFile := filepath.Join(home, creds)
 	if _, err := os.Stat(cfgFile); err == nil {
 		return os.Remove(cfgFile)
 	}
-	return nil
+	return err
 }
 
 func (a *Account) HasRemembered() bool {

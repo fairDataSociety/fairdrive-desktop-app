@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-
 	"github.com/datafund/fdfs/pkg/api"
 	dfuse "github.com/datafund/fdfs/pkg/fuse"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/winfsp/cgofuse/fuse"
 )
 
@@ -23,6 +23,7 @@ type Handler struct {
 	api          *api.DfsAPI
 	activeMounts map[string]*fuse.FileSystemHost
 	logger       logging.Logger
+	sessionID    string
 }
 
 func New(logger logging.Logger) (*Handler, error) {
@@ -42,14 +43,26 @@ func (h *Handler) Start(fc *api.FairOSConfig) (err error) {
 	return nil
 }
 
-func (h *Handler) Login(username, password string) (string, error) {
+func (h *Handler) Login(username, password string) error {
 	if h.api == nil {
-		return "", ErrFairOsNotInitialised
+		return ErrFairOsNotInitialised
 	}
-	return h.api.Login(username, password)
+	sessionID, err := h.api.Login(username, password)
+	if err != nil {
+		return err
+	}
+	h.sessionID = sessionID
+	return err
 }
 
-func (h *Handler) Mount(pod, sessionId, mountPoint string, createPod bool) error {
+func (h *Handler) Logout() error {
+	if h.api == nil {
+		return ErrFairOsNotInitialised
+	}
+	return h.api.LogoutUser(h.sessionID)
+}
+
+func (h *Handler) Mount(pod, mountPoint string, createPod bool) error {
 	if h.api == nil {
 		return ErrFairOsNotInitialised
 	}
@@ -60,11 +73,11 @@ func (h *Handler) Mount(pod, sessionId, mountPoint string, createPod bool) error
 		return fmt.Errorf("%s is already mounted", pod)
 	}
 	ctx := context.Background()
-	pi, err := h.api.GetPodInfo(ctx, pod, sessionId, createPod)
+	pi, err := h.api.GetPodInfo(ctx, pod, h.sessionID, createPod)
 	if err != nil {
 		return err
 	}
-	dfsFuse, err := dfuse.New(sessionId, pi, h.api, h.logger)
+	dfsFuse, err := dfuse.New(h.sessionID, pi, h.api, h.logger)
 	if err != nil {
 		return err
 	}
@@ -88,7 +101,7 @@ func (h *Handler) Mount(pod, sessionId, mountPoint string, createPod bool) error
 	return nil
 }
 
-func (h *Handler) Unmount(pod, sessionId string) error {
+func (h *Handler) Unmount(pod string) error {
 	if h.api == nil {
 		return ErrFairOsNotInitialised
 	}
@@ -103,18 +116,22 @@ func (h *Handler) Unmount(pod, sessionId string) error {
 		return fmt.Errorf("unmount failed")
 	}
 	delete(h.activeMounts, pod)
-	return h.api.ClosePod(pod, sessionId)
+	return h.api.ClosePod(pod, h.sessionID)
 }
 
-func (h *Handler) GetPodsList(sessionId string) ([]string, error) {
+func (h *Handler) GetPodsList() ([]string, error) {
 	if h.api == nil {
 		return []string{}, ErrFairOsNotInitialised
 	}
-	pods, _, err := h.api.ListPods(sessionId)
+	pods, _, err := h.api.ListPods(h.sessionID)
 	if err != nil {
 		return nil, err
 	}
 	return pods, err
+}
+
+func (h *Handler) CreatePod(podname string) (*pod.Info, error) {
+	return h.api.CreatePod(podname, h.sessionID)
 }
 
 func (h *Handler) Close() error {

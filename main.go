@@ -6,7 +6,6 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/datafund/fdfs/pkg/api"
 	"github.com/datafund/fdfs/pkg/handler"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/wailsapp/wails/v2/pkg/application"
@@ -17,18 +16,62 @@ import (
 	wRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-//go:embed all:frontend/dist
-var assets embed.FS
+var (
+	//go:embed all:frontend/dist
+	assets embed.FS
+)
 
 func main() {
+
 	logger := logging.New(os.Stdout, 5)
 	dfsHandler, err := handler.New(logger)
 	if err != nil {
 		println("Error:", err.Error())
+		return
 	}
 	cnf := &conf{}
 	acc := NewAccount()
+	abt := &about{}
 	var startContext context.Context
+
+	appMenu := menu.NewMenu()
+	fileMenu := appMenu.AddSubmenu("File")
+
+	prefShortcut := keys.CmdOrCtrl(",")
+	if runtime.GOOS == "windows" {
+		prefShortcut = keys.Combo(",", keys.CmdOrCtrlKey, keys.ShiftKey)
+	}
+	fileMenu.AddText("About", nil, func(_ *menu.CallbackData) {
+		wRuntime.EventsEmit(startContext, "about")
+	})
+	fileMenu.AddText("Check for updates...", nil, func(_ *menu.CallbackData) {
+		// TODO check for update
+	})
+	fileMenu.AddSeparator()
+
+	fileMenu.AddText("Preferences", prefShortcut, func(_ *menu.CallbackData) {
+		wRuntime.EventsEmit(startContext, "preferences")
+	})
+	fileMenu.AddSeparator()
+	if runtime.GOOS == "darwin" {
+		appMenu.Append(menu.EditMenu()) // on macos platform, we should append EditMenu to enable Cmd+C,Cmd+V,Cmd+Z... shortcut
+	}
+	fileMenu.AddText("Logout", keys.Combo("W", keys.ShiftKey, keys.CmdOrCtrlKey), func(item *menu.CallbackData) {
+		wRuntime.EventsEmit(startContext, "logout")
+	})
+
+	podMenu := appMenu.AddSubmenu("Pod")
+	podMenu.AddText("New", keys.CmdOrCtrl("n"), func(_ *menu.CallbackData) {
+		wRuntime.EventsEmit(startContext, "podNew")
+	})
+	helpMenu := appMenu.AddSubmenu("Help")
+	helpMenu.AddText("Report a problem", nil, func(_ *menu.CallbackData) {
+		// TODO Report a problem
+	})
+	helpMenu.AddText("Fairdrive Help", nil, func(_ *menu.CallbackData) {
+		// TODO redirect to FAQ
+	})
+
 	// Create application with options
 	app := application.NewWithOptions(&options.App{
 		Title:         "app",
@@ -43,42 +86,44 @@ func main() {
 			dfsHandler,
 			cnf,
 			acc,
+			abt,
 		},
 		OnStartup: func(ctx context.Context) {
 			startContext = ctx
 			err := cnf.ReadConfig()
 			if err != nil {
 				println("read config failed ", err.Error())
+				return
 			}
-			c := cnf.GetConfig()
-			if c == nil {
-				c = &api.FairOSConfig{
-					IsProxy: true,
-					Bee:     "https://bee-1.dev.fairdatasociety.org",
-					RPC:     "https://xdai.dev.fairdatasociety.org",
-					Network: "testnet",
+			wRuntime.EventsOn(startContext, "disableMenus", func(_ ...interface{}) {
+				for _, item := range podMenu.Items {
+					item.Disabled = true
 				}
-			}
-			err = dfsHandler.Start(c)
-			if err != nil {
-				println("failed to start on startup ", err.Error())
-			}
+				for _, item := range fileMenu.Items {
+					if item.Label == "Logout" {
+						item.Disabled = true
+						break
+					}
+				}
+				wRuntime.MenuUpdateApplicationMenu(startContext)
+			})
+			wRuntime.EventsOn(startContext, "enableMenus", func(_ ...interface{}) {
+				for _, item := range podMenu.Items {
+					item.Disabled = false
+				}
+				for _, item := range fileMenu.Items {
+					if item.Label == "Logout" {
+						item.Disabled = false
+						break
+					}
+				}
+				wRuntime.MenuUpdateApplicationMenu(startContext)
+			})
 		},
 		OnShutdown: func(_ context.Context) {
 			dfsHandler.Close()
 		},
 	})
-	appMenu := menu.NewMenu()
-	fileMenu := appMenu.AddSubmenu("File")
-
-	fileMenu.AddText("Preferences", keys.CmdOrCtrl(","), func(_ *menu.CallbackData) {
-		wRuntime.EventsEmit(startContext, "preferences")
-	})
-	fileMenu.AddSeparator()
-
-	if runtime.GOOS == "darwin" {
-		appMenu.Append(menu.EditMenu()) // on macos platform, we should append EditMenu to enable Cmd+C,Cmd+V,Cmd+Z... shortcut
-	}
 	fileMenu.AddText("Quit", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
 		app.Quit()
 	})
@@ -86,5 +131,6 @@ func main() {
 
 	if err := app.Run(); err != nil {
 		println("Error:", err.Error())
+		return
 	}
 }

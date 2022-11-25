@@ -4,7 +4,8 @@ GOLANGCI_LINT_VERSION ?= v1.50.1
 
 COMMIT ?= "$(shell git describe --long --dirty --always --match "" || true)"
 VERSION ?= "$(shell git describe --tags --abbrev=0 || true)"
-LDFLAGS ?= -s -w -X github.com/datafund/fdfs.commit="$(COMMIT)" -X github.com/datafund/fdfs.version="$(VERSION)"
+BUILD_TIMESTAMP ?= "$(shell date '+%B%d,%Y')"
+LDFLAGS ?= -s -w -X main.commit="$(COMMIT)" -X main.version="$(VERSION)" -X main.buildTimestamp="$(BUILD_TIMESTAMP)"
 
 .PHONY: lint
 lint: linter
