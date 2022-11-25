@@ -126,25 +126,20 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+
       - name: Import Code-Signing Certificates for macOS
         uses: Apple-Actions/import-codesign-certs@v1
         with:
-          # The certificates in a PKCS12 file encoded as a base64 string
           p12-file-base64: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
-          # The password used to import the PKCS12 file
           p12-password: ${{ secrets.CERTIFICATE_PASSWORD }}
+
       - name: Sign and notarize
         shell: bash
         run: |
-#         chmod +x scripts/add-cert.sh && ./scripts/add-cert.sh
           chmod +x scripts/gon-config.sh && ./scripts/gon-config.sh
           brew tap mitchellh/gon
           brew install mitchellh/gon/gon
           gon -log-level=info -log-json build/bin/config.json
-#         npm install --global create-dmg
-#         chmod +x 'build/bin/mac/Fairdrive Desktop App.app/Contents/MacOS/Fairdrive Desktop App'
-#         create-dmg 'build/bin/mac/Fairdrive Desktop App.app' build/bin --identity '${{ secrets.ID }}'
-#         mv 'build/bin/FDA 1.0.0.dmg' build/bin/fairdrive.dmg
         env:
           CERTIFICATE_OSX_APPLICATION: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
           CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
