@@ -33,7 +33,7 @@ import {
 import MuiAlert  from '@mui/material/Alert'
 
 import {api} from "../wailsjs/go/models"
-import {EventsOn} from "../wailsjs/runtime"
+import {EventsEmit, EventsOn} from "../wailsjs/runtime"
 import {Info} from "@mui/icons-material"
 import CloseIcon from '@mui/icons-material/Close'
 import {BuildTime, Version} from "../wailsjs/go/main/about";
@@ -78,7 +78,6 @@ function App() {
 
     const [username, setName] = useState('')
     const [password, setPassword] = useState('')
-    const [sessionId, setSessionId] = useState('')
     const [remember, setRemember] = useState<boolean>(false)
     const [message, setMessage] = useState('')
     useEffect(() => {
@@ -90,13 +89,11 @@ function App() {
         })
         EventsOn("logout", async ()=> {
             try {
+                await Logout()
+                EventsEmit("disableMenus")
                 setShowLogin(true)
                 setShowPods(false)
-
-                await Logout(sessionId)
-                setSessionId("")
                 setPods([])
-
                 await ForgetPassword()
             } catch(e: any) {
                 showError(e)
@@ -129,19 +126,19 @@ function App() {
                         Get().then(async (acc) => {
                             console.log(acc)
                             if (acc.Username === "" || acc.Password === "") {
+                                EventsEmit("disableMenus")
                                 return
                             }
                             try {
                                 setName(acc.Username)
                                 setPassword(acc.Password)
-                                let sId = await Login(acc.Username, acc.Password)
+                                await Login(acc.Username, acc.Password)
                                 setShowLogin(false)
-                                setSessionId(sId)
-                                let p = await GetPodsList(sId)
+                                let p = await GetPodsList()
                                 setPods(p)
                             }
                             catch(e: any) {
-                                console.log(e)
+                                EventsEmit("disableMenus")
                                 showError(e)
                             }
                         })
@@ -166,14 +163,14 @@ function App() {
         if (e.target.checked) {
             // TODO need to check how mount point can be passed for Windows and linux
             try {
-                await Mount(e.target.value, sessionId, "/tmp/"+e.target.value, false)
+                await Mount(e.target.value, "/tmp/"+e.target.value, false)
             }
             catch(e: any) {
                 showError(e)
             }
         } else {
             try {
-                await Unmount(e.target.value, sessionId)
+                await Unmount(e.target.value)
             }
             catch(e: any) {
                 showError(e)
@@ -226,16 +223,17 @@ function App() {
 
     async function login() {
         try {
-            let sId = await Login(username, password)
-            setSessionId(sId)
+            await Login(username, password)
             setShowLogin(false)
-            let p = await GetPodsList(sId)
+            let p = await GetPodsList()
             setPods(p)
+            setShowPods(true)
             if (remember) {
                 await RememberPassword(username, password)
             } else {
                 await ForgetPassword()
             }
+            EventsEmit("enableMenus")
         }
         catch(e: any) {
             showError(e)

@@ -6,26 +6,26 @@ export function Close() {
   return window['go']['handler']['Handler']['Close']();
 }
 
-export function GetPodsList(arg1) {
-  return window['go']['handler']['Handler']['GetPodsList'](arg1);
+export function GetPodsList() {
+  return window['go']['handler']['Handler']['GetPodsList']();
 }
 
 export function Login(arg1, arg2) {
   return window['go']['handler']['Handler']['Login'](arg1, arg2);
 }
 
-export function Logout(arg1) {
-  return window['go']['handler']['Handler']['Logout'](arg1);
+export function Logout() {
+  return window['go']['handler']['Handler']['Logout']();
 }
 
-export function Mount(arg1, arg2, arg3, arg4) {
-  return window['go']['handler']['Handler']['Mount'](arg1, arg2, arg3, arg4);
+export function Mount(arg1, arg2, arg3) {
+  return window['go']['handler']['Handler']['Mount'](arg1, arg2, arg3);
 }
 
 export function Start(arg1) {
   return window['go']['handler']['Handler']['Start'](arg1);
 }
 
-export function Unmount(arg1, arg2) {
-  return window['go']['handler']['Handler']['Unmount'](arg1, arg2);
+export function Unmount(arg1) {
+  return window['go']['handler']['Handler']['Unmount'](arg1);
 }

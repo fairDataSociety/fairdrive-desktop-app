@@ -70,7 +70,7 @@ func (a *Account) ForgetPassword() error {
 	if _, err := os.Stat(cfgFile); err == nil {
 		return os.Remove(cfgFile)
 	}
-	return nil
+	return err
 }
 
 func (a *Account) HasRemembered() bool {

@@ -4,14 +4,14 @@ import {api} from '../models';
 
 export function Close():Promise<Error>;
 
-export function GetPodsList(arg1:string):Promise<Array<string>>;
+export function GetPodsList():Promise<Array<string>>;
 
-export function Login(arg1:string,arg2:string):Promise<string>;
+export function Login(arg1:string,arg2:string):Promise<Error>;
 
-export function Logout(arg1:string):Promise<Error>;
+export function Logout():Promise<Error>;
 
-export function Mount(arg1:string,arg2:string,arg3:string,arg4:boolean):Promise<Error>;
+export function Mount(arg1:string,arg2:string,arg3:boolean):Promise<Error>;
 
 export function Start(arg1:api.FairOSConfig):Promise<Error>;
 
-export function Unmount(arg1:string,arg2:string):Promise<Error>;
+export function Unmount(arg1:string):Promise<Error>;
