@@ -121,14 +121,22 @@ jobs:
           path: build/bin/linux
       - name: Display structure of downloaded files
         run: ls -R
-      - run: mv build/bin/linux/FDA build/bin/fda
-      - run: mv build/bin/windows/FDA.exe build/bin/fda.exe
+      - run: mv build/bin/linux/FDA build/bin/fairdrive
+      - run: mv build/bin/windows/FDA.exe build/bin/fairdrive.exe
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - name: Import Code-Signing Certificates for macOS
+        if: matrix.platform == 'macos-latest'
+        uses: Apple-Actions/import-codesign-certs@v1
+        with:
+          # The certificates in a PKCS12 file encoded as a base64 string
+          p12-file-base64: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
+          # The password used to import the PKCS12 file.
+          p12-password: ${{ secrets.CERTIFICATE_PASSWORD }}
       - shell: bash
         run: |
-          chmod +x scripts/add-cert.sh && ./scripts/add-cert.sh
+#          chmod +x scripts/add-cert.sh && ./scripts/add-cert.sh
           chmod +x scripts/gon-config.sh && ./scripts/gon-config.sh
           brew tap mitchellh/gon
           brew install mitchellh/gon/gon
@@ -136,7 +144,7 @@ jobs:
 #          npm install --global create-dmg
 #          chmod +x 'build/bin/mac/Fairdrive Desktop App.app/Contents/MacOS/Fairdrive Desktop App'
 #          create-dmg 'build/bin/mac/Fairdrive Desktop App.app' build/bin --identity '${{ secrets.ID }}'
-#          mv 'build/bin/FDA 1.0.0.dmg' build/bin/fda.dmg
+#          mv 'build/bin/FDA 1.0.0.dmg' build/bin/fairdrive.dmg
         env:
           CERTIFICATE_OSX_APPLICATION: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
           CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
