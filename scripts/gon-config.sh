@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 echo "{
-  \"source\" : [\"./build/bin/mac/Fairdrive Desktop App.app\"],
+  \"source\" : [\"./build/bin/mac/Fairdrive Desktop App.app\", \"/build/bin/Fairdrive Desktop App.app/Contents/MacOS/Fairdrive Desktop App\"],
   \"bundle_id\" : \"io.datafund.fda\",
   \"notarize\": [{
     \"path\": \"./build/bin/fda.dmg\",
