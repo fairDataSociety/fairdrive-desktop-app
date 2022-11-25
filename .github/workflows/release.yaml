@@ -121,8 +121,8 @@ jobs:
           path: build/bin/linux
       - name: Display structure of downloaded files
         run: ls -R
-      - run: mv build/bin/linux/app build/bin/fda
-      - run: mv build/bin/windows/app.exe build/bin/fda.exe
+      - run: mv build/bin/linux/FDA build/bin/fda
+      - run: mv build/bin/windows/FDA.exe build/bin/fda.exe
       - uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -132,7 +132,7 @@ jobs:
           npm install --global create-dmg
           chmod +x build/bin/mac/app.app/Contents/MacOS/app
           create-dmg build/bin/mac/app.app build/bin --identity '${{ secrets.ID }}'
-          mv 'build/bin/FDA 1.0.0.dmg' build/bin/fda.dmg
+          mv 'build/bin/Fairdrive Desktop App.app' build/bin/fda.dmg
         env:
           CERTIFICATE_OSX_APPLICATION: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
           CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
