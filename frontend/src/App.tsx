@@ -2,7 +2,7 @@ import {forwardRef, SyntheticEvent, useEffect, useState} from 'react'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 import logo from './assets/images/logo-universal.png'
 import './App.css'
-import {Login, Mount, GetPodsList, Unmount, Start, Close, Logout} from "../wailsjs/go/handler/Handler"
+import {Login, Mount, GetPodsList, Unmount, Start, Close, Logout, CreatePod} from "../wailsjs/go/handler/Handler"
 import {SetupConfig, IsSet, GetConfig} from "../wailsjs/go/main/conf"
 import {RememberPassword, HasRemembered, ForgetPassword, Get} from "../wailsjs/go/main/Account"
 
@@ -28,7 +28,7 @@ import {
     Snackbar,
     AlertProps,
     Dialog,
-    DialogTitle, DialogContent, Typography, styled
+    DialogTitle, DialogContent, Typography, styled, DialogContentText, DialogActions
 } from "@mui/material"
 import MuiAlert  from '@mui/material/Alert'
 
@@ -69,6 +69,28 @@ function App() {
     const handleAboutClose = () => {
         setShowAbout(false);
     };
+
+    const [showPodNew, setPodNew] = useState<boolean>(false)
+    const handlePodNewClose = () => {
+        setPodNew(false);
+    };
+    const [newPodName, setNewPodName] = useState('')
+
+    const handlePodNew = async () => {
+        try {
+            if (newPodName !== "") {
+                await CreatePod(newPodName)
+                setPodNew(false);
+                setNewPodName('')
+                let p = await GetPodsList()
+                setPods(p)
+                setShowPods(true)
+            }
+        } catch(e: any) {
+            showError(e)
+        }
+    };
+
     const [version, setVersion] = useState('')
     const [buildTime, setTime] = useState('')
 
@@ -83,6 +105,9 @@ function App() {
     useEffect(() => {
         EventsOn("preferences", ()=> {
             setShowConfig(true)
+        })
+        EventsOn("podNew", ()=> {
+            setPodNew(true)
         })
         EventsOn("about", ()=> {
             setShowAbout(true)
@@ -196,6 +221,7 @@ function App() {
     const updateBatch = (e: any) => setBatch(e.target.value)
     const updateRPC = (e: any) => setRPC(e.target.value)
     const updateNetwork = (e: any) => setNetwork(e.target.value)
+    const updateNewPodName = (e: any) => setNewPodName(e.target.value)
 
     async function closeSettings() {
         setShowConfig(false)
@@ -439,6 +465,31 @@ function App() {
                         </AboutDialog>
                     )
                 }
+
+                {/*pod new dialog*/}
+                if (showPodNew) {
+                    return (
+                        <Dialog open={showPodNew} onClose={handlePodNewClose}>
+                            <DialogTitle>Create new Pod</DialogTitle>
+                            <DialogContent>
+                                <TextField
+                                    autoFocus
+                                    margin="dense"
+                                    id="podName"
+                                    label="Pod Name"
+                                    fullWidth
+                                    variant="standard"
+                                    onChange={updateNewPodName}
+                                />
+                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={handlePodNewClose}>Cancel</Button>
+                                <Button onClick={handlePodNew}>Create</Button>
+                            </DialogActions>
+                        </Dialog>
+                    )
+                }
+
                 if (showLogin) {
                     return (
                         <ThemeProvider theme={theme}>

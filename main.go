@@ -62,7 +62,7 @@ func main() {
 
 	podMenu := appMenu.AddSubmenu("Pod")
 	podMenu.AddText("New", keys.CmdOrCtrl("n"), func(_ *menu.CallbackData) {
-		// TODO Create a new pod
+		wRuntime.EventsEmit(startContext, "podNew")
 	})
 	helpMenu := appMenu.AddSubmenu("Help")
 	helpMenu.AddText("Report a problem", nil, func(_ *menu.CallbackData) {

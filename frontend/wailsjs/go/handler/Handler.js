@@ -6,6 +6,10 @@ export function Close() {
   return window['go']['handler']['Handler']['Close']();
 }
 
+export function CreatePod(arg1) {
+  return window['go']['handler']['Handler']['CreatePod'](arg1);
+}
+
 export function GetPodsList() {
   return window['go']['handler']['Handler']['GetPodsList']();
 }

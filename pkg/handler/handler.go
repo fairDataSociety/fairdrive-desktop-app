@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-
 	"github.com/datafund/fdfs/pkg/api"
 	dfuse "github.com/datafund/fdfs/pkg/fuse"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/winfsp/cgofuse/fuse"
 )
 
@@ -128,6 +128,10 @@ func (h *Handler) GetPodsList() ([]string, error) {
 		return nil, err
 	}
 	return pods, err
+}
+
+func (h *Handler) CreatePod(podname string) (*pod.Info, error) {
+	return h.api.CreatePod(podname, h.sessionID)
 }
 
 func (h *Handler) Close() error {
