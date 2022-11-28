@@ -119,6 +119,14 @@ func main() {
 				}
 				wRuntime.MenuUpdateApplicationMenu(startContext)
 			})
+			wRuntime.EventsOn(startContext, "showDirectoryDialog", func(_ ...interface{}) {
+				location, err := wRuntime.OpenDirectoryDialog(startContext, wRuntime.OpenDialogOptions{})
+				if err != nil {
+					println("select directory failed ", err.Error())
+					return
+				}
+				wRuntime.EventsEmit(startContext, "mountPointSelected", location)
+			})
 		},
 		OnShutdown: func(_ context.Context) {
 			dfsHandler.Close()

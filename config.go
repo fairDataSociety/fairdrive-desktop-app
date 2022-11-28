@@ -15,10 +15,11 @@ const (
 )
 
 type conf struct {
-	fc *api.FairOSConfig
+	fc         *api.FairOSConfig
+	mountPoint string
 }
 
-func (c *conf) SetupConfig(beeEndpoint, beeBatch, network, rpc string, beeGatewayBool bool) error {
+func (c *conf) SetupConfig(beeEndpoint, beeBatch, network, rpc, mountPoint string, beeGatewayBool bool) error {
 	config := viper.New()
 
 	config.Set("bee.endpoint", beeEndpoint)
@@ -30,6 +31,10 @@ func (c *conf) SetupConfig(beeEndpoint, beeBatch, network, rpc string, beeGatewa
 	if err != nil {
 		return err
 	}
+	if mountPoint == "" {
+		mountPoint = home
+	}
+	config.Set("mountPoint", mountPoint)
 	cfgFile := filepath.Join(home, settings)
 	return config.WriteConfigAs(cfgFile)
 }
@@ -57,11 +62,16 @@ func (c *conf) ReadConfig() error {
 		RPC:     config.GetString("rpc"),
 		Network: config.GetString("network"),
 	}
+	c.mountPoint = config.GetString("mountPoint")
 	return nil
 }
 
 func (c *conf) GetConfig() *api.FairOSConfig {
 	return c.fc
+}
+
+func (c *conf) GetMountPoint() string {
+	return c.mountPoint
 }
 
 func (c *conf) IsSet() bool {

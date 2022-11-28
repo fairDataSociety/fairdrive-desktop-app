@@ -3,7 +3,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles'
 import logo from './assets/images/logo-universal.png'
 import './App.css'
 import {Login, Mount, GetPodsList, Unmount, Start, Close, Logout, CreatePod} from "../wailsjs/go/handler/Handler"
-import {SetupConfig, IsSet, GetConfig} from "../wailsjs/go/main/conf"
+import {SetupConfig, IsSet, GetConfig, GetMountPoint} from "../wailsjs/go/main/conf"
 import {RememberPassword, HasRemembered, ForgetPassword, Get} from "../wailsjs/go/main/Account"
 
 import {
@@ -34,7 +34,7 @@ import MuiAlert  from '@mui/material/Alert'
 
 import {api} from "../wailsjs/go/models"
 import {EventsEmit, EventsOn} from "../wailsjs/runtime"
-import {Info} from "@mui/icons-material"
+import {Folder, Info} from "@mui/icons-material"
 import CloseIcon from '@mui/icons-material/Close'
 import {BuildTime, Version} from "../wailsjs/go/main/about";
 
@@ -56,6 +56,7 @@ const AboutDialog = styled(Dialog)(({ theme }) => ({
 }));
 
 function App() {
+
     const [open, setOpen] = useState(false);
     const handleClose = (event?: SyntheticEvent | Event, reason?: string) => {
         if (reason === 'clickaway') {
@@ -112,6 +113,9 @@ function App() {
         EventsOn("about", ()=> {
             setShowAbout(true)
         })
+        EventsOn("mountPointSelected", (m: string)=> {
+            setMountPoint(m)
+        })
         EventsOn("logout", async ()=> {
             try {
                 await Logout()
@@ -132,7 +136,6 @@ function App() {
             setTime(res)
         })
         IsSet().then((isSet) => {
-            console.log("isSet", isSet)
             if (!isSet) {
                 setShowConfig(true)
             } else {
@@ -171,9 +174,10 @@ function App() {
                 })
             }
         })
-
+        GetMountPoint().then(res => {
+            setMountPoint(res)
+        })
         HasRemembered().then((isSet) => {
-            console.log("HasRemembered", isSet)
             if (!isSet) {
                 setRemember(true)
             }
@@ -188,7 +192,7 @@ function App() {
         if (e.target.checked) {
             // TODO need to check how mount point can be passed for Windows and linux
             try {
-                await Mount(e.target.value, "/tmp/"+e.target.value, false)
+                await Mount(e.target.value, mountPoint+"/"+e.target.value, false)
             }
             catch(e: any) {
                 showError(e)
@@ -202,6 +206,7 @@ function App() {
             }
         }
     }
+    const [mountPoint, setMountPoint] = useState('')
     const [isProxy, setProxy] = useState<boolean>(true)
     const [proxyValue, setProxyValue] = useState('yes')
     const [bee, setBee] = useState('https://bee-1.dev.fairdatasociety.org')
@@ -239,7 +244,7 @@ function App() {
             "network": network,
         }
         try {
-            await SetupConfig(bee, batch, network, rpc, isProxy)
+            await SetupConfig(bee, batch, network, rpc, mountPoint, isProxy)
             await Start(cfg)
             setShowConfig(false)
         } catch (e: any) {
@@ -260,10 +265,13 @@ function App() {
                 await ForgetPassword()
             }
             EventsEmit("enableMenus")
-        }
-        catch(e: any) {
+        } catch(e: any) {
             showError(e)
         }
+    }
+
+    function showMountPointSelector() {
+        EventsEmit("showDirectoryDialog")
     }
 
     function showError(error: any) {
@@ -300,7 +308,7 @@ function App() {
                         flexDirection: 'column',
                         alignItems: 'center',
                         boxShadow: 24,
-                        bgcolor: 'grey',
+                        bgcolor: 'white',
                         p: 4,
                     }}
 
@@ -389,6 +397,26 @@ function App() {
                                 <MenuItem value={"play"}>FDP play</MenuItem>
                             </Select>
                             <Tooltip title="Specify Network type for ENS based authentication">
+                                <IconButton>
+                                    <Info />
+                                </IconButton>
+                            </Tooltip>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                            <TextField
+                                margin="normal"
+                                value={mountPoint}
+                                disabled={true}
+                                required
+                                fullWidth
+                                id="mountPoint"
+                                label="Mount Location"
+                                autoComplete="off"
+                            />
+                            <IconButton onClick={showMountPointSelector}>
+                                <Folder />
+                            </IconButton>
+                            <Tooltip title="Location of the Fairdrive folder">
                                 <IconButton>
                                     <Info />
                                 </IconButton>

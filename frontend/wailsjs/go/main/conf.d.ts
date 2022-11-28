@@ -4,8 +4,10 @@ import {api} from '../models';
 
 export function GetConfig():Promise<api.FairOSConfig>;
 
+export function GetMountPoint():Promise<string>;
+
 export function IsSet():Promise<boolean>;
 
 export function ReadConfig():Promise<Error>;
 
-export function SetupConfig(arg1:string,arg2:string,arg3:string,arg4:string,arg5:boolean):Promise<Error>;
+export function SetupConfig(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:boolean):Promise<Error>;
