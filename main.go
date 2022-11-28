@@ -74,7 +74,7 @@ func main() {
 
 	// Create application with options
 	app := application.NewWithOptions(&options.App{
-		Title:         "app",
+		Title:         "Fairdrive", // TODO change title to Fairdrive
 		Width:         375,
 		Height:        667,
 		DisableResize: true,
@@ -120,7 +120,9 @@ func main() {
 				wRuntime.MenuUpdateApplicationMenu(startContext)
 			})
 			wRuntime.EventsOn(startContext, "showDirectoryDialog", func(_ ...interface{}) {
+				print("showDirectoryDialog")
 				location, err := wRuntime.OpenDirectoryDialog(startContext, wRuntime.OpenDialogOptions{})
+				print("location: ", err, location)
 				if err != nil {
 					println("select directory failed ", err.Error())
 					return
