@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"fmt"
 	"os"
 	"runtime"
 
@@ -90,11 +91,6 @@ func main() {
 		},
 		OnStartup: func(ctx context.Context) {
 			startContext = ctx
-			err := cnf.ReadConfig()
-			if err != nil {
-				println("read config failed ", err.Error())
-				return
-			}
 			wRuntime.EventsOn(startContext, "disableMenus", func(_ ...interface{}) {
 				for _, item := range podMenu.Items {
 					item.Disabled = true
@@ -119,16 +115,24 @@ func main() {
 				}
 				wRuntime.MenuUpdateApplicationMenu(startContext)
 			})
-			wRuntime.EventsOn(startContext, "showDirectoryDialog", func(_ ...interface{}) {
-				print("showDirectoryDialog")
-				location, err := wRuntime.OpenDirectoryDialog(startContext, wRuntime.OpenDialogOptions{})
-				print("location: ", err, location)
+
+			wRuntime.EventsOn(startContext, "showDirectoryDialog", func(l ...interface{}) {
+				location := ""
+				if len(l) == 1 {
+					location = fmt.Sprintf("%s", l[0])
+				}
+				location, err = wRuntime.OpenDirectoryDialog(startContext, wRuntime.OpenDialogOptions{DefaultDirectory: location})
 				if err != nil {
 					println("select directory failed ", err.Error())
 					return
 				}
 				wRuntime.EventsEmit(startContext, "mountPointSelected", location)
 			})
+			err := cnf.ReadConfig()
+			if err != nil {
+				println("read config failed ", err.Error())
+				return
+			}
 		},
 		OnShutdown: func(_ context.Context) {
 			dfsHandler.Close()
