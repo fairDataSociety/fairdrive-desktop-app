@@ -272,7 +272,7 @@ function App() {
   }
 
   function showMountPointSelector() {
-    EventsEmit('showDirectoryDialog')
+    EventsEmit('showDirectoryDialog', mountPoint)
   }
 
   function showError(error: any) {
