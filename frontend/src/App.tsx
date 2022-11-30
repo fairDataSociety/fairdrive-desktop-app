@@ -539,8 +539,12 @@ function App() {
                 />
               </DialogContent>
               <DialogActions>
-                <Button onClick={handlePodNewClose}>Cancel</Button>
-                <Button onClick={handlePodNew}>Create</Button>
+                <Button onClick={handlePodNewClose} disabled={isLoading}>
+                  Close
+                </Button>
+                <Button onClick={handlePodNew} disabled={isLoading}>
+                  Create
+                </Button>
               </DialogActions>
             </Dialog>
           )
