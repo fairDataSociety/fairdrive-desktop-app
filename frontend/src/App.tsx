@@ -35,6 +35,7 @@ import {
   styled,
   DialogContentText,
   DialogActions,
+  LinearProgress,
 } from '@mui/material'
 import MuiAlert from '@mui/material/Alert'
 
@@ -59,6 +60,7 @@ const AboutDialog = styled(Dialog)(({ theme }) => ({
 }))
 
 function App() {
+  const [isLoading, setIsLoading] = useState(false)
   const [open, setOpen] = useState(false)
   const handleClose = (event?: SyntheticEvent | Event, reason?: string) => {
     if (reason === 'clickaway') {
@@ -119,6 +121,7 @@ function App() {
       setMountPoint(m)
     })
     EventsOn('logout', async () => {
+      setIsLoading(true)
       try {
         await Logout()
         EventsEmit('disableMenus')
@@ -129,6 +132,7 @@ function App() {
       } catch (e: any) {
         showError(e)
       }
+      setIsLoading(false)
     })
 
     Version().then((res) => {
@@ -192,6 +196,7 @@ function App() {
   const updateRemember = (e: any) => setRemember(e.target.checked)
 
   const mount = async (e: any) => {
+    setIsLoading(true)
     if (e.target.checked) {
       // TODO need to check how mount point can be passed for Windows and linux
       try {
@@ -206,6 +211,7 @@ function App() {
         showError(e)
       }
     }
+    setIsLoading(false)
   }
   const [mountPoint, setMountPoint] = useState('')
   const [isProxy, setProxy] = useState<boolean>(true)
@@ -234,6 +240,7 @@ function App() {
   }
 
   async function initFairOs() {
+    setIsLoading(true)
     if (remember) {
       await Close()
     }
@@ -251,9 +258,11 @@ function App() {
     } catch (e: any) {
       showError(e)
     }
+    setIsLoading(false)
   }
 
   async function login() {
+    setIsLoading(true)
     try {
       await Login(username, password)
       setShowLogin(false)
@@ -269,6 +278,7 @@ function App() {
     } catch (e: any) {
       showError(e)
     }
+    setIsLoading(false)
   }
 
   function showMountPointSelector() {
@@ -620,6 +630,24 @@ function App() {
           )
         }
       })()}
+
+      <div
+        style={{
+          position: 'absolute',
+          top: '0px',
+          zIndex: '10000',
+          width: '100%',
+          height: '10px',
+        }}
+      >
+        {isLoading && (
+          <LinearProgress
+            sx={{
+              height: 10,
+            }}
+          />
+        )}
+      </div>
     </div>
   )
 }
