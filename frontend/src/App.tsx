@@ -620,7 +620,12 @@ function App() {
                       <Grid item>
                         <FormControlLabel
                           control={
-                            <Checkbox onChange={mount} value={pod} color="primary" />
+                            <Checkbox
+                              onChange={mount}
+                              value={pod}
+                              color="primary"
+                              disabled={isLoading}
+                            />
                           }
                           label={pod}
                         />
