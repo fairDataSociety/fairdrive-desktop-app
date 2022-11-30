@@ -1,6 +1,8 @@
 import {forwardRef, SyntheticEvent, useEffect, useState} from 'react'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
-import logo from './assets/images/logo-universal.png'
+//import logo1 from './assets/images/logo-universal.png'
+//import logoOrange from './assets/images/fairdatasociety-logo.jpg'
+import logo from './assets/images/fairdata.svg'
 import './App.css'
 import {Login, Mount, GetPodsList, Unmount, Start, Close, Logout, CreatePod} from "../wailsjs/go/handler/Handler"
 import {SetupConfig, IsSet, GetConfig, GetMountPoint} from "../wailsjs/go/main/conf"
@@ -304,7 +306,7 @@ function App() {
       </Snackbar>
 
       {/*logo*/}
-      <img src={logo} id="logo" alt="logo" />
+      <img src={logo} id="logo" alt="logo" className="logo-icon" />
 
       {/*settings modal*/}
       <Modal

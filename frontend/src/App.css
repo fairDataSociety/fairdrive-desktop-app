@@ -57,3 +57,15 @@
     border: none;
     background-color: rgba(255, 255, 255, 1);
 }
+
+
+.logo-icon {
+    display: inline-block;
+    width: 70px;
+    height: 70px;
+    background-size: cover;
+  }
+.logo-icon:hover,
+.logo-icon:focus {
+    filter: invert(100%) sepia(0%) saturate(100%) hue-rotate(0deg) brightness(100%) contrast(100%);
+}
