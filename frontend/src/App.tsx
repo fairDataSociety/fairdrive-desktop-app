@@ -339,7 +339,12 @@ function App() {
               <Grid container>
                 <Grid item>
                   <Tooltip title="Select if you directly access Bee">
-                    <FormControlLabel value={'no'} control={<Radio />} label="No" />
+                    <FormControlLabel
+                      value={'no'}
+                      control={<Radio />}
+                      label="No"
+                      style={{ color: 'black' }}
+                    />
                   </Tooltip>
                 </Grid>
 
@@ -349,6 +354,7 @@ function App() {
                       value={'yes'}
                       control={<Radio />}
                       label="Yes"
+                      style={{ color: 'black' }}
                     />
                   </Tooltip>
                 </Grid>
