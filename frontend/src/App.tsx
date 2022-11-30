@@ -298,7 +298,7 @@ function App() {
 
   return (
     <div id="App">
-      <h1 style={{ color: 'black' }}>Fairdrive</h1>
+      {/* <h1 style={{ color: 'black' }}>Fairdrive</h1> */}
       {/*shows error*/}
       <Snackbar open={open} onClose={handleClose}>
         <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
