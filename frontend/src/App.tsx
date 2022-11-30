@@ -464,6 +464,7 @@ function App() {
                 variant="contained"
                 sx={{ mt: 3, mb: 2 }}
                 onClick={initFairOs}
+                disabled={isLoading}
               >
                 Start
               </Button>
