@@ -298,6 +298,7 @@ function App() {
 
   return (
     <div id="App">
+      <h1 style={{ color: 'black' }}>Fairdrive</h1>
       {/*shows error*/}
       <Snackbar open={open} onClose={handleClose}>
         <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
@@ -373,7 +374,7 @@ function App() {
             </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-              <Tooltip title="BatchID to use for uploads, leave empty if you are using gateway">
+              <Tooltip title="BatchID to use for uploads, leave empty if you are using gateway.">
                 <TextField
                   margin="normal"
                   value={batch}
