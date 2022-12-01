@@ -175,28 +175,28 @@ function App() {
           let acc = await Get()
           if (acc.Username === '' || acc.Password === '') {
             EventsEmit('disableMenus')
-            return
-          }
-          setName(acc.Username)
-          setPassword(acc.Password)
+          } else {
+            setName(acc.Username)
+            setPassword(acc.Password)
 
-          await Login(acc.Username, acc.Password)
-          let p = await GetPodsList()
+            await Login(acc.Username, acc.Password)
+            let p = await GetPodsList()
 
-          setPods(p)
-          setShowLogin(false)
+            setPods(p)
+            setShowLogin(false)
 
-          let _mountPoint = await GetMountPoint()
-          setMountPoint(_mountPoint)
+            let _mountPoint = await GetMountPoint()
+            setMountPoint(_mountPoint)
 
-          let autoMount = await GetAutoMount()
-          if(autoMount) {
-            let mountedPods = await GetMountedPods()
-            mountedPods.map(async (pod) => {
-              await Mount(pod, _mountPoint, false)
-              let pods = await GetCashedPods()
-              setPods(pods)
-            })
+            let autoMount = await GetAutoMount()
+            if(autoMount) {
+              let mountedPods = await GetMountedPods()
+              mountedPods.map(async (pod) => {
+                await Mount(pod, _mountPoint, false)
+                let pods = await GetCashedPods()
+                setPods(pods)
+              })
+            }
           }
         } catch (e: any) {
           EventsEmit('disableMenus')
