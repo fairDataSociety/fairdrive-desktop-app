@@ -18,7 +18,7 @@ type Account struct {
 	Password string
 }
 
-func NewAccount() *Account {
+func newAccount() *Account {
 	config := viper.New()
 	acc := &Account{}
 	home, err := homedir.Dir()

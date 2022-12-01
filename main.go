@@ -31,7 +31,7 @@ func main() {
 		return
 	}
 	cnf := &conf{}
-	acc := NewAccount()
+	acc := newAccount()
 	abt := &about{}
 	var startContext context.Context
 
@@ -57,7 +57,7 @@ func main() {
 	if runtime.GOOS == "darwin" {
 		appMenu.Append(menu.EditMenu()) // on macos platform, we should append EditMenu to enable Cmd+C,Cmd+V,Cmd+Z... shortcut
 	}
-	fileMenu.AddText("Logout", keys.Combo("W", keys.ShiftKey, keys.CmdOrCtrlKey), func(item *menu.CallbackData) {
+	fileMenu.AddText("Logout", keys.Combo("W", keys.ShiftKey, keys.CmdOrCtrlKey), func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "logout")
 	})
 
@@ -65,6 +65,15 @@ func main() {
 	podMenu.AddText("New", keys.CmdOrCtrl("n"), func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "podNew")
 	})
+	podMenu.AddSeparator()
+	auto := podMenu.AddText("Auto mount", nil, func(it *menu.CallbackData) {
+		err = cnf.setAutomount(it.MenuItem.Checked)
+		if err != nil {
+			println("saving auto mount config failed ", err.Error())
+			return
+		}
+	})
+	auto.Type = menu.CheckboxType
 	helpMenu := appMenu.AddSubmenu("Help")
 	helpMenu.AddText("Report a problem", nil, func(_ *menu.CallbackData) {
 		// TODO Report a problem
@@ -93,7 +102,10 @@ func main() {
 			startContext = ctx
 			wRuntime.EventsOn(startContext, "disableMenus", func(_ ...interface{}) {
 				for _, item := range podMenu.Items {
-					item.Disabled = true
+					if item.Label == "New" {
+						item.Disabled = false
+						break
+					}
 				}
 				for _, item := range fileMenu.Items {
 					if item.Label == "Logout" {
@@ -105,7 +117,10 @@ func main() {
 			})
 			wRuntime.EventsOn(startContext, "enableMenus", func(_ ...interface{}) {
 				for _, item := range podMenu.Items {
-					item.Disabled = false
+					if item.Label == "New" {
+						item.Disabled = false
+						break
+					}
 				}
 				for _, item := range fileMenu.Items {
 					if item.Label == "Logout" {
@@ -128,10 +143,31 @@ func main() {
 				}
 				wRuntime.EventsEmit(startContext, "mountPointSelected", location)
 			})
+			wRuntime.EventsOn(startContext, "Mount", func(...interface{}) {
+				allPods := dfsHandler.GetCashedPods()
+				podsToSave := []string{}
+				for _, podItem := range allPods {
+					if podItem.IsMounted {
+						podsToSave = append(podsToSave, podItem.PodName)
+					}
+				}
+				err := cnf.setMountedPods(podsToSave)
+				if err != nil {
+					println("failed to same mounted pods for automount ", err.Error())
+					return
+				}
+			})
+
 			err := cnf.ReadConfig()
 			if err != nil {
 				println("read config failed ", err.Error())
 				return
+			}
+
+			if cnf.IsSet() {
+				auto.Checked = cnf.autoMount
+				wRuntime.MenuUpdateApplicationMenu(startContext)
+				wRuntime.EventsEmit(startContext, "mountThesePods")
 			}
 		},
 		OnShutdown: func(_ context.Context) {
