@@ -28,6 +28,7 @@ export namespace handler {
 	export class PodMountedInfo {
 	    podName: string;
 	    isMounted: boolean;
+	    mountPoint: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new PodMountedInfo(source);
@@ -37,6 +38,7 @@ export namespace handler {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.podName = source["podName"];
 	        this.isMounted = source["isMounted"];
+	        this.mountPoint = source["mountPoint"];
 	    }
 	}
 

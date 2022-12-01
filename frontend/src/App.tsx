@@ -186,11 +186,14 @@ function App() {
           let p = await GetPodsList()
           setPods(p)
 
+          let _mountPoint = await GetMountPoint()
+          setMountPoint(_mountPoint)
+
           let autoMount = await GetAutoMount()
           if(autoMount) {
             let mountedPods = await GetMountedPods()
             mountedPods.map(async (pod) => {
-              await Mount(pod, mountPoint, false)
+              await Mount(pod, _mountPoint, false)
               let pods = await GetCashedPods()
               setPods(pods)
             })
@@ -201,9 +204,6 @@ function App() {
         }
         setIsLoading(false)
       }
-    })
-    GetMountPoint().then((res) => {
-      setMountPoint(res)
     })
     HasRemembered().then((isSet) => {
       if (!isSet) {
@@ -654,13 +654,23 @@ function App() {
                       <Grid item>
                         <FormControlLabel
                           control={
-                            <Checkbox
-                              onChange={mount}
-                              value={pod.podName}
-                              color="primary"
-                              disabled={isLoading}
-                              checked={pod.isMounted}
-                            />
+                            pod.isMounted ?
+                              <Tooltip title={pod.mountPoint}>
+                                <Checkbox
+                                  onChange={mount}
+                                  value={pod.podName+"asdasd"}
+                                  color="primary"
+                                  disabled={isLoading}
+                                  checked={pod.isMounted}
+                                />
+                              </Tooltip> :
+                              <Checkbox
+                                  onChange={mount}
+                                  value={pod.podName}
+                                  color="primary"
+                                  disabled={isLoading}
+                                  checked={pod.isMounted}
+                              />
                           }
                           label={pod.podName}
                           style={{ color: 'black' }}

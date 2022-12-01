@@ -25,20 +25,26 @@ var (
 type Handler struct {
 	lock           sync.Mutex
 	api            *api.DfsAPI
-	activeMounts   map[string]*fuse.FileSystemHost
+	activeMounts   map[string]*hostMount
 	logger         logging.Logger
 	sessionID      string
 	lastLoadedPods []string
 }
 
+type hostMount struct {
+	h    *fuse.FileSystemHost
+	path string
+}
+
 type PodMountedInfo struct {
-	PodName   string `json:"podName"`
-	IsMounted bool   `json:"isMounted"`
+	PodName    string `json:"podName"`
+	IsMounted  bool   `json:"isMounted"`
+	MountPoint string `json:"mountPoint"`
 }
 
 func New(logger logging.Logger) (*Handler, error) {
 	return &Handler{
-		activeMounts: map[string]*fuse.FileSystemHost{},
+		activeMounts: map[string]*hostMount{},
 		logger:       logger,
 	}, nil
 }
@@ -80,13 +86,14 @@ func (h *Handler) Mount(pod, location string, createPod bool) error {
 		h.logger.Errorf("mount: fairos not initialised")
 		return ErrFairOsNotInitialised
 	}
-	mountPoint := filepath.Join(location, root, pod)
-	if _, err := os.Stat(mountPoint); err != nil {
-		err = os.MkdirAll(mountPoint, 0700)
+	parent := filepath.Join(location, root)
+	if _, err := os.Stat(parent); err != nil {
+		err = os.MkdirAll(parent, 0700)
 		if err != nil {
 			return err
 		}
 	}
+	mountPoint := filepath.Join(parent, pod)
 	h.lock.Lock()
 	defer h.lock.Unlock()
 	_, ok := h.activeMounts[pod]
@@ -115,10 +122,14 @@ func (h *Handler) Mount(pod, location string, createPod bool) error {
 	}()
 	select {
 	case <-time.After(time.Second * 1):
-		h.activeMounts[pod] = host
+		h.activeMounts[pod] = &hostMount{
+			h:    host,
+			path: mountPoint,
+		}
 	case <-sig:
 		return fmt.Errorf("failed to mount")
 	}
+	h.logger.Infof("%s is mounted at %s", pod, mountPoint)
 	return nil
 }
 
@@ -133,7 +144,7 @@ func (h *Handler) Unmount(pod string) error {
 	if !ok || host == nil {
 		return fmt.Errorf("%s is not mounted", pod)
 	}
-	u := host.Unmount()
+	u := host.h.Unmount()
 	if !u {
 		return fmt.Errorf("unmount failed")
 	}
@@ -155,10 +166,13 @@ func (h *Handler) GetPodsList() ([]*PodMountedInfo, error) {
 	h.lastLoadedPods = pods
 	podsMounted := []*PodMountedInfo{}
 	for _, podName := range pods {
-		_, ok := h.activeMounts[podName]
+		host, ok := h.activeMounts[podName]
 		podMounted := &PodMountedInfo{
 			PodName:   podName,
 			IsMounted: ok,
+		}
+		if ok {
+			podMounted.MountPoint = host.path
 		}
 		podsMounted = append(podsMounted, podMounted)
 	}
@@ -173,10 +187,13 @@ func (h *Handler) GetCashedPods() []*PodMountedInfo {
 	defer h.lock.Unlock()
 	podsMounted := []*PodMountedInfo{}
 	for _, podName := range h.lastLoadedPods {
-		_, ok := h.activeMounts[podName]
+		host, ok := h.activeMounts[podName]
 		podMounted := &PodMountedInfo{
 			PodName:   podName,
 			IsMounted: ok,
+		}
+		if ok {
+			podMounted.MountPoint = host.path
 		}
 		podsMounted = append(podsMounted, podMounted)
 	}
@@ -198,9 +215,9 @@ func (h *Handler) Close() error {
 
 	h.lock.Lock()
 	defer h.lock.Unlock()
-	for pod, host := range h.activeMounts {
-		host.Unmount()
-		delete(h.activeMounts, pod)
+	for podName, host := range h.activeMounts {
+		host.h.Unmount()
+		delete(h.activeMounts, podName)
 	}
 	return h.api.Close()
 }
