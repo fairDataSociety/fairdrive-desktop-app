@@ -622,7 +622,7 @@ function App() {
             </ThemeProvider>
           )
         }
-        if (showPods) {
+        if (showPods && pods != null) {
           return (
             <ThemeProvider theme={theme}>
               <Container component="main" maxWidth="xs">
