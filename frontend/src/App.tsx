@@ -181,10 +181,10 @@ function App() {
           setPassword(acc.Password)
 
           await Login(acc.Username, acc.Password)
-          setShowLogin(false)
-
           let p = await GetPodsList()
+
           setPods(p)
+          setShowLogin(false)
 
           let _mountPoint = await GetMountPoint()
           setMountPoint(_mountPoint)
@@ -290,8 +290,8 @@ function App() {
     setIsLoading(true)
     try {
       await Login(username, password)
-      setShowLogin(false)
       let p = await GetPodsList()
+      setShowLogin(false)
       setPods(p)
       setShowPods(true)
       if (remember) {
