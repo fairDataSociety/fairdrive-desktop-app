@@ -54,7 +54,13 @@ import CloseIcon from '@mui/icons-material/Close'
 import { BuildTime, Version } from '../wailsjs/go/main/about'
 import PodMountedInfo = handler.PodMountedInfo;
 
-const theme = createTheme()
+const theme = createTheme({
+  typography: {
+    "fontFamily": `"WorkSans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif`
+  }
+})
 const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />
 })
@@ -315,269 +321,270 @@ function App() {
 
   return (
     <div id="App">
-      {/* <h1 style={{ color: 'black' }}>Fairdrive</h1> */}
-      {/*shows error*/}
-      <Snackbar open={open} onClose={handleClose}>
-        <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
-          {message}
-        </Alert>
-      </Snackbar>
+      <ThemeProvider theme={theme}>
+        {/* <h1 style={{ color: 'black' }}>Fairdrive</h1> */}
 
-      {/*logo*/}
-      <img src={logo} id="logo" alt="logo" className="logo-icon" />
+        {/*shows error*/}
+        <Snackbar open={open} onClose={handleClose}>
+          <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
+            {message}
+          </Alert>
+        </Snackbar>
 
-      {/*settings modal*/}
-      <Modal
-        open={showConfig}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box
-          sx={{
-            marginTop: 8,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            boxShadow: 24,
-            bgcolor: 'white',
-            p: 4,
-          }}
+        {/*logo*/}
+        <img src={logo} id="logo" alt="logo" className="logo-icon" />
+
+        {/*settings modal*/}
+        <Modal
+          open={showConfig}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
         >
-          <FormGroup>
-            <FormLabel id="demo-controlled-radio-buttons-group">
-              Is your bee node running behind proxy?
-            </FormLabel>
-            <RadioGroup
-              aria-labelledby="demo-controlled-radio-buttons-group"
-              name="controlled-radio-buttons-group"
-              onChange={updateProxy}
-              value={proxyValue}
-            >
-              <Grid container>
-                <Grid item>
-                  <Tooltip title="Select if you directly access Bee">
-                    <FormControlLabel
-                      value={'no'}
-                      control={<Radio />}
-                      label="No"
-                      style={{ color: 'black' }}
-                    />
-                  </Tooltip>
-                </Grid>
-
-                <Grid item>
-                  <Tooltip title="Select if your bee is behind proxy">
-                    <FormControlLabel
-                      value={'yes'}
-                      control={<Radio />}
-                      label="Yes"
-                      style={{ color: 'black' }}
-                    />
-                  </Tooltip>
-                </Grid>
-              </Grid>
-            </RadioGroup>
-            <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-              <Tooltip title="Bee API endpoint, recomended http://localhost:1635">
-                <TextField
-                  margin="normal"
-                  value={bee}
-                  required
-                  fullWidth
-                  id="bee"
-                  label="Bee"
-                  onChange={updateBee}
-                  autoComplete="off"
-                />
-
-                {/* <IconButton>
-                    <Info />
-                  </IconButton> */}
-              </Tooltip>
-            </Box>
-
-            <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-              <Tooltip title="BatchID to use for uploads, leave empty if you are using gateway.">
-                <TextField
-                  margin="normal"
-                  value={batch}
-                  required
-                  fullWidth
-                  id="batch"
-                  label="BatchID"
-                  onChange={updateBatch}
-                  autoComplete="off"
-                />
-
-                {/* <IconButton>
-                    <Info />
-                  </IconButton> */}
-              </Tooltip>
-            </Box>
-
-            <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-              <Tooltip title="RPC Endpoint for ENS based authentication">
-                <TextField
-                  margin="normal"
-                  value={rpc}
-                  required
-                  fullWidth
-                  id="rpc"
-                  label="RPC"
-                  onChange={updateRPC}
-                  autoComplete="off"
-                />
-
-                {/* <IconButton>
-                    <Info />
-                  </IconButton> */}
-              </Tooltip>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-              <Tooltip title="Specify Network type for ENS based authentication">
-                <Select
-                  required
-                  fullWidth
-                  id="network"
-                  label="Network"
-                  onChange={updateNetwork}
-                  displayEmpty={true}
-                  value={network}
-                >
-                  <MenuItem value={'testnet'}>Testnet</MenuItem>
-                  <MenuItem value={'play'}>FDP play</MenuItem>
-                </Select>
-                {/*                 
-                  <IconButton>
-                    <Info />
-                  </IconButton> */}
-              </Tooltip>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-              <Tooltip title="Location of the Fairdrive folder, a mounting point">
-                <TextField
-                  margin="normal"
-                  value={mountPoint}
-                  disabled={true}
-                  required
-                  fullWidth
-                  id="mountPoint"
-                  label="Mount Location"
-                  autoComplete="off"
-                />
-              </Tooltip>
-
-              <Tooltip title="Select mounting point location">
-                <IconButton onClick={showMountPointSelector}>
-                  <Folder />
-                </IconButton>
-              </Tooltip>
-
-              {/* <Tooltip title="Location of the Fairdrive folder">
-                  <IconButton>
-                    <Info />
-                  </IconButton>
-                </Tooltip> */}
-            </Box>
-            <Stack mt={3} mb={3} spacing={2} direction="row">
-              <Button fullWidth variant="contained" onClick={closeSettings}>
-                Close
-              </Button>
-              <Button
-                fullWidth
-                variant="contained"
-                sx={{ mt: 3, mb: 2 }}
-                onClick={initFairOs}
-                disabled={isLoading}
+          <Box
+            sx={{
+              marginTop: 8,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              boxShadow: 24,
+              bgcolor: 'white',
+              p: 4,
+            }}
+          >
+            <FormGroup>
+              <FormLabel id="demo-controlled-radio-buttons-group">
+                Is your bee node running behind proxy?
+              </FormLabel>
+              <RadioGroup
+                aria-labelledby="demo-controlled-radio-buttons-group"
+                name="controlled-radio-buttons-group"
+                onChange={updateProxy}
+                value={proxyValue}
               >
-                Start
-              </Button>
-            </Stack>
-          </FormGroup>
-        </Box>
-      </Modal>
+                <Grid container>
+                  <Grid item>
+                    <Tooltip title="Select if you directly access Bee">
+                      <FormControlLabel
+                        value={'no'}
+                        control={<Radio />}
+                        label="No"
+                        style={{ color: 'black' }}
+                      />
+                    </Tooltip>
+                  </Grid>
 
-      {/*about dialog*/}
-      {(() => {
-        if (showAbout) {
-          return (
-            <AboutDialog aria-labelledby="about-title" open={showAbout}>
-              <DialogTitle sx={{ m: 0, p: 2, fontSize: 'small' }}>
-                About
-                <IconButton
-                  aria-label="close"
-                  onClick={handleAboutClose}
-                  sx={{
-                    position: 'absolute',
-                    right: 8,
-                    top: 8,
-                    color: (theme) => theme.palette.grey[500],
-                  }}
-                >
-                  <CloseIcon />
-                </IconButton>
-              </DialogTitle>
-              <DialogContent dividers>
-                <Typography gutterBottom variant="h6" align="left">
-                  Fairdrive
-                </Typography>
-                <Typography gutterBottom align="left">
-                  Version {version}
-                </Typography>
-                <Typography gutterBottom align="left">
-                  Built on {buildTime}
-                </Typography>
-                <Typography gutterBottom align="left">
-                  <Link href="#" variant="body2">
-                    License
-                  </Link>
-                </Typography>
-                <Typography gutterBottom align="left">
-                  <Link href="#" variant="body2">
-                    Powered by FairOS
-                  </Link>
-                </Typography>
-                <Typography gutterBottom align="left">
-                  © FairDataSociety 2022
-                </Typography>
-              </DialogContent>
-            </AboutDialog>
-          )
-        }
+                  <Grid item>
+                    <Tooltip title="Select if your bee is behind proxy">
+                      <FormControlLabel
+                        value={'yes'}
+                        control={<Radio />}
+                        label="Yes"
+                        style={{ color: 'black' }}
+                      />
+                    </Tooltip>
+                  </Grid>
+                </Grid>
+              </RadioGroup>
+              <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                <Tooltip title="Bee API endpoint, recomended http://localhost:1635">
+                  <TextField
+                    margin="normal"
+                    value={bee}
+                    required
+                    fullWidth
+                    id="bee"
+                    label="Bee"
+                    onChange={updateBee}
+                    autoComplete="off"
+                  />
 
-        {
-          /*pod new dialog*/
-        }
-        if (showPodNew) {
-          return (
-            <Dialog open={showPodNew} onClose={handlePodNewClose}>
-              <DialogTitle>Create new Pod</DialogTitle>
-              <DialogContent>
-                <TextField
-                  autoFocus
-                  margin="dense"
-                  id="podName"
-                  label="Pod Name"
-                  fullWidth
-                  variant="standard"
-                  onChange={updateNewPodName}
-                />
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handlePodNewClose} disabled={isLoading}>
+                  {/* <IconButton>
+                      <Info />
+                    </IconButton> */}
+                </Tooltip>
+              </Box>
+
+              <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                <Tooltip title="BatchID to use for uploads, leave empty if you are using gateway.">
+                  <TextField
+                    margin="normal"
+                    value={batch}
+                    required
+                    fullWidth
+                    id="batch"
+                    label="BatchID"
+                    onChange={updateBatch}
+                    autoComplete="off"
+                  />
+
+                  {/* <IconButton>
+                      <Info />
+                    </IconButton> */}
+                </Tooltip>
+              </Box>
+
+              <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                <Tooltip title="RPC Endpoint for ENS based authentication">
+                  <TextField
+                    margin="normal"
+                    value={rpc}
+                    required
+                    fullWidth
+                    id="rpc"
+                    label="RPC"
+                    onChange={updateRPC}
+                    autoComplete="off"
+                  />
+
+                  {/* <IconButton>
+                      <Info />
+                    </IconButton> */}
+                </Tooltip>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                <Tooltip title="Specify Network type for ENS based authentication">
+                  <Select
+                    required
+                    fullWidth
+                    id="network"
+                    label="Network"
+                    onChange={updateNetwork}
+                    displayEmpty={true}
+                    value={network}
+                  >
+                    <MenuItem value={'testnet'}>Testnet</MenuItem>
+                    <MenuItem value={'play'}>FDP play</MenuItem>
+                  </Select>
+                  {/*
+                    <IconButton>
+                      <Info />
+                    </IconButton> */}
+                </Tooltip>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                <Tooltip title="Location of the Fairdrive folder, a mounting point">
+                  <TextField
+                    margin="normal"
+                    value={mountPoint}
+                    disabled={true}
+                    required
+                    fullWidth
+                    id="mountPoint"
+                    label="Mount Location"
+                    autoComplete="off"
+                  />
+                </Tooltip>
+
+                <Tooltip title="Select mounting point location">
+                  <IconButton onClick={showMountPointSelector}>
+                    <Folder />
+                  </IconButton>
+                </Tooltip>
+
+                {/* <Tooltip title="Location of the Fairdrive folder">
+                    <IconButton>
+                      <Info />
+                    </IconButton>
+                  </Tooltip> */}
+              </Box>
+              <Stack mt={3} mb={3} spacing={2} direction="row">
+                <Button fullWidth variant="contained" onClick={closeSettings}>
                   Close
                 </Button>
-                <Button onClick={handlePodNew} disabled={isLoading}>
-                  Create
+                <Button
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                  onClick={initFairOs}
+                  disabled={isLoading}
+                >
+                  Start
                 </Button>
-              </DialogActions>
-            </Dialog>
-          )
-        }
+              </Stack>
+            </FormGroup>
+          </Box>
+        </Modal>
 
-        if (showLogin) {
-          return (
-            <ThemeProvider theme={theme}>
+        {/*about dialog*/}
+        {(() => {
+          if (showAbout) {
+            return (
+              <AboutDialog aria-labelledby="about-title" open={showAbout}>
+                <DialogTitle sx={{ m: 0, p: 2, fontSize: 'small' }}>
+                  About
+                  <IconButton
+                    aria-label="close"
+                    onClick={handleAboutClose}
+                    sx={{
+                      position: 'absolute',
+                      right: 8,
+                      top: 8,
+                      color: (theme) => theme.palette.grey[500],
+                    }}
+                  >
+                    <CloseIcon />
+                  </IconButton>
+                </DialogTitle>
+                <DialogContent dividers>
+                  <Typography gutterBottom variant="h6" align="left">
+                    Fairdrive
+                  </Typography>
+                  <Typography gutterBottom align="left">
+                    Version {version}
+                  </Typography>
+                  <Typography gutterBottom align="left">
+                    Built on {buildTime}
+                  </Typography>
+                  <Typography gutterBottom align="left">
+                    <Link href="#" variant="body2">
+                      License
+                    </Link>
+                  </Typography>
+                  <Typography gutterBottom align="left">
+                    <Link href="#" variant="body2">
+                      Powered by FairOS
+                    </Link>
+                  </Typography>
+                  <Typography gutterBottom align="left">
+                    © FairDataSociety 2022
+                  </Typography>
+                </DialogContent>
+              </AboutDialog>
+            )
+          }
+
+          {
+            /*pod new dialog*/
+          }
+          if (showPodNew) {
+            return (
+              <Dialog open={showPodNew} onClose={handlePodNewClose}>
+                <DialogTitle>Create new Pod</DialogTitle>
+                <DialogContent>
+                  <TextField
+                    autoFocus
+                    margin="dense"
+                    id="podName"
+                    label="Pod Name"
+                    fullWidth
+                    variant="standard"
+                    onChange={updateNewPodName}
+                  />
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={handlePodNewClose} disabled={isLoading}>
+                    Close
+                  </Button>
+                  <Button onClick={handlePodNew} disabled={isLoading}>
+                    Create
+                  </Button>
+                </DialogActions>
+              </Dialog>
+            )
+          }
+
+          if (showLogin) {
+            return (
               <Container component="main" maxWidth="xs">
                 <Box
                   sx={{
@@ -636,12 +643,10 @@ function App() {
                   </FormGroup>
                 </Box>
               </Container>
-            </ThemeProvider>
-          )
-        }
-        if (showPods && pods != null) {
-          return (
-            <ThemeProvider theme={theme}>
+            )
+          }
+          if (showPods && pods != null) {
+            return (
               <Container component="main" maxWidth="xs">
                 <FormGroup>
                   {pods.map((pod) => (
@@ -665,10 +670,9 @@ function App() {
                   ))}
                 </FormGroup>
               </Container>
-            </ThemeProvider>
-          )
-        }
-      })()}
+            )
+          }
+        })()}
 
       <div
         style={{
@@ -687,7 +691,8 @@ function App() {
           />
         )}
       </div>
-    </div>
+    </ThemeProvider>
+  </div>
   )
 }
 
