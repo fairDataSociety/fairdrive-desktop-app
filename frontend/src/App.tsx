@@ -640,6 +640,7 @@ function App() {
                             />
                           }
                           label={pod}
+                          style={{ color: 'black' }}
                         />
                       </Grid>
                     </Grid>
