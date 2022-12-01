@@ -3,6 +3,8 @@ package handler
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"runtime"
 	"sync"
 	"time"
@@ -15,15 +17,23 @@ import (
 )
 
 var (
-	ErrFairOsNotInitialised = fmt.Errorf("fairOs not initialised")
+	ErrFairOsNotInitialised = fmt.Errorf("fairos not initialised")
+
+	root = "Fairdrive"
 )
 
 type Handler struct {
-	lock         sync.Mutex
-	api          *api.DfsAPI
-	activeMounts map[string]*fuse.FileSystemHost
-	logger       logging.Logger
-	sessionID    string
+	lock           sync.Mutex
+	api            *api.DfsAPI
+	activeMounts   map[string]*fuse.FileSystemHost
+	logger         logging.Logger
+	sessionID      string
+	lastLoadedPods []string
+}
+
+type PodMountedInfo struct {
+	PodName   string `json:"podName"`
+	IsMounted bool   `json:"isMounted"`
 }
 
 func New(logger logging.Logger) (*Handler, error) {
@@ -38,6 +48,7 @@ func (h *Handler) Start(fc *api.FairOSConfig) (err error) {
 	defer h.lock.Unlock()
 	h.api, err = api.New(h.logger, fc)
 	if err != nil {
+		h.logger.Errorf("start: fairos initialisation failed: %s", err.Error())
 		return err
 	}
 	return nil
@@ -45,6 +56,7 @@ func (h *Handler) Start(fc *api.FairOSConfig) (err error) {
 
 func (h *Handler) Login(username, password string) error {
 	if h.api == nil {
+		h.logger.Errorf("login: fairos not initialised")
 		return ErrFairOsNotInitialised
 	}
 	sessionID, err := h.api.Login(username, password)
@@ -57,14 +69,23 @@ func (h *Handler) Login(username, password string) error {
 
 func (h *Handler) Logout() error {
 	if h.api == nil {
+		h.logger.Errorf("logout: fairos not initialised")
 		return ErrFairOsNotInitialised
 	}
 	return h.api.LogoutUser(h.sessionID)
 }
 
-func (h *Handler) Mount(pod, mountPoint string, createPod bool) error {
+func (h *Handler) Mount(pod, location string, createPod bool) error {
 	if h.api == nil {
+		h.logger.Errorf("mount: fairos not initialised")
 		return ErrFairOsNotInitialised
+	}
+	mountPoint := filepath.Join(location, root, pod)
+	if _, err := os.Stat(mountPoint); err != nil {
+		err = os.MkdirAll(mountPoint, 0700)
+		if err != nil {
+			return err
+		}
 	}
 	h.lock.Lock()
 	defer h.lock.Unlock()
@@ -103,6 +124,7 @@ func (h *Handler) Mount(pod, mountPoint string, createPod bool) error {
 
 func (h *Handler) Unmount(pod string) error {
 	if h.api == nil {
+		h.logger.Errorf("unmount: fairos not initialised")
 		return ErrFairOsNotInitialised
 	}
 	h.lock.Lock()
@@ -119,18 +141,53 @@ func (h *Handler) Unmount(pod string) error {
 	return h.api.ClosePod(pod, h.sessionID)
 }
 
-func (h *Handler) GetPodsList() ([]string, error) {
+func (h *Handler) GetPodsList() ([]*PodMountedInfo, error) {
 	if h.api == nil {
-		return []string{}, ErrFairOsNotInitialised
+		h.logger.Errorf("get pod list: fairos not initialised")
+		return nil, ErrFairOsNotInitialised
 	}
+	h.lock.Lock()
+	defer h.lock.Unlock()
 	pods, _, err := h.api.ListPods(h.sessionID)
 	if err != nil {
 		return nil, err
 	}
-	return pods, err
+	h.lastLoadedPods = pods
+	podsMounted := []*PodMountedInfo{}
+	for _, podName := range pods {
+		_, ok := h.activeMounts[podName]
+		podMounted := &PodMountedInfo{
+			PodName:   podName,
+			IsMounted: ok,
+		}
+		podsMounted = append(podsMounted, podMounted)
+	}
+	return podsMounted, err
+}
+
+func (h *Handler) GetCashedPods() []*PodMountedInfo {
+	if h.api == nil {
+		return nil
+	}
+	h.lock.Lock()
+	defer h.lock.Unlock()
+	podsMounted := []*PodMountedInfo{}
+	for _, podName := range h.lastLoadedPods {
+		_, ok := h.activeMounts[podName]
+		podMounted := &PodMountedInfo{
+			PodName:   podName,
+			IsMounted: ok,
+		}
+		podsMounted = append(podsMounted, podMounted)
+	}
+	return podsMounted
 }
 
 func (h *Handler) CreatePod(podname string) (*pod.Info, error) {
+	if h.api == nil {
+		h.logger.Errorf("create pod: fairos not initialised")
+		return nil, ErrFairOsNotInitialised
+	}
 	return h.api.CreatePod(podname, h.sessionID)
 }
 

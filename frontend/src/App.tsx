@@ -1,13 +1,20 @@
-import {forwardRef, SyntheticEvent, useEffect, useState} from 'react'
+import { forwardRef, SyntheticEvent, useEffect, useState } from 'react'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
-//import logo1 from './assets/images/logo-universal.png'
-//import logoOrange from './assets/images/fairdatasociety-logo.jpg'
 import logo from './assets/images/fairdata.svg'
 import './App.css'
-import {Login, Mount, GetPodsList, Unmount, Start, Close, Logout, CreatePod} from "../wailsjs/go/handler/Handler"
-import {SetupConfig, IsSet, GetConfig, GetMountPoint} from "../wailsjs/go/main/conf"
-import {RememberPassword, HasRemembered, ForgetPassword, Get} from "../wailsjs/go/main/Account"
-import './assets/fonts/worksans-regular.woff2'
+import {
+  Login,
+  Mount,
+  GetPodsList,
+  Unmount,
+  Start,
+  Close,
+  Logout,
+  CreatePod,
+  GetCashedPods
+} from "../wailsjs/go/handler/Handler"
+import { SetupConfig, IsSet, GetConfig, GetMountPoint, GetAutoMount, GetMountedPods } from "../wailsjs/go/main/conf"
+import { RememberPassword, HasRemembered, ForgetPassword, Get } from "../wailsjs/go/main/Account"
 
 import {
   TextField,
@@ -35,17 +42,17 @@ import {
   DialogContent,
   Typography,
   styled,
-  DialogContentText,
   DialogActions,
   LinearProgress,
 } from '@mui/material'
 import MuiAlert from '@mui/material/Alert'
 
-import { api } from '../wailsjs/go/models'
+import { api, handler } from '../wailsjs/go/models'
 import { EventsEmit, EventsOn } from '../wailsjs/runtime'
-import { Folder, Info } from '@mui/icons-material'
+import { Folder } from '@mui/icons-material'
 import CloseIcon from '@mui/icons-material/Close'
 import { BuildTime, Version } from '../wailsjs/go/main/about'
+import PodMountedInfo = handler.PodMountedInfo;
 
 const theme = createTheme()
 const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
@@ -143,44 +150,50 @@ function App() {
     BuildTime().then((res) => {
       setTime(res)
     })
-    IsSet().then((isSet) => {
+    IsSet().then(async (isSet) => {
       if (!isSet) {
         setShowConfig(true)
       } else {
-        GetConfig().then((c) => {
-          if (c !== null) {
-            c.isProxy ? setProxyValue('yes') : setProxyValue('no')
-            setProxy(c.isProxy)
-            setBee(c.bee)
-            setBatch(c.batch)
-            setNetwork(c.network)
-            setRPC(c.rpc)
+        let c = await GetConfig()
+        if (c !== null) {
+          c.isProxy ? setProxyValue('yes') : setProxyValue('no')
+          setProxy(c.isProxy)
+          setBee(c.bee)
+          setBatch(c.batch)
+          setNetwork(c.network)
+          setRPC(c.rpc)
+        }
+        setIsLoading(true)
+        try {
+          await Start(c)
+          let acc = await Get()
+          if (acc.Username === '' || acc.Password === '') {
+            EventsEmit('disableMenus')
+            return
           }
-          Start(c)
-            .catch((err) => {
-              showError(err)
+          setName(acc.Username)
+          setPassword(acc.Password)
+
+          await Login(acc.Username, acc.Password)
+          setShowLogin(false)
+
+          let p = await GetPodsList()
+          setPods(p)
+
+          let autoMount = await GetAutoMount()
+          if(autoMount) {
+            let mountedPods = await GetMountedPods()
+            mountedPods.map(async (pod) => {
+              await Mount(pod, mountPoint, false)
+              let pods = await GetCashedPods()
+              setPods(pods)
             })
-            .then((res) => {
-              Get().then(async (acc) => {
-                console.log(acc)
-                if (acc.Username === '' || acc.Password === '') {
-                  EventsEmit('disableMenus')
-                  return
-                }
-                try {
-                  setName(acc.Username)
-                  setPassword(acc.Password)
-                  await Login(acc.Username, acc.Password)
-                  setShowLogin(false)
-                  let p = await GetPodsList()
-                  setPods(p)
-                } catch (e: any) {
-                  EventsEmit('disableMenus')
-                  showError(e)
-                }
-              })
-            })
-        })
+          }
+        } catch (e: any) {
+          EventsEmit('disableMenus')
+          showError(e)
+        }
+        setIsLoading(false)
       }
     })
     GetMountPoint().then((res) => {
@@ -192,7 +205,7 @@ function App() {
       }
     })
   }, [])
-  const [pods, setPods] = useState<string[]>([])
+  const [pods, setPods] = useState<PodMountedInfo[]>([])
   const updateName = (e: any) => setName(e.target.value)
   const updatePassword = (e: any) => setPassword(e.target.value)
   const updateRemember = (e: any) => setRemember(e.target.checked)
@@ -202,17 +215,21 @@ function App() {
     if (e.target.checked) {
       // TODO need to check how mount point can be passed for Windows and linux
       try {
-        await Mount(e.target.value, mountPoint + '/' + e.target.value, false)
+        await Mount(e.target.value, mountPoint, false)
+        EventsEmit('Mount')
       } catch (e: any) {
         showError(e)
       }
     } else {
       try {
         await Unmount(e.target.value)
+        EventsEmit('Mount')
       } catch (e: any) {
         showError(e)
       }
     }
+    let pods = await GetCashedPods()
+    setPods(pods)
     setIsLoading(false)
   }
   const [mountPoint, setMountPoint] = useState('')
@@ -628,18 +645,19 @@ function App() {
               <Container component="main" maxWidth="xs">
                 <FormGroup>
                   {pods.map((pod) => (
-                    <Grid container>
+                    <Grid container key={pod.podName}>
                       <Grid item>
                         <FormControlLabel
                           control={
                             <Checkbox
                               onChange={mount}
-                              value={pod}
+                              value={pod.podName}
                               color="primary"
                               disabled={isLoading}
+                              checked={pod.isMounted}
                             />
                           }
-                          label={pod}
+                          label={pod.podName}
                           style={{ color: 'black' }}
                         />
                       </Grid>
