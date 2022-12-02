@@ -541,6 +541,7 @@ function App() {
                   <Typography gutterBottom align="left">
                     © FairDataSociety 2022
                   </Typography>
+                  <img src={logo} id="logo" alt="logo" className="logo-icon" />
                 </DialogContent>
               </AboutDialog>
             )
@@ -649,7 +650,7 @@ function App() {
           if (showPods && pods != null) {
             return (
               <Container component="main" maxWidth="xs">
-                <Tooltip title="Existing pods are listed. Here you can mount and unmount your pods">
+                <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
                   <h2 style={{ color: 'black' }}>Pods</h2>
                 </Tooltip>
                 <FormGroup>
