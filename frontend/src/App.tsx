@@ -652,13 +652,20 @@ function App() {
                   {pods.map((pod) => (
                     <Grid container key={pod.podName}>
                       <Grid item>
-                        <Checkbox
-                          onChange={mount}
-                          value={pod.podName}
-                          color="primary"
-                          disabled={isLoading}
-                          checked={pod.isMounted}
-                        />
+                        <Tooltip
+                          title={
+                            pod.isMounted ? 'Unmount this pod' : 'Mount this pod'
+                          }
+                        >
+                          <Checkbox
+                            onChange={mount}
+                            value={pod.podName}
+                            color="primary"
+                            disabled={isLoading}
+                            checked={pod.isMounted}
+                          />
+                        </Tooltip>
+                        &nbsp;
                         <FormControlLabel
                           control={
                             pod.isMounted ? (
