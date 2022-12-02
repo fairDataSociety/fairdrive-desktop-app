@@ -3,8 +3,8 @@ project_name: fda
 release:
   prerelease: auto
   extra_files:
-    - glob: ./build/bin/fda
-    - glob: ./build/bin/fda.dmg
-    - glob: ./build/bin/fda.exe
+    - glob: ./build/bin/fairdrive
+    - glob: ./build/bin/fairdrive.dmg
+    - glob: ./build/bin/fairdrive.exe
 builds:
   - skip: true

@@ -1,40 +1,52 @@
-# Filesystem in USErspace (FUSE) client for fairOS-dfs
+# Fairdrive Desktop App
 
-fdfs is a FUSE client for fairOS-dfs. It lets you mount your
+Fairdrive Desktop App is a FUSE client for fairOS-dfs. It lets you mount your
 pod on your own user space and interact with your data.
 
 ## Requirements
+
+#### FUSE
+
 You need [FUSE](http://github.com/libfuse/libfuse) for your OS.
 
+##### Installing fuse on macOS
+```
+brew install macfuse
+```
+
+##### Installing fuse on debian
+```
+sudo apt-get update
+sudo apt-get -qq install libfuse-dev
+```
+
+##### Installing fuse on windows
+install [winfsp](https://winfsp.dev/rel/)
+
+#### BEE
 You will need a bee node running with a valid stamp id.
-## About
 
-This is the official Wails React-TS template.
+## Development
 
-You can configure the project by editing `wails.json`. More information about the project settings can be found
-here: https://wails.io/docs/reference/project-config
+#### Requirements
 
-## Live Development
+- gcc
+- golang installed
+- [wails](https://wails.io/docs/gettingstarted/installation#installing-wails)
 
-To run in live development mode, run `wails dev` in the project directory. This will run a Vite development
-server that will provide very fast hot reload of your frontend changes. If you want to develop in a browser
-and have access to your Go methods, there is also a dev server that runs on http://localhost:34115. Connect
-to this in your browser, and you can call your Go code from devtools.
+### Live Development
 
-## Building
+```
+wails dev
+```
 
-To build a redistributable, production mode package, use `wails build`.
+### Building
 
-## Dependencies
-- [cgofuse](https://github.com/billziss-gh/cgofuse)
-- [cobra](github.com/spf13/cobra)
-- [fairOS-dfs](github.com/fairdatasociety/fairOS-dfs)
-- [promptui](github.com/manifoldco/promptui)
+```
+make binary
+```
 
-
-## Building on Windows
-
-### Requirements
+### Development requirements for windows
 
 #### Tools 
   1.install go
@@ -55,4 +67,10 @@ set `CPLUS_INCLUDE_PATH` to `C:\Program Files (x86)\WinFsp\inc\fuse`
 
 Installing frontend dependencies: npm ERR! Unexpected token '.'
 
-This could be a problem to various reasons why your node,npm,nvm installation is corrupt. Probably because you used old nvm (prior to version 1.1.10) which wrongly creates symbolic links. You will have to uninstall nvm and reinstall new node version. 
+This could be a problem to various reasons why your node,npm,nvm installation is corrupt. Probably because you used old nvm (prior to version 1.1.10) which wrongly creates symbolic links. You will have to uninstall nvm and reinstall new node version.
+
+## Dependencies
+- [cgofuse](https://github.com/billziss-gh/cgofuse)
+- [cobra](github.com/spf13/cobra)
+- [fairOS-dfs](github.com/fairdatasociety/fairOS-dfs)
+- [wails.io](https://wails.io/)
