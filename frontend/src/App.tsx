@@ -313,6 +313,9 @@ function App() {
   function showError(error: any) {
     if (typeof error === 'string') {
       setMessage(error.toUpperCase())
+      if (message === 'USER NOT LOGGED IN') {
+        setShowLogin(true)
+      }
     } else if (error instanceof Error) {
       setMessage(error.message) // works, `e` narrowed to Error
     }
@@ -342,7 +345,7 @@ function App() {
         </Snackbar>
 
         {/*logo*/}
-        <img src={logo} id="logo" alt="logo" className="logo-icon" />
+        {/* <img src={logo} id="logo" alt="logo" className="logo-icon" /> */}
 
         {/*settings modal*/}
         <Modal
@@ -363,7 +366,7 @@ function App() {
           >
             <FormGroup>
               <FormLabel id="demo-controlled-radio-buttons-group">
-                Is your bee node running behind proxy?
+                Is bee node running behind proxy?
               </FormLabel>
               <RadioGroup
                 aria-labelledby="demo-controlled-radio-buttons-group"
@@ -498,8 +501,8 @@ function App() {
           if (showAbout) {
             return (
               <AboutDialog aria-labelledby="about-title" open={showAbout}>
-                <DialogTitle sx={{ m: 0, p: 2, fontSize: 'small' }}>
-                  About
+                <DialogTitle>
+                  Fairdrive
                   <IconButton
                     aria-label="close"
                     onClick={handleAboutClose}
@@ -514,9 +517,6 @@ function App() {
                   </IconButton>
                 </DialogTitle>
                 <DialogContent dividers>
-                  <Typography gutterBottom variant="h6" align="left">
-                    Fairdrive
-                  </Typography>
                   <Typography gutterBottom align="left">
                     Version {version}
                   </Typography>
@@ -533,6 +533,7 @@ function App() {
                       Powered by FairOS
                     </Link>
                   </Typography>
+                  <br />
                   <Typography gutterBottom align="left">
                     © FairDataSociety 2022
                   </Typography>
@@ -547,7 +548,9 @@ function App() {
           if (showPodNew) {
             return (
               <Dialog open={showPodNew} onClose={handlePodNewClose}>
-                <DialogTitle>Create new Pod</DialogTitle>
+                <Tooltip title="Imagine POD is one of your drives">
+                  <DialogTitle>Create new Pod</DialogTitle>
+                </Tooltip>
                 <DialogContent>
                   <TextField
                     autoFocus
@@ -573,102 +576,102 @@ function App() {
 
           if (showLogin) {
             return (
-              <Container component="main" maxWidth="xs">
-                <Box
-                  sx={{
-                    marginTop: 8,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                  }}
-                >
-                  <FormGroup>
-                    <TextField
-                      margin="normal"
-                      required
-                      fullWidth
-                      id="username"
-                      label="Username"
-                      onChange={updateName}
-                      autoComplete="off"
-                      autoFocus
-                    />
+              <>
+                <img src={logo} id="logo" alt="logo" className="logo-icon" />
+                <Container component="main" maxWidth="xs">
+                  <Box
+                    sx={{
+                      marginTop: 8,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <FormGroup>
+                      <TextField
+                        margin="normal"
+                        required
+                        fullWidth
+                        id="username"
+                        label="Username"
+                        onChange={updateName}
+                        autoComplete="off"
+                        autoFocus
+                      />
 
-                    <TextField
-                      margin="normal"
-                      required
-                      fullWidth
-                      id="password"
-                      label="Password"
-                      onChange={updatePassword}
-                      autoComplete="off"
-                      type="password"
-                    />
-                    <FormControlLabel
-                      control={
-                        <Checkbox color="primary" onChange={updateRemember} />
-                      }
-                      label={<Typography>Remember and keep me logged-in</Typography>}
-                      style={{ color: 'black' }}
-                    />
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      sx={{ mt: 3, mb: 2 }}
-                      onClick={login}
-                      disabled={isLoading}
-                    >
-                      Login
-                    </Button>
-                    <Grid container>
-                      <Grid item>
-                        {/*TODO add create account website and fairdrive */}
-                        <Link href="#" variant="body2">
-                          {"Don't have an account? Sign Up"}
-                        </Link>
+                      <TextField
+                        margin="normal"
+                        required
+                        fullWidth
+                        id="password"
+                        label="Password"
+                        onChange={updatePassword}
+                        autoComplete="off"
+                        type="password"
+                      />
+                      <FormControlLabel
+                        control={
+                          <Checkbox color="primary" onChange={updateRemember} />
+                        }
+                        label={
+                          <Typography>Remember and keep me logged-in</Typography>
+                        }
+                        style={{ color: 'black' }}
+                      />
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        sx={{ mt: 3, mb: 2 }}
+                        onClick={login}
+                        disabled={isLoading}
+                      >
+                        Login
+                      </Button>
+                      <Grid container>
+                        <Grid item>
+                          {/*TODO add create account website and fairdrive */}
+                          <Link href="#" variant="body2">
+                            {"Don't have an account? Sign Up"}
+                          </Link>
+                        </Grid>
                       </Grid>
-                    </Grid>
-                  </FormGroup>
-                </Box>
-              </Container>
+                    </FormGroup>
+                  </Box>
+                </Container>
+              </>
             )
           }
+
           if (showPods && pods != null) {
             return (
               <Container component="main" maxWidth="xs">
+                <Tooltip title="Here you can mount/unmount your pods">
+                  <h2 style={{ color: 'black' }}>Pods</h2>
+                </Tooltip>
                 <FormGroup>
                   {pods.map((pod) => (
                     <Grid container key={pod.podName}>
                       <Grid item>
+                        <Checkbox
+                          onChange={mount}
+                          value={pod.podName}
+                          color="primary"
+                          disabled={isLoading}
+                          checked={pod.isMounted}
+                        />
                         <FormControlLabel
                           control={
-                            pod.isMounted ?
-                              <Grid container>
-                                <Grid item>
-                                  <Checkbox
-                                    onChange={mount}
-                                    value={pod.podName}
-                                    color="primary"
-                                    disabled={isLoading}
-                                    checked={pod.isMounted}
-                                  />
-                                </Grid>
-                                <Grid item>
-                                  <Tooltip title={pod.mountPoint}>
-                                    <IconButton onClick={() => copyUrlToClipboard(pod.mountPoint)}>
-                                      <ContentCopyIcon />
-                                    </IconButton>
-                                  </Tooltip>
-                                </Grid>
-                              </Grid>
-                               :
-                              <Checkbox
-                                  onChange={mount}
-                                  value={pod.podName}
-                                  color="primary"
-                                  disabled={isLoading}
-                                  checked={pod.isMounted}
-                              />
+                            pod.isMounted ? (
+                              <Tooltip title={pod.mountPoint}>
+                                <IconButton
+                                  onClick={() => copyUrlToClipboard(pod.mountPoint)}
+                                >
+                                  <ContentCopyIcon />
+                                </IconButton>
+                              </Tooltip>
+                            ) : (
+                              <></>
+                            )
                           }
                           label={pod.podName}
                           style={{ color: 'black' }}
@@ -682,25 +685,25 @@ function App() {
           }
         })()}
 
-      <div
-        style={{
-          position: 'absolute',
-          top: '0px',
-          zIndex: '10000',
-          width: '100%',
-          height: '10px',
-        }}
-      >
-        {isLoading && (
-          <LinearProgress
-            sx={{
-              height: 10,
-            }}
-          />
-        )}
-      </div>
-    </ThemeProvider>
-  </div>
+        <div
+          style={{
+            position: 'absolute',
+            top: '0px',
+            zIndex: '10000',
+            width: '100%',
+            height: '10px',
+          }}
+        >
+          {isLoading && (
+            <LinearProgress
+              sx={{
+                height: 10,
+              }}
+            />
+          )}
+        </div>
+      </ThemeProvider>
+    </div>
   )
 }
 
