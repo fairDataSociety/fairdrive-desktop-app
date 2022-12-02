@@ -355,7 +355,7 @@ function App() {
         >
           <Box
             sx={{
-              marginTop: 8,
+              marginTop: 0,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -479,18 +479,22 @@ function App() {
                 </Tooltip>
               </Box>
               <Stack mt={3} mb={3} spacing={2} direction="row">
-                <Button fullWidth variant="contained" onClick={closeSettings}>
-                  Close
-                </Button>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  sx={{ mt: 3, mb: 2 }}
-                  onClick={initFairOs}
-                  disabled={isLoading}
-                >
-                  Start
-                </Button>
+                <Tooltip title="Closes this dialog without saving">
+                  <Button fullWidth variant="contained" onClick={closeSettings}>
+                    Close
+                  </Button>
+                </Tooltip>
+                <Tooltip title="Save settings and connect">
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    sx={{ mt: 3, mb: 2 }}
+                    onClick={initFairOs}
+                    disabled={isLoading}
+                  >
+                    Start
+                  </Button>
+                </Tooltip>
               </Stack>
             </FormGroup>
           </Box>
@@ -645,7 +649,7 @@ function App() {
           if (showPods && pods != null) {
             return (
               <Container component="main" maxWidth="xs">
-                <Tooltip title="Here you can mount/unmount your pods">
+                <Tooltip title="Existing pods are listed. Here you can mount and unmount your pods">
                   <h2 style={{ color: 'black' }}>Pods</h2>
                 </Tooltip>
                 <FormGroup>
