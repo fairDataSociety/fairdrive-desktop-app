@@ -841,7 +841,6 @@ function App() {
                       Source
                     </Link>
                   </Typography>
-
                   <Typography
                     align="center"
                     sx={{ fontWeight: 'light', fontSize: '0.7rem' }}
@@ -950,7 +949,6 @@ function App() {
                         autoComplete="off"
                         autoFocus
                       />
-
                       <TextField
                         margin="normal"
                         required
