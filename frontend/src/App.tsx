@@ -46,7 +46,7 @@ import {
   LinearProgress,
 } from '@mui/material'
 import MuiAlert from '@mui/material/Alert'
-
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { api, handler } from '../wailsjs/go/models'
 import { EventsEmit, EventsOn } from '../wailsjs/runtime'
 import { Folder } from '@mui/icons-material'
@@ -319,6 +319,16 @@ function App() {
     setOpen(true)
   }
 
+  function copyUrlToClipboard(location: string) {
+    try {
+      navigator.clipboard.writeText(location).catch((err) => {
+        showError(`Unable to copy to the clipboard: ${err}`)
+      })
+    } catch (err) {
+      showError(`Unable to copy to the clipboard (in try/catch): ${err}`)
+    }
+  }
+
   return (
     <div id="App">
       <ThemeProvider theme={theme}>
@@ -397,10 +407,6 @@ function App() {
                     onChange={updateBee}
                     autoComplete="off"
                   />
-
-                  {/* <IconButton>
-                      <Info />
-                    </IconButton> */}
                 </Tooltip>
               </Box>
 
@@ -416,10 +422,6 @@ function App() {
                     onChange={updateBatch}
                     autoComplete="off"
                   />
-
-                  {/* <IconButton>
-                      <Info />
-                    </IconButton> */}
                 </Tooltip>
               </Box>
 
@@ -435,10 +437,6 @@ function App() {
                     onChange={updateRPC}
                     autoComplete="off"
                   />
-
-                  {/* <IconButton>
-                      <Info />
-                    </IconButton> */}
                 </Tooltip>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
@@ -455,10 +453,6 @@ function App() {
                     <MenuItem value={'testnet'}>Testnet</MenuItem>
                     <MenuItem value={'play'}>FDP play</MenuItem>
                   </Select>
-                  {/*
-                    <IconButton>
-                      <Info />
-                    </IconButton> */}
                 </Tooltip>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
@@ -480,12 +474,6 @@ function App() {
                     <Folder />
                   </IconButton>
                 </Tooltip>
-
-                {/* <Tooltip title="Location of the Fairdrive folder">
-                    <IconButton>
-                      <Info />
-                    </IconButton>
-                  </Tooltip> */}
               </Box>
               <Stack mt={3} mb={3} spacing={2} direction="row">
                 <Button fullWidth variant="contained" onClick={closeSettings}>
@@ -655,15 +643,25 @@ function App() {
                         <FormControlLabel
                           control={
                             pod.isMounted ?
-                              <Tooltip title={pod.mountPoint}>
-                                <Checkbox
-                                  onChange={mount}
-                                  value={pod.podName+"asdasd"}
-                                  color="primary"
-                                  disabled={isLoading}
-                                  checked={pod.isMounted}
-                                />
-                              </Tooltip> :
+                              <Grid container>
+                                <Grid item>
+                                  <Checkbox
+                                    onChange={mount}
+                                    value={pod.podName}
+                                    color="primary"
+                                    disabled={isLoading}
+                                    checked={pod.isMounted}
+                                  />
+                                </Grid>
+                                <Grid item>
+                                  <Tooltip title={pod.mountPoint}>
+                                    <IconButton onClick={() => copyUrlToClipboard(pod.mountPoint)}>
+                                      <ContentCopyIcon />
+                                    </IconButton>
+                                  </Tooltip>
+                                </Grid>
+                              </Grid>
+                               :
                               <Checkbox
                                   onChange={mount}
                                   value={pod.podName}

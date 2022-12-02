@@ -13,6 +13,7 @@ import (
 	dfuse "github.com/datafund/fdfs/pkg/fuse"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/mitchellh/go-homedir"
 	"github.com/winfsp/cgofuse/fuse"
 )
 
@@ -85,6 +86,13 @@ func (h *Handler) Mount(pod, location string, createPod bool) error {
 	if h.api == nil {
 		h.logger.Errorf("mount: fairos not initialised")
 		return ErrFairOsNotInitialised
+	}
+	if location == "" {
+		home, err := homedir.Dir()
+		if err != nil {
+			home = ""
+		}
+		location = home
 	}
 	parent := filepath.Join(location, root)
 	if _, err := os.Stat(parent); err != nil {

@@ -84,7 +84,7 @@ func main() {
 
 	// Create application with options
 	app := application.NewWithOptions(&options.App{
-		Title:         "Fairdrive", // TODO change title to Fairdrive
+		Title:         "Fairdrive",
 		Width:         375,
 		Height:        667,
 		DisableResize: true,
