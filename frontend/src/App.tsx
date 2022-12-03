@@ -97,6 +97,7 @@ function App() {
   const [newPodName, setNewPodName] = useState('')
 
   const handlePodNew = async () => {
+    setIsLoading(true)
     try {
       if (newPodName !== '') {
         await CreatePod(newPodName)
@@ -109,6 +110,7 @@ function App() {
     } catch (e: any) {
       showError(e)
     }
+    setIsLoading(false)
   }
 
   const [version, setVersion] = useState('')
