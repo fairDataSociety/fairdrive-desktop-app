@@ -106,7 +106,7 @@ func main() {
 					location = fmt.Sprintf("%s", l[0])
 				}
 				if location != "" {
-					err := Run(fmt.Sprintf("%s", location))
+					err := Run(location)
 					if err != nil {
 						println("directory open failed ", err.Error())
 						return
