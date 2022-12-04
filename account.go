@@ -66,6 +66,8 @@ func (a *Account) ForgetPassword() error {
 	if err != nil {
 		return err
 	}
+	a.Username = ""
+	a.Password = ""
 	cfgFile := filepath.Join(home, creds)
 	if _, err := os.Stat(cfgFile); err == nil {
 		return os.Remove(cfgFile)

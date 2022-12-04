@@ -208,9 +208,7 @@ function App() {
       }
     })
     HasRemembered().then((isSet) => {
-      if (!isSet) {
-        setRemember(true)
-      }
+      setRemember(isSet)
     })
   }, [])
   const [pods, setPods] = useState<PodMountedInfo[]>([])
