@@ -128,9 +128,6 @@ jobs:
           go env
           printf "\n\nSystem environment:\n\n"
           env
-      - name: Install wails
-        run: |
-          GO111MODULE=on go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
       - name: Go module cache
         uses: actions/cache@v3
@@ -139,7 +136,16 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
+
+      - name: Install wails
+        run: |
+          GO111MODULE=on go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
       - name: Build
+        run: |
+          make binary
+      - name: Rename
+        if: matrix.os != 'windows-latest'
         run: |
           make binary
 
@@ -147,17 +153,17 @@ jobs:
         if: matrix.os == 'windows-latest'
         with:
           name: windows
-          path: build/bin/fairdrive-${{ matrix.os }}-${{ matrix.arch }}.exe
+          path: build/bin/*
       - uses: actions/upload-artifact@v3
         if: matrix.os == 'ubuntu-latest'
         with:
-          name: linux
-          path: build/bin/fairdrive-${{ matrix.os }}-${{ matrix.arch }}
+          name: linux-${{ matrix.arch }}
+          path: build/bin/*
       - uses: actions/upload-artifact@v3
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-11'
         with:
-          name: mac
-          path: build/bin/fairdrive-${{ matrix.os }}-${{ matrix.arch }}
+          name: mac-${{ matrix.arch }}
+          path: build/bin/*
 
 
 
