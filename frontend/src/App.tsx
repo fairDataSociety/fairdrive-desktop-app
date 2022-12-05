@@ -43,7 +43,7 @@ import {
   Typography,
   styled,
   DialogActions,
-  LinearProgress,
+  LinearProgress, List, ListItem, ListItemButton, ListItemIcon, ListItemText,
 } from '@mui/material'
 import MuiAlert from '@mui/material/Alert'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -208,9 +208,7 @@ function App() {
       }
     })
     HasRemembered().then((isSet) => {
-      if (!isSet) {
-        setRemember(true)
-      }
+      setRemember(isSet)
     })
   }, [])
   const [pods, setPods] = useState<PodMountedInfo[]>([])
@@ -655,45 +653,77 @@ function App() {
                 <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
                   <h2 style={{ color: 'black' }}>Pods</h2>
                 </Tooltip>
-                <FormGroup>
-                  {pods.map((pod) => (
-                    <Grid container key={pod.podName}>
-                      <Grid item>
-                        <Tooltip
-                          title={
-                            pod.isMounted ? 'Unmount this pod' : 'Mount this pod'
+                <Box sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
+                  <List>
+                    {pods.map((pod) => (
+                      pod.isMounted ? (
+                        <ListItem
+                          key={pod.podName}
+                          secondaryAction={
+                          <div>
+                            <Tooltip title={pod.mountPoint}>
+                              <IconButton
+                                onClick={() => copyUrlToClipboard(pod.mountPoint)}
+                              >
+                                <ContentCopyIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Open">
+                              <IconButton
+                                onClick={() => EventsEmit("open", pod.mountPoint)}
+                              >
+                                <Folder />
+                              </IconButton>
+                            </Tooltip>
+                          </div>
                           }
+                          disablePadding
                         >
-                          <Checkbox
-                            onChange={mount}
-                            value={pod.podName}
-                            color="primary"
-                            disabled={isLoading}
-                            checked={pod.isMounted}
-                          />
-                        </Tooltip>
-                        &nbsp;
-                        <FormControlLabel
-                          control={
-                            pod.isMounted ? (
-                              <Tooltip title={pod.mountPoint}>
-                                <IconButton
-                                  onClick={() => copyUrlToClipboard(pod.mountPoint)}
-                                >
-                                  <ContentCopyIcon />
-                                </IconButton>
+                          <ListItemButton>
+                            <ListItemIcon>
+                              <Tooltip
+                                  title={
+                                    pod.isMounted ? 'Unmount this pod' : 'Mount this pod'
+                                  }
+                              >
+                                <Checkbox
+                                    onChange={mount}
+                                    value={pod.podName}
+                                    color="primary"
+                                    disabled={isLoading}
+                                    checked={pod.isMounted}
+                                />
                               </Tooltip>
-                            ) : (
-                              <></>
-                            )
-                          }
-                          label={pod.podName}
-                          style={{ color: 'black' }}
-                        />
-                      </Grid>
-                    </Grid>
-                  ))}
-                </FormGroup>
+                            </ListItemIcon>
+                            <ListItemText primary={pod.podName} style={{ color: 'black' }}/>
+                          </ListItemButton>
+                        </ListItem> ) :
+                        <ListItem
+                          key={pod.podName}
+                          disablePadding
+                        >
+                          <ListItemButton>
+                            <ListItemIcon>
+                              <Tooltip
+                                  title={
+                                    pod.isMounted ? 'Unmount this pod' : 'Mount this pod'
+                                  }
+                              >
+                                <Checkbox
+                                    onChange={mount}
+                                    value={pod.podName}
+                                    color="primary"
+                                    disabled={isLoading}
+                                    checked={pod.isMounted}
+                                />
+                              </Tooltip>
+                            </ListItemIcon>
+                            <ListItemText primary={pod.podName} style={{ color: 'black' }}/>
+                          </ListItemButton>
+                        </ListItem>
+                    ))}
+                  </List>
+                </Box>
               </Container>
             )
           }

@@ -100,6 +100,19 @@ func main() {
 		},
 		OnStartup: func(ctx context.Context) {
 			startContext = ctx
+			wRuntime.EventsOn(startContext, "open", func(l ...interface{}) {
+				location := ""
+				if len(l) == 1 {
+					location = fmt.Sprintf("%s", l[0])
+				}
+				if location != "" {
+					err := Run(location)
+					if err != nil {
+						println("directory open failed ", err.Error())
+						return
+					}
+				}
+			})
 			wRuntime.EventsOn(startContext, "disableMenus", func(_ ...interface{}) {
 				for _, item := range podMenu.Items {
 					if item.Label == "New" {
