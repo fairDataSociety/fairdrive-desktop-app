@@ -160,7 +160,7 @@ jobs:
         run: |
           chmod +x scripts/add-cert.sh && ./scripts/add-cert.sh
           npm install --global create-dmg
-          chmod +x build/bin/mac/Fairdrive Desktop App.app/Contents/MacOS/Fairdrive Desktop App
+          chmod +x 'build/bin/mac/Fairdrive Desktop App.app/Contents/MacOS/Fairdrive Desktop App'
           create-dmg 'build/bin/mac/Fairdrive Desktop App.app' build/bin --identity '${{ secrets.ID }}'
           mv 'build/bin/FDA 1.0.0.dmg' build/bin/${{ matrix.job_name }}.dmg
         env:
