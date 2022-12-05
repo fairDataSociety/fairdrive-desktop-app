@@ -17,11 +17,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        job_name: [ 'linux_amd64', 'linux_arm64', 'mac_amd64', 'mac_arm64', 'windows' ]
+        job_name: [ 'linux', 'mac_amd64', 'mac_arm64', 'windows' ]
         include:
           - job_name: linux_amd64
             os: ubuntu-latest
-            goarch: amd64
             go: '1.19'
             gotags: cmount
             build_flags: '-include "^linux/"'
@@ -29,13 +28,6 @@ jobs:
             quicktest: true
             racequicktest: true
             deploy: true
-
-          - job_name: linux_arm64
-            os: ubuntu-latest
-            go: '1.19'
-            goarch: arm64
-            gotags: cmount
-            quicktest: true
 
           - job_name: mac_amd64
             os: macos-11
@@ -157,12 +149,12 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: matrix.os == 'ubuntu-latest'
         with:
-          name: linux-${{ matrix.arch }}
+          name: linux-${{ matrix.job_name }}
           path: build/bin/*
       - uses: actions/upload-artifact@v3
         if: matrix.os == 'macos-11'
         with:
-          name: mac-${{ matrix.arch }}
+          name: mac-${{ matrix.job_name }}
           path: build/bin/*
 
 
