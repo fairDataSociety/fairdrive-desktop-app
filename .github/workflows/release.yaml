@@ -136,10 +136,6 @@ jobs:
       - name: Build
         run: |
           make binary
-      - name: Rename
-        if: matrix.os != 'windows-latest'
-        run: |
-          make binary
 
       - uses: actions/upload-artifact@v3
         if: matrix.os == 'windows-latest'
@@ -160,8 +156,8 @@ jobs:
         run: |
           chmod +x scripts/add-cert.sh && ./scripts/add-cert.sh
           npm install --global create-dmg
-          chmod +x 'build/bin/mac/Fairdrive Desktop App.app/Contents/MacOS/Fairdrive Desktop App'
-          create-dmg 'build/bin/mac/Fairdrive Desktop App.app' build/bin --identity '${{ secrets.ID }}'
+          chmod +x 'build/bin/Fairdrive Desktop App.app/Contents/MacOS/Fairdrive Desktop App'
+          create-dmg 'build/bin/Fairdrive Desktop App.app' build/bin --identity '${{ secrets.ID }}'
           mv 'build/bin/FDA 1.0.0.dmg' build/bin/${{ matrix.job_name }}.dmg
         env:
           CERTIFICATE_OSX_APPLICATION: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
@@ -170,7 +166,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: matrix.os == 'macos-11'
         with:
-          name: mac-${{ matrix.job_name }}
+          name: ${{ matrix.job_name }}
           path: build/bin/*
 
 
