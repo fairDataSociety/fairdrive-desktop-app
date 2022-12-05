@@ -17,10 +17,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        job_name: [ 'linux', 'linux_386', 'mac_amd64', 'mac_arm64', 'windows', 'other_os', 'go1.17', 'go1.18' ]
+        job_name: [ 'linux_amd64', 'linux_arm64', 'mac_amd64', 'mac_arm64', 'windows' ]
         include:
-          - job_name: linux
+          - job_name: linux_amd64
             os: ubuntu-latest
+            goarch: amd64
             go: '1.19'
             gotags: cmount
             build_flags: '-include "^linux/"'
@@ -29,10 +30,10 @@ jobs:
             racequicktest: true
             deploy: true
 
-          - job_name: linux_386
+          - job_name: linux_arm64
             os: ubuntu-latest
             go: '1.19'
-            goarch: 386
+            goarch: arm64
             gotags: cmount
             quicktest: true
 
@@ -61,25 +62,6 @@ jobs:
             build_args: '-buildmode exe'
             quicktest: true
             deploy: true
-
-          - job_name: other_os
-            os: ubuntu-latest
-            go: '1.19'
-            build_flags: '-exclude "^(windows/|darwin/|linux/)"'
-            compile_all: true
-            deploy: true
-
-          - job_name: go1.17
-            os: ubuntu-latest
-            go: '1.17'
-            quicktest: true
-            racequicktest: true
-
-          - job_name: go1.18
-            os: ubuntu-latest
-            go: '1.18'
-            quicktest: true
-            racequicktest: true
 
     name: ${{ matrix.job_name }}
 
@@ -111,7 +93,7 @@ jobs:
           sudo modprobe fuse
           sudo chmod 666 /dev/fuse
           sudo chown root:$USER /etc/fuse.conf
-          sudo apt-get install fuse libfuse-dev rpm pkg-config
+          sudo apt-get install fuse libfuse-dev rpm pkg-config build-essential libgtk-3-dev libwebkit2gtk-4.0-dev
         if: matrix.os == 'ubuntu-latest'
 
       - name: Install Libraries on macOS
