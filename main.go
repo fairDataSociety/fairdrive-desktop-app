@@ -40,7 +40,7 @@ func main() {
 
 	prefShortcut := keys.CmdOrCtrl(",")
 	if runtime.GOOS == "windows" {
-		prefShortcut = keys.Combo(",", keys.CmdOrCtrlKey, keys.ShiftKey)
+		prefShortcut = keys.Combo("P", keys.CmdOrCtrlKey, keys.ShiftKey)
 	}
 	fileMenu.AddText("About", nil, func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "about")

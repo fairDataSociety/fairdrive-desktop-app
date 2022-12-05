@@ -1,6 +1,8 @@
 import { forwardRef, SyntheticEvent, useEffect, useState } from 'react'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 import logo from './assets/images/fairdata.svg'
+import backgroundImage from './assets/images/sculptures_of_data_s.jpg'
+
 import './App.css'
 import {
   Login,
@@ -11,10 +13,22 @@ import {
   Close,
   Logout,
   CreatePod,
-  GetCashedPods
-} from "../wailsjs/go/handler/Handler"
-import { SetupConfig, IsSet, GetConfig, GetMountPoint, GetAutoMount, GetMountedPods } from "../wailsjs/go/main/conf"
-import { RememberPassword, HasRemembered, ForgetPassword, Get } from "../wailsjs/go/main/Account"
+  GetCashedPods,
+} from '../wailsjs/go/handler/Handler'
+import {
+  SetupConfig,
+  IsSet,
+  GetConfig,
+  GetMountPoint,
+  GetAutoMount,
+  GetMountedPods,
+} from '../wailsjs/go/main/conf'
+import {
+  RememberPassword,
+  HasRemembered,
+  ForgetPassword,
+  Get,
+} from '../wailsjs/go/main/Account'
 
 import {
   TextField,
@@ -43,23 +57,28 @@ import {
   Typography,
   styled,
   DialogActions,
-  LinearProgress, List, ListItem, ListItemButton, ListItemIcon, ListItemText,
+  LinearProgress,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material'
 import MuiAlert from '@mui/material/Alert'
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import { api, handler } from '../wailsjs/go/models'
 import { EventsEmit, EventsOn } from '../wailsjs/runtime'
 import { Folder } from '@mui/icons-material'
 import CloseIcon from '@mui/icons-material/Close'
 import { BuildTime, Version } from '../wailsjs/go/main/about'
-import PodMountedInfo = handler.PodMountedInfo;
+import PodMountedInfo = handler.PodMountedInfo
 
 const theme = createTheme({
   typography: {
-    "fontFamily": `"WorkSans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    fontFamily: `"WorkSans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
     "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif`
-  }
+    sans-serif`,
+  },
 })
 const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />
@@ -191,7 +210,7 @@ function App() {
             setMountPoint(_mountPoint)
 
             let autoMount = await GetAutoMount()
-            if(autoMount) {
+            if (autoMount) {
               let mountedPods = await GetMountedPods()
               mountedPods.map(async (pod) => {
                 await Mount(pod, _mountPoint, false)
@@ -199,6 +218,7 @@ function App() {
                 setPods(pods)
               })
             }
+            EventsEmit('enableMenus') // if we get to the pods abd we are logged in, and got pods, then enable the menus, so that we get Logout option
           }
         } catch (e: any) {
           EventsEmit('disableMenus')
@@ -355,7 +375,7 @@ function App() {
         >
           <Box
             sx={{
-              marginTop: 0,
+              margin: 1,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -653,75 +673,86 @@ function App() {
                 <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
                   <h2 style={{ color: 'black' }}>Pods</h2>
                 </Tooltip>
-                <Box sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
+                <Box
+                  sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
+                >
                   <List>
-                    {pods.map((pod) => (
+                    {pods.map((pod) =>
                       pod.isMounted ? (
                         <ListItem
                           key={pod.podName}
                           secondaryAction={
-                          <div>
-                            <Tooltip title={pod.mountPoint}>
-                              <IconButton
-                                onClick={() => copyUrlToClipboard(pod.mountPoint)}
-                              >
-                                <ContentCopyIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Open">
-                              <IconButton
-                                onClick={() => EventsEmit("open", pod.mountPoint)}
-                              >
-                                <Folder />
-                              </IconButton>
-                            </Tooltip>
-                          </div>
+                            <div>
+                              <Tooltip title={pod.mountPoint}>
+                                <IconButton
+                                  onClick={() => copyUrlToClipboard(pod.mountPoint)}
+                                >
+                                  <ContentCopyIcon />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Open">
+                                <IconButton
+                                  onClick={() => EventsEmit('open', pod.mountPoint)}
+                                >
+                                  <Folder />
+                                </IconButton>
+                              </Tooltip>
+                            </div>
                           }
                           disablePadding
                         >
                           <ListItemButton>
                             <ListItemIcon>
                               <Tooltip
-                                  title={
-                                    pod.isMounted ? 'Unmount this pod' : 'Mount this pod'
-                                  }
+                                title={
+                                  pod.isMounted
+                                    ? 'Unmount this pod'
+                                    : 'Mount this pod'
+                                }
                               >
                                 <Checkbox
-                                    onChange={mount}
-                                    value={pod.podName}
-                                    color="primary"
-                                    disabled={isLoading}
-                                    checked={pod.isMounted}
+                                  onChange={mount}
+                                  value={pod.podName}
+                                  color="primary"
+                                  disabled={isLoading}
+                                  checked={pod.isMounted}
                                 />
                               </Tooltip>
                             </ListItemIcon>
-                            <ListItemText primary={pod.podName} style={{ color: 'black' }}/>
+                            <ListItemText
+                              primary={pod.podName}
+                              style={{ color: 'black' }}
+                            />
                           </ListItemButton>
-                        </ListItem> ) :
-                        <ListItem
-                          key={pod.podName}
-                          disablePadding
-                        >
+                        </ListItem>
+                      ) : (
+                        <ListItem key={pod.podName} disablePadding>
                           <ListItemButton>
                             <ListItemIcon>
                               <Tooltip
-                                  title={
-                                    pod.isMounted ? 'Unmount this pod' : 'Mount this pod'
-                                  }
+                                title={
+                                  pod.isMounted
+                                    ? 'Unmount this pod'
+                                    : 'Mount this pod'
+                                }
                               >
                                 <Checkbox
-                                    onChange={mount}
-                                    value={pod.podName}
-                                    color="primary"
-                                    disabled={isLoading}
-                                    checked={pod.isMounted}
+                                  onChange={mount}
+                                  value={pod.podName}
+                                  color="primary"
+                                  disabled={isLoading}
+                                  checked={pod.isMounted}
                                 />
                               </Tooltip>
                             </ListItemIcon>
-                            <ListItemText primary={pod.podName} style={{ color: 'black' }}/>
+                            <ListItemText
+                              primary={pod.podName}
+                              style={{ color: 'black' }}
+                            />
                           </ListItemButton>
                         </ListItem>
-                    ))}
+                      ),
+                    )}
                   </List>
                 </Box>
               </Container>
@@ -746,6 +777,21 @@ function App() {
             />
           )}
         </div>
+
+        <img
+          src={backgroundImage}
+          id="background"
+          alt="background"
+          style={{
+            opacity: '0.1',
+            position: 'fixed',
+            top: '0',
+            left: '0',
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none',
+          }}
+        />
       </ThemeProvider>
     </div>
   )
