@@ -67,7 +67,7 @@ import {
 import MuiAlert from '@mui/material/Alert'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import { api, handler } from '../wailsjs/go/models'
-import { EventsEmit, EventsOn } from '../wailsjs/runtime'
+import { BrowserOpenURL, EventsEmit, EventsOn } from '../wailsjs/runtime'
 import { Folder } from '@mui/icons-material'
 import CloseIcon from '@mui/icons-material/Close'
 import { BuildTime, Version } from '../wailsjs/go/main/about'
@@ -212,11 +212,13 @@ function App() {
             let autoMount = await GetAutoMount()
             if (autoMount) {
               let mountedPods = await GetMountedPods()
-              mountedPods.map(async (pod) => {
-                await Mount(pod, _mountPoint, false)
-                let pods = await GetCashedPods()
-                setPods(pods)
-              })
+              if (mountedPods != null) {
+                mountedPods.map(async (pod) => {
+                  await Mount(pod, _mountPoint, false)
+                  let pods = await GetCashedPods()
+                  setPods(pods)
+                })
+              }
             }
             EventsEmit('enableMenus') // if we get to the pods abd we are logged in, and got pods, then enable the menus, so that we get Logout option
           }
@@ -304,6 +306,10 @@ function App() {
       showError(e)
     }
     setIsLoading(false)
+  }
+
+  async function openSignUp() {
+    BrowserOpenURL("https://create.staging.fairdatasociety.org/#/register")
   }
 
   async function login() {
@@ -419,7 +425,7 @@ function App() {
                 </Grid>
               </RadioGroup>
               <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                <Tooltip title="Bee API endpoint, recomended http://localhost:1635">
+                <Tooltip title="Bee API endpoint, recommended http://localhost:1635">
                   <TextField
                     margin="normal"
                     value={bee}
@@ -655,7 +661,7 @@ function App() {
                       <Grid container>
                         <Grid item>
                           {/*TODO add create account website and fairdrive */}
-                          <Link href="#" variant="body2">
+                          <Link href="#" variant="body2" onClick={openSignUp}>
                             {"Don't have an account? Sign Up"}
                           </Link>
                         </Grid>
