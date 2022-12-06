@@ -74,6 +74,23 @@ import CloseIcon from '@mui/icons-material/Close'
 import { BuildTime, Version } from '../wailsjs/go/main/about'
 import PodMountedInfo = handler.PodMountedInfo
 
+interface UserInfo {
+  username: string | any
+  password: string | any
+}
+
+interface AccountInfo {
+  userInfo: UserInfo[] | any
+  pods: PodMountedInfo[] | any
+}
+
+function createUserInfo(username: string, password: string): UserInfo {
+  return { username, password }
+}
+function createAccountInfo(userInfo: UserInfo, pods: PodMountedInfo[]): AccountInfo {
+  return {userInfo, pods}
+}
+
 const theme = createTheme({
   typography: {
     fontFamily: `"WorkSans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
@@ -140,13 +157,20 @@ function App() {
   const [showLogin, setShowLogin] = useState<boolean>(true)
   const [showPods, setShowPods] = useState<boolean>(true)
 
+  const [showAccounts, setShowAccounts] = useState<boolean>(false)
+
   const [username, setName] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState<boolean>(false)
   const [message, setMessage] = useState('')
+
   useEffect(() => {
     EventsOn('preferences', () => {
       setShowConfig(true)
+    })
+    EventsOn('showAccounts', () => {
+      setShowAccounts(true)
+      console.log('showAccounts')
     })
     EventsOn('podNew', () => {
       setPodNew(true)
@@ -238,6 +262,20 @@ function App() {
   const updateName = (e: any) => setName(e.target.value)
   const updatePassword = (e: any) => setPassword(e.target.value)
   const updateRemember = (e: any) => setRemember(e.target.checked)
+
+  const [accounts, setAccounts] = useState<AccountInfo[]>([])
+
+  const addAccount = async (username: string, password: string) => {
+    const account = accounts.find((obj) => {
+      return obj.userInfo.username === username;
+    });
+
+    if(account===undefined) {
+      let newAccount = createUserInfo(username, password)
+      return newAccount;
+    }
+    return account;
+  }
 
   const mount = async (e: any) => {
     setIsLoading(true)
@@ -490,7 +528,10 @@ function App() {
                 </Tooltip>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                <Tooltip title="Specify Network type for ENS based authentication">
+                <Tooltip
+                  title="Specify Network type for ENS based authentication"
+                  placement="top"
+                >
                   <Select
                     required
                     fullWidth
@@ -499,6 +540,7 @@ function App() {
                     onChange={updateNetwork}
                     displayEmpty={true}
                     value={network}
+                    style={{ color: 'black' }}
                   >
                     <MenuItem value={'testnet'}>Testnet</MenuItem>
                     <MenuItem value={'play'}>FDP play</MenuItem>
@@ -546,6 +588,24 @@ function App() {
             </FormGroup>
           </Box>
         </Modal>
+        {showAccounts && (
+          <>
+            <Dialog open={showAccounts}>
+              <Tooltip title="Your previously logged accounts" placement="top">
+                <DialogTitle>Accounts</DialogTitle>
+              </Tooltip>
+
+              <DialogActions>
+                <Button onClick={() => setShowAccounts(false)} disabled={isLoading}>
+                  Close
+                </Button>
+                <Button onClick={handlePodNew} disabled={isLoading}>
+                  Switch
+                </Button>
+              </DialogActions>
+            </Dialog>
+          </>
+        )}
 
         {/*about dialog*/}
         {(() => {
@@ -738,8 +798,11 @@ function App() {
             return (
               <Container component="main" maxWidth="xs">
                 <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
-                  <h2 style={{ color: 'black' }}>Pods</h2>
+                  <h2 style={{ color: 'black' }}>
+                    Pods <Typography>{showAccounts ? 'true' : 'false'} </Typography>
+                  </h2>
                 </Tooltip>
+
                 <Box
                   sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
                 >

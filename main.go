@@ -50,6 +50,10 @@ func main() {
 	})
 	fileMenu.AddSeparator()
 
+	fileMenu.AddText("Accounts", keys.Combo("A", keys.ShiftKey, keys.CmdOrCtrlKey), func(_ *menu.CallbackData) {
+		wRuntime.EventsEmit(startContext, "showAccounts")
+	})
+
 	fileMenu.AddText("Preferences", prefShortcut, func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "preferences")
 	})
