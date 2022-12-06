@@ -636,50 +636,6 @@ function App() {
           </Box>
         </Modal>
 
-        {showAccounts && (
-          <>
-            <Dialog open={showAccounts}>
-              <Tooltip
-                title="Your previously logged accounts. Click to login."
-                placement="top"
-              >
-                <DialogTitle>Accounts</DialogTitle>
-              </Tooltip>
-              <List>
-                {accounts.map((account) => (
-                  <>
-                    <Tooltip
-                      title="Click to login with this account"
-                      placement="top"
-                    >
-                      <ListItem
-                        key={account.userInfo.username}
-                        onClick={() => handleAccountSwitch(account)}
-                        style={{ cursor: 'pointer' }}
-                        className="account-switch"
-                      >
-                        <Typography>{account.userInfo.username}</Typography>
-                      </ListItem>
-                    </Tooltip>
-                  </>
-                ))}
-              </List>
-              {/* <ListItem key = {account.userInfo.username} onClick={() => handleAccountSwitch(account)}> */}
-              <DialogActions
-                style={{ justifyContent: 'space-between', alignItems: 'center' }}
-              >
-                <Button onClick={() => setShowAccounts(false)} disabled={isLoading}>
-                  Close
-                </Button>
-                <div style={{ flex: '1 0 0' }} />
-                {/* <Button onClick={handlePodNew} disabled={isLoading}>
-                  Switch
-                </Button> */}
-              </DialogActions>
-            </Dialog>
-          </>
-        )}
-
         <div
           style={{
             position: 'absolute',
@@ -697,6 +653,41 @@ function App() {
             />
           )}
         </div>
+
+        {showAccounts && (
+          <Dialog open={showAccounts}>
+            <Tooltip
+              title="Your previously logged accounts. Click to login."
+              placement="top"
+            >
+              <DialogTitle>Accounts</DialogTitle>
+            </Tooltip>
+            <List>
+              {accounts.map((account) => (
+                <>
+                  <Tooltip title="Click to login with this account" placement="top">
+                    <ListItem
+                      key={account.userInfo.username}
+                      onClick={() => handleAccountSwitch(account)}
+                      style={{ cursor: 'pointer' }}
+                      className="account-switch"
+                    >
+                      <Typography>{account.userInfo.username}</Typography>
+                    </ListItem>
+                  </Tooltip>
+                </>
+              ))}
+            </List>
+            {/* <ListItem key = {account.userInfo.username} onClick={() => handleAccountSwitch(account)}> */}
+            <DialogActions
+              style={{ justifyContent: 'space-between', alignItems: 'center' }}
+            >
+              <Button onClick={() => setShowAccounts(false)} disabled={isLoading}>
+                Close
+              </Button>
+            </DialogActions>
+          </Dialog>
+        )}
 
         {/*about dialog*/}
         {(() => {
