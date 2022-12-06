@@ -664,18 +664,15 @@ function App() {
             </Tooltip>
             <List>
               {accounts.map((account) => (
-                <>
-                  <Tooltip title="Click to login with this account" placement="top">
-                    <ListItem
-                      key={account.userInfo.username}
-                      onClick={() => handleAccountSwitch(account)}
-                      style={{ cursor: 'pointer' }}
-                      className="account-switch"
-                    >
-                      <Typography>{account.userInfo.username}</Typography>
-                    </ListItem>
-                  </Tooltip>
-                </>
+                <ListItem
+                  key={account.userInfo.username}
+                  onClick={() => handleAccountSwitch(account)}
+                  style={{ cursor: 'pointer' }}
+                  className="account-switch"
+                  disabled={isLoading}
+                >
+                  <Typography>{account.userInfo.username}</Typography>
+                </ListItem>
               ))}
             </List>
             {/* <ListItem key = {account.userInfo.username} onClick={() => handleAccountSwitch(account)}> */}
