@@ -1,6 +1,7 @@
 import { forwardRef, SyntheticEvent, useEffect, useState } from 'react'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 import logo from './assets/images/fairdata.svg'
+import dfLogo from './assets/images/datafund.svg'
 import backgroundImage from './assets/images/sculptures_of_data_s.jpg'
 
 import './App.css'
@@ -309,7 +310,27 @@ function App() {
   }
 
   async function openSignUp() {
-    BrowserOpenURL("https://create.staging.fairdatasociety.org/#/register")
+    BrowserOpenURL('https://create.staging.fairdatasociety.org/#/register')
+  }
+
+  async function openBrowserLicense() {
+    BrowserOpenURL('https://github.com/datafund/fairos-fuse/blob/master/LICENSE')
+  }
+  async function openBrowserFairOS() {
+    BrowserOpenURL(
+      'https://docs.fairos.fairdatasociety.org/docs/fairos-dfs/api-reference',
+    )
+  }
+  async function openBrowserFDPprotocol() {
+    BrowserOpenURL('https://fdp.fairdatasociety.org/')
+  }
+
+  async function openBrowserFairDataSociety() {
+    BrowserOpenURL('https://fairdatasociety.org/')
+  }
+
+  async function openBrowserDatafund() {
+    BrowserOpenURL('https://datafund.io/')
   }
 
   async function login() {
@@ -547,27 +568,67 @@ function App() {
                   </IconButton>
                 </DialogTitle>
                 <DialogContent dividers>
-                  <Typography gutterBottom align="left">
-                    Version {version}
+                  <Typography gutterBottom align="center">
+                    Powered by&nbsp;
+                    <Link href="#" variant="body2" onClick={openBrowserFairOS}>
+                      FairOS
+                    </Link>
+                    &nbsp;
+                    <Link href="#" variant="body2" onClick={openBrowserFDPprotocol}>
+                      FairDataProtocol
+                    </Link>
                   </Typography>
-                  <Typography gutterBottom align="left">
-                    Built on {buildTime}
-                  </Typography>
-                  <Typography gutterBottom align="left">
-                    <Link href="#" variant="body2">
+
+                  <Typography gutterBottom align="center">
+                    <Link href="#" variant="body2" onClick={openBrowserLicense}>
                       License
                     </Link>
-                  </Typography>
-                  <Typography gutterBottom align="left">
-                    <Link href="#" variant="body2">
-                      Powered by FairOS
+                    &nbsp;
+                    <Link href="#" variant="body2" onClick={openBrowserLicense}>
+                      Source
                     </Link>
                   </Typography>
-                  <br />
-                  <Typography gutterBottom align="left">
-                    © FairDataSociety 2022
+
+                  <Typography
+                    align="center"
+                    sx={{ fontWeight: 'light', fontSize: '0.7rem' }}
+                  >
+                    Version <strong>{version}</strong> Built on{' '}
+                    <strong>{buildTime}</strong>
                   </Typography>
-                  <img src={logo} id="logo" alt="logo" className="logo-icon" />
+
+                  <img
+                    src={logo}
+                    id="logo"
+                    alt="logo"
+                    className="logo-icon"
+                    onClick={openBrowserFairDataSociety}
+                  />
+
+                  <Typography gutterBottom align="center">
+                    ©&nbsp;
+                    <Link
+                      href="#"
+                      variant="body2"
+                      onClick={openBrowserFairDataSociety}
+                    >
+                      FairDataSociety
+                    </Link>
+                    &nbsp;2022
+                  </Typography>
+
+                  <img
+                    src={dfLogo}
+                    id="logo"
+                    alt="logo"
+                    className="logo-icon-df"
+                    onClick={openBrowserDatafund}
+                  />
+                  {/* <Typography gutterBottom align="center">
+                    <Link href="#" variant="body2" onClick={openBrowserDatafund}>
+                      Initiative
+                    </Link>
+                  </Typography> */}
                 </DialogContent>
               </AboutDialog>
             )

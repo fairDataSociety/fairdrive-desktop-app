@@ -68,4 +68,17 @@
 .logo-icon:hover,
 .logo-icon:focus {
     filter: invert(100%) sepia(0%) saturate(100%) hue-rotate(0deg) brightness(100%) contrast(100%);
+    cursor: pointer;
+}
+
+.logo-icon-df {
+    display: inline-block;
+    width: 70px;
+    height: 70px;
+    background-size: cover;
+  }
+.logo-icon-df:hover,
+.logo-icon-df:focus {
+    filter: grayscale(100%) invert(30%) saturate(50%) hue-rotate(90deg);
+    cursor: pointer;
 }
