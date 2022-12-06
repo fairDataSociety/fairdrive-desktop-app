@@ -82,3 +82,11 @@
     filter: grayscale(100%) invert(30%) saturate(50%) hue-rotate(90deg);
     cursor: pointer;
 }
+
+.account-switch {
+}
+.account-switch:hover,
+.account-switch:focus {
+   filter: grayscale(100%) invert(30%) saturate(50%) hue-rotate(90deg);
+   cursor: pointer;
+}

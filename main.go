@@ -50,7 +50,7 @@ func main() {
 	})
 	fileMenu.AddSeparator()
 
-	fileMenu.AddText("Accounts", keys.Combo("A", keys.ShiftKey, keys.CmdOrCtrlKey), func(_ *menu.CallbackData) {
+	fileMenu.AddText("Accounts", keys.Combo("S", keys.CmdOrCtrlKey), func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "showAccounts")
 	})
 

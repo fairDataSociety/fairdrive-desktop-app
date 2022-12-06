@@ -87,8 +87,15 @@ interface AccountInfo {
 function createUserInfo(username: string, password: string): UserInfo {
   return { username, password }
 }
-function createAccountInfo(userInfo: UserInfo, pods: PodMountedInfo[]): AccountInfo {
-  return {userInfo, pods}
+function addAccount(userInfo: UserInfo, pods: PodMountedInfo[]): AccountInfo {
+  return { userInfo, pods }
+}
+function createAccountInfo(
+  username: string,
+  password: string,
+  pods: PodMountedInfo[],
+): AccountInfo {
+  return { userInfo: createUserInfo(username, password), pods }
 }
 
 const theme = createTheme({
@@ -164,13 +171,21 @@ function App() {
   const [remember, setRemember] = useState<boolean>(false)
   const [message, setMessage] = useState('')
 
+  async function LoadStoredAccounts() {
+    let storedAccounts = localStorage.getItem('accounts')
+    if (storedAccounts !== null) {
+      setAccounts(JSON.parse(storedAccounts))
+    }
+    console.log('accounts loaded', storedAccounts)
+  }
+
   useEffect(() => {
+    LoadStoredAccounts()
     EventsOn('preferences', () => {
       setShowConfig(true)
     })
     EventsOn('showAccounts', () => {
       setShowAccounts(true)
-      console.log('showAccounts')
     })
     EventsOn('podNew', () => {
       setPodNew(true)
@@ -222,14 +237,16 @@ function App() {
           if (acc.Username === '' || acc.Password === '') {
             EventsEmit('disableMenus')
           } else {
-            setName(acc.Username)
-            setPassword(acc.Password)
+            let p = await doLogin(acc.Username, acc.Password)
 
-            await Login(acc.Username, acc.Password)
-            let p = await GetPodsList()
+            // setName(acc.Username)
+            // setPassword(acc.Password)
 
-            setPods(p)
-            setShowLogin(false)
+            // await Login(acc.Username, acc.Password)
+            // let p = await GetPodsList()
+
+            // setPods(p)
+            // setShowLogin(false)
 
             let _mountPoint = await GetMountPoint()
             setMountPoint(_mountPoint)
@@ -245,7 +262,7 @@ function App() {
                 })
               }
             }
-            EventsEmit('enableMenus') // if we get to the pods abd we are logged in, and got pods, then enable the menus, so that we get Logout option
+            //EventsEmit('enableMenus') // if we get to the pods abd we are logged in, and got pods, then enable the menus, so that we get Logout option
           }
         } catch (e: any) {
           EventsEmit('disableMenus')
@@ -265,16 +282,23 @@ function App() {
 
   const [accounts, setAccounts] = useState<AccountInfo[]>([])
 
-  const addAccount = async (username: string, password: string) => {
+  const addAccount = async (
+    username: string,
+    password: string,
+    pods: handler.PodMountedInfo[],
+  ) => {
     const account = accounts.find((obj) => {
-      return obj.userInfo.username === username;
-    });
+      return obj.userInfo.username === username
+    })
 
-    if(account===undefined) {
-      let newAccount = createUserInfo(username, password)
-      return newAccount;
+    if (account === undefined) {
+      let newAccountInfo = createAccountInfo(username, password, pods)
+      let newAccounts = [...accounts, newAccountInfo]
+      setAccounts(newAccounts)
+      localStorage.setItem('accounts', JSON.stringify(newAccounts))
+      return newAccountInfo
     }
-    return account;
+    return account
   }
 
   const mount = async (e: any) => {
@@ -371,20 +395,43 @@ function App() {
     BrowserOpenURL('https://datafund.io/')
   }
 
+  async function handleAccountSwitch(account: AccountInfo) {
+    setIsLoading(true)
+    try {
+      setShowLogin(false)
+      setShowPods(false)
+      setName(account.userInfo.username)
+      setPassword(account.userInfo.password)
+      doLogin(account.userInfo.username, account.userInfo.password)
+      setShowAccounts(false)
+    } catch (e: any) {
+      showError(e)
+      setShowLogin(true)
+    }
+    setIsLoading(false)
+  }
+
+  async function doLogin(user: string, pass: string) {
+    await Login(user, pass)
+    let p = await GetPodsList()
+    setShowLogin(false)
+    setPods(p)
+    setShowPods(true)
+    EventsEmit('enableMenus')
+    return p
+  }
+
   async function login() {
     setIsLoading(true)
     try {
-      await Login(username, password)
-      let p = await GetPodsList()
-      setShowLogin(false)
-      setPods(p)
-      setShowPods(true)
+      let p = await doLogin(username, password)
+
       if (remember) {
         await RememberPassword(username, password)
+        addAccount(username, password, p) // add only if remember is checked and login is successful
       } else {
         await ForgetPassword()
       }
-      EventsEmit('enableMenus')
     } catch (e: any) {
       showError(e)
     }
@@ -588,24 +635,68 @@ function App() {
             </FormGroup>
           </Box>
         </Modal>
+
         {showAccounts && (
           <>
             <Dialog open={showAccounts}>
-              <Tooltip title="Your previously logged accounts" placement="top">
+              <Tooltip
+                title="Your previously logged accounts. Click to login."
+                placement="top"
+              >
                 <DialogTitle>Accounts</DialogTitle>
               </Tooltip>
-
-              <DialogActions>
+              <List>
+                {accounts.map((account) => (
+                  <>
+                    <Tooltip
+                      title="Click to login with this account"
+                      placement="top"
+                    >
+                      <ListItem
+                        key={account.userInfo.username}
+                        onClick={() => handleAccountSwitch(account)}
+                        style={{ cursor: 'pointer' }}
+                        className="account-switch"
+                      >
+                        <Typography>{account.userInfo.username}</Typography>
+                      </ListItem>
+                    </Tooltip>
+                  </>
+                ))}
+              </List>
+              {/* <ListItem key = {account.userInfo.username} onClick={() => handleAccountSwitch(account)}> */}
+              <DialogActions
+                style={{ justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <Button onClick={() => setShowAccounts(false)} disabled={isLoading}>
                   Close
                 </Button>
-                <Button onClick={handlePodNew} disabled={isLoading}>
+                <div style={{ flex: '1 0 0' }} />
+                {/* <Button onClick={handlePodNew} disabled={isLoading}>
                   Switch
-                </Button>
+                </Button> */}
               </DialogActions>
             </Dialog>
           </>
         )}
+
+        <div
+          style={{
+            position: 'absolute',
+            top: '0px',
+            zIndex: '10000',
+            width: '100%',
+            height: '10px',
+          }}
+        >
+          {isLoading && (
+            <LinearProgress
+              sx={{
+                height: 10,
+              }}
+            />
+          )}
+        </div>
 
         {/*about dialog*/}
         {(() => {
@@ -799,7 +890,8 @@ function App() {
               <Container component="main" maxWidth="xs">
                 <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
                   <h2 style={{ color: 'black' }}>
-                    Pods <Typography>{showAccounts ? 'true' : 'false'} </Typography>
+                    Pods
+                    <Typography>{username}</Typography>
                   </h2>
                 </Tooltip>
 
@@ -889,24 +981,6 @@ function App() {
             )
           }
         })()}
-
-        <div
-          style={{
-            position: 'absolute',
-            top: '0px',
-            zIndex: '10000',
-            width: '100%',
-            height: '10px',
-          }}
-        >
-          {isLoading && (
-            <LinearProgress
-              sx={{
-                height: 10,
-              }}
-            />
-          )}
-        </div>
 
         <img
           src={backgroundImage}
