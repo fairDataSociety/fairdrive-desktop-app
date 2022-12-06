@@ -181,11 +181,11 @@ jobs:
           path: build/bin/windows
       - uses: actions/download-artifact@v3
         with:
-          name: mac
+          name: mac_arm64
           path: build/bin/mac_arm64
       - uses: actions/download-artifact@v3
         with:
-          name: mac
+          name: mac_amd64
           path: build/bin/mac_amd64
       - uses: actions/download-artifact@v3
         with:
