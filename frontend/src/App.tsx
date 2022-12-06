@@ -212,11 +212,13 @@ function App() {
             let autoMount = await GetAutoMount()
             if (autoMount) {
               let mountedPods = await GetMountedPods()
-              mountedPods.map(async (pod) => {
-                await Mount(pod, _mountPoint, false)
-                let pods = await GetCashedPods()
-                setPods(pods)
-              })
+              if (mountedPods != null) {
+                mountedPods.map(async (pod) => {
+                  await Mount(pod, _mountPoint, false)
+                  let pods = await GetCashedPods()
+                  setPods(pods)
+                })
+              }
             }
             EventsEmit('enableMenus') // if we get to the pods abd we are logged in, and got pods, then enable the menus, so that we get Logout option
           }
