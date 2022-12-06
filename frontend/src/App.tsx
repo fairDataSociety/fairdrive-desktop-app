@@ -864,7 +864,10 @@ function App() {
                         Login
                       </Button>
                       <>
-                        <Typography style={{color:'black'}}>Don't have an account?</Typography>
+                        <br />
+                        <Typography style={{ color: 'black' }}>
+                          Don't have an account?
+                        </Typography>
                         <Link
                           href="#"
                           variant="body2"
