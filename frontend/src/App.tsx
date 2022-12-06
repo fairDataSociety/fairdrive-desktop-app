@@ -176,7 +176,7 @@ function App() {
     if (storedAccounts !== null) {
       setAccounts(JSON.parse(storedAccounts))
     }
-    console.log('accounts loaded', storedAccounts)
+    //console.log('accounts loaded', storedAccounts)
   }
 
   useEffect(() => {
