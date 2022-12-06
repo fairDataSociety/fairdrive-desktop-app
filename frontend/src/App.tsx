@@ -845,7 +845,12 @@ function App() {
                           <Checkbox color="primary" onChange={updateRemember} />
                         }
                         label={
-                          <Typography>Remember and keep me logged-in</Typography>
+                          <Tooltip
+                            title="This will also add information to a list of available accounts for faster switching between accounts"
+                            placement="top"
+                          >
+                            <Typography>Remember and keep me logged-in</Typography>
+                          </Tooltip>
                         }
                         style={{ color: 'black' }}
                       />
@@ -858,14 +863,17 @@ function App() {
                       >
                         Login
                       </Button>
-                      <Grid container>
-                        <Grid item>
-                          {/*TODO add create account website and fairdrive */}
-                          <Link href="#" variant="body2" onClick={openSignUp}>
-                            {"Don't have an account? Sign Up"}
-                          </Link>
-                        </Grid>
-                      </Grid>
+                      <>
+                        <Typography style={{color:'black'}}>Don't have an account?</Typography>
+                        <Link
+                          href="#"
+                          variant="body2"
+                          onClick={openSignUp}
+                          align="center"
+                        >
+                          Sign Up
+                        </Link>
+                      </>
                     </FormGroup>
                   </Box>
                 </Container>
