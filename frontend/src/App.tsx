@@ -846,7 +846,7 @@ function App() {
                         }
                         label={
                           <Tooltip
-                            title="This will also add information to a list of available accounts for faster switching between accounts"
+                            title="This will also add information to a list of available accounts for faster switching"
                             placement="top"
                           >
                             <Typography>Remember and keep me logged-in</Typography>
