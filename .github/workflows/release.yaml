@@ -158,7 +158,8 @@ jobs:
           npm install --global create-dmg
           chmod +x 'build/bin/Fairdrive Desktop App.app/Contents/MacOS/Fairdrive Desktop App'
           create-dmg 'build/bin/Fairdrive Desktop App.app' build/bin --identity '${{ secrets.ID }}'
-          mv 'build/bin/FDA 0.1.0.dmg' build/bin/${{ matrix.job_name }}.dmg
+          mv 'build/bin/FDA 0.1.0.dmg' build/bin/FDA.dmg
+          rm -rf build/bin/Fairdrive Desktop App.app
         env:
           CERTIFICATE_OSX_APPLICATION: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
           CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
@@ -169,146 +170,37 @@ jobs:
           name: ${{ matrix.job_name }}
           path: build/bin/*
 
+  release:
+    needs: build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v3
+        with:
+          name: windows
+          path: build/bin/windows
+      - uses: actions/download-artifact@v3
+        with:
+          name: mac
+          path: build/bin/mac
+      - uses: actions/download-artifact@v3
+        with:
+          name: linux
+          path: build/bin/linux
+      - name: Display structure of downloaded files
+        run: ls -R
+      - name: Rename binaries
+        run: |
+          mv build/bin/linux/FDA build/bin/fairdrive_linux
+          mv build/bin/windows/FDA.exe build/bin/fairdrive_windows.exe
+          mv build/bin/mac_arm64/FDA.dmg build/bin/fairdrive_darwin_arm64.dmg
+          mv build/bin/mac_amd64/FDA.dmg build/bin/fairdrive_darwin_amd64.dmg
 
-
-
-#    strategy:
-#      matrix:
-#        include:
-#          - os: windows-latest
-#            arch: amd64
-#            cgo: 1
-#            cpath: C:\Program Files (x86)\WinFsp\inc\fuse
-#          - os: ubuntu-latest
-#            arch: amd64
-#            cgo: 1
-#          - os: ubuntu-latest
-#            arch: arm64
-#            cgo: 1
-#          - os: macos-latest
-#            arch: amd64
-#            cgo: 1
-#          - os: macos-latest
-#            arch: arm64
-#            cgo: 1
-#      fail-fast: false
-#
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v2
-#        with:
-#          submodules: recursive
-#      - name: Install go
-#        uses: actions/setup-go@v2
-#        with:
-#          stable: true
-#          go-version: 1.18.*
-#
-#      - name: Install winfsp (Windows)
-#        if: runner.os == 'Windows'
-#        run: |
-#          $releases = Invoke-WebRequest https://api.github.com/repos/winfsp/winfsp/releases | ConvertFrom-Json
-#          $asseturi = $releases[0].assets.browser_download_url | Where-Object { $_ -match "winfsp-.*\.msi" }
-#          Invoke-WebRequest -Uri $asseturi -Out winfsp.msi
-#          Start-Process -NoNewWindow -Wait msiexec "/i winfsp.msi /qn INSTALLLEVEL=1000"
-#        shell: powershell
-#
-#      - name: Install FUSE (Linux)
-#        if: runner.os == 'Linux'
-#        run: |
-#          sudo apt-get update
-#          sudo apt-get -qq install libfuse-dev
-#          sudo apt-get -qq install libacl1-dev
-#          sudo apt-get install build-essential libgtk-3-dev libwebkit2gtk-4.0-dev
-#
-#      - name: Install FUSE (macOS)
-#        if: runner.os == 'macOS'
-#        run: |
-#          brew install macfuse
-#
-#      - name: Set git to use LF
-#        # make sure that line endings are not converted on windows
-#        # as gofmt linter will report that they need to be changed
-#        run: git config --global core.autocrlf false
-#      - name: Cache Go modules
-#        uses: actions/cache@v1
-#        with:
-#          path: ~/go/pkg/mod
-#          key: ${{ runner.os }}-build-${{ hashFiles('**/go.sum') }}
-#          restore-keys: |
-#            ${{ runner.OS }}-build-${{ env.cache-name }}-
-#            ${{ runner.OS }}-build-
-#            ${{ runner.OS }}-
-#      - name: Install wails
-#        run: |
-#          GO111MODULE=on go install github.com/wailsapp/wails/v2/cmd/wails@latest
-#      - name: Build
-#        run: make binary
-#      - uses: actions/upload-artifact@v3
-#        if: matrix.os == 'windows-latest'
-#        with:
-#          name: windows
-#          path: build/bin/fairdrive-${{ matrix.os }}-${{ matrix.arch }}.exe
-#      - uses: actions/upload-artifact@v3
-#        if: matrix.os == 'ubuntu-latest'
-#        with:
-#          name: linux
-#          path: build/bin/fairdrive-${{ matrix.os }}-${{ matrix.arch }}
-#      - uses: actions/upload-artifact@v3
-#        if: matrix.os == 'macos-latest'
-#        with:
-#          name: mac
-#          path: build/bin/fairdrive-${{ matrix.os }}-${{ matrix.arch }}
-#  release:
-#    needs: build
-#    runs-on: macos-latest
-#    steps:
-#      - uses: actions/checkout@v2
-#      - uses: actions/download-artifact@v3
-#        with:
-#          name: windows
-#          path: build/bin/windows
-#      - uses: actions/download-artifact@v3
-#        with:
-#          name: mac
-#          path: build/bin/mac
-#      - uses: actions/download-artifact@v3
-#        with:
-#          name: linux
-#          path: build/bin/linux
-#      - name: Display structure of downloaded files
-#        run: ls -R
-#      - run: mv build/bin/linux/FDA build/bin/fairdrive
-#      - run: mv build/bin/windows/FDA.exe build/bin/fairdrive.exe
-#      - uses: actions/setup-node@v3
-#        with:
-#          node-version: 18
-#
-#      - name: Import Code-Signing Certificates for macOS
-#        uses: Apple-Actions/import-codesign-certs@v1
-#        with:
-#          p12-file-base64: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
-#          p12-password: ${{ secrets.CERTIFICATE_PASSWORD }}
-#
-#      - name: Sign and notarize
-#        shell: bash
-#        run: |
-#          chmod +x scripts/gon-config.sh && ./scripts/gon-config.sh
-#          brew tap mitchellh/gon
-#          brew install mitchellh/gon/gon
-#          gon -log-level=info -log-json build/bin/config.json
-#        env:
-#          CERTIFICATE_OSX_APPLICATION: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
-#          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
-#          APPLE_USER: ${{ secrets.APPLE_USER }}
-#          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-#          ID: ${{ secrets.ID }}
-#
-#      - name : Run GoReleaser
-#        uses: goreleaser/goreleaser-action@v2
-#        with:
-#          distribution: goreleaser
-#          version: latest
-#          args: release --rm-dist
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name : Run GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
