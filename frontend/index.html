@@ -4,10 +4,19 @@
     <meta charset="UTF-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Fairdrive Desktop App</title>
+    <link rel="stylesheet" href="./src/assets//pyscript.css" />
+    <script defer src="./src/assets/pyscript.js"></script>
 </head>
 <body>
 <div id="root"></div>
 <script src="./src/main.tsx" type="module"></script>
+<py-script>
+    import asyncio
+    from itertools import count
+    for i in count():
+        print(f"Count: {i}")
+        await asyncio.sleep(1) 
+</py-script>
 </body>
 </html>
 
