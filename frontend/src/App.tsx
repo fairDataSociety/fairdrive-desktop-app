@@ -838,16 +838,14 @@ function App() {
                 <Container component="main" maxWidth="xs">
                   <Box
                     sx={{
-                      marginTop: 3,
+                      marginTop: 1,
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                     }}
                   >
                     <FormGroup>
-                      <Typography style={{ color: 'black' }}>
-                        Fair Data Society Login
-                      </Typography>
+                      <h2 style={{ color: 'black' }}>Fair Data Society Login</h2>
                       <TextField
                         margin="normal"
                         required
