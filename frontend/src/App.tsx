@@ -87,9 +87,11 @@ interface AccountInfo {
 function createUserInfo(username: string, password: string): UserInfo {
   return { username, password }
 }
+
 function addAccount(userInfo: UserInfo, pods: PodMountedInfo[]): AccountInfo {
   return { userInfo, pods }
 }
+
 function createAccountInfo(
   username: string,
   password: string,
@@ -324,8 +326,8 @@ function App() {
     setIsLoading(false)
   }
   const [mountPoint, setMountPoint] = useState('')
-  const [isProxy, setProxy] = useState<boolean>(true)
-  const [proxyValue, setProxyValue] = useState('yes')
+  const [isProxy, setProxy] = useState<boolean>(false)
+  const [proxyValue, setProxyValue] = useState('no')
   const [bee, setBee] = useState('https://bee-1.dev.fairdatasociety.org')
   const [batch, setBatch] = useState('')
   const [rpc, setRPC] = useState('https://xdai.dev.fairdatasociety.org')
