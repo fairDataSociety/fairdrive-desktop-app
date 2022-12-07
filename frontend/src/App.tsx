@@ -300,6 +300,7 @@ function App() {
       localStorage.setItem('accounts', JSON.stringify(newAccounts))
       return newAccountInfo
     }
+    // TDOD update pod info
     return account
   }
 
@@ -414,6 +415,12 @@ function App() {
   }
 
   async function doLogin(user: string, pass: string) {
+    // TODO: logout existing user and maybe unmount all pods
+    try {
+      await Logout()
+    } catch (e: any) {
+      console.log(e)
+    }
     await Login(user, pass)
     let p = await GetPodsList()
     setShowLogin(false)
@@ -499,9 +506,11 @@ function App() {
             }}
           >
             <FormGroup>
-              <FormLabel id="demo-controlled-radio-buttons-group">
-                Is bee node running behind proxy?
-              </FormLabel>
+              <Tooltip title="Usually bee nodes and gateways are not behind proxy. Please check before connecting via proxy." placement='top'>
+                <FormLabel id="demo-controlled-radio-buttons-group">
+                      Is bee node running behind proxy?
+                </FormLabel>
+              </Tooltip>
               <RadioGroup
                 aria-labelledby="demo-controlled-radio-buttons-group"
                 name="controlled-radio-buttons-group"
@@ -521,7 +530,7 @@ function App() {
                   </Grid>
 
                   <Grid item>
-                    <Tooltip title="Select if your bee is behind proxy">
+                    <Tooltip title="Select if your bee is behind proxy (gateways are not proxies)">
                       <FormControlLabel
                         value={'yes'}
                         control={<Radio />}

@@ -79,6 +79,12 @@ func (h *Handler) Logout() error {
 		h.logger.Errorf("logout: fairos not initialised")
 		return ErrFairOsNotInitialised
 	}
+	h.lock.Lock()
+	defer h.lock.Unlock()
+	for podName, host := range h.activeMounts {
+		host.h.Unmount()
+		delete(h.activeMounts, podName)
+	}
 	return h.api.LogoutUser(h.sessionID)
 }
 
