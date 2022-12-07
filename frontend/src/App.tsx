@@ -298,6 +298,7 @@ function App() {
       localStorage.setItem('accounts', JSON.stringify(newAccounts))
       return newAccountInfo
     }
+    // TDOD update pod info
     return account
   }
 
@@ -412,6 +413,12 @@ function App() {
   }
 
   async function doLogin(user: string, pass: string) {
+    // TODO: logout existing user and maybe unmount all pods
+    try {
+      await Logout()
+    } catch (e: any) {
+      console.log(e)
+    }
     await Login(user, pass)
     let p = await GetPodsList()
     setShowLogin(false)
