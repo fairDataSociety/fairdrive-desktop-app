@@ -121,11 +121,8 @@ func (h *Handler) Mount(pod, location string, createPod bool) error {
 	sig := make(chan int)
 	host := fuse.NewFileSystemHost(dfsFuse)
 	go func() {
-		var fuseArgs = []string{}
-		if runtime.GOOS == "darwin" {
-			fuseArgs = append(fuseArgs, "-onoappledouble")
-		}
-		host.Mount(mountPoint, fuseArgs)
+		host.SetCapReaddirPlus(true)
+		host.Mount(mountPoint, mountOptions(pod))
 		close(sig)
 	}()
 	select {
@@ -228,4 +225,23 @@ func (h *Handler) Close() error {
 		delete(h.activeMounts, podName)
 	}
 	return h.api.Close()
+}
+
+func mountOptions(pod string) (options []string) {
+	options = []string{}
+	options = append(options, "-o", "debug")
+
+	if runtime.GOOS == "windows" {
+		options = append(options, "--FileSystemName="+pod)
+	} else {
+		options = append(options, "-o", "fsname="+pod)
+		options = append(options, "-o", "atomic_o_trunc")
+		if runtime.GOOS == "darwin" {
+			options = append(options, "-o", "volname="+pod)
+
+			options = append(options, "-o", "noappledouble")
+			options = append(options, "-o", "noapplexattr")
+		}
+	}
+	return options
 }
