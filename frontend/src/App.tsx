@@ -506,9 +506,12 @@ function App() {
             }}
           >
             <FormGroup>
-              <Tooltip title="Usually bee nodes and gateways are not behind proxy. Please check before connecting via proxy." placement='top'>
+              <Tooltip
+                title="Usually bee nodes and gateways are not behind proxy. Please check before connecting via proxy."
+                placement="top"
+              >
                 <FormLabel id="demo-controlled-radio-buttons-group">
-                      Is bee node running behind proxy?
+                  Is bee node running behind proxy?
                 </FormLabel>
               </Tooltip>
               <RadioGroup
@@ -668,11 +671,17 @@ function App() {
         {showAccounts && (
           <Dialog open={showAccounts}>
             <Tooltip
-              title="Your previously logged accounts. Click to login."
+              title="Your previously logged accounts. Click on account name to login."
               placement="top"
             >
               <DialogTitle>Accounts</DialogTitle>
             </Tooltip>
+
+            {accounts.length === 0 && (
+              <Typography style={{ color: 'gray', margin: '20px' }}>
+                No accounts found
+              </Typography>
+            )}
             <List>
               {accounts.map((account) => (
                 <ListItem
@@ -819,17 +828,26 @@ function App() {
           if (showLogin) {
             return (
               <>
-                <img src={logo} id="logo" alt="logo" className="logo-icon" />
+                <img
+                  src={logo}
+                  id="logo"
+                  alt="logo"
+                  className="logo-icon"
+                  onClick={() => setShowAccounts(true)}
+                />
                 <Container component="main" maxWidth="xs">
                   <Box
                     sx={{
-                      marginTop: 8,
+                      marginTop: 3,
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                     }}
                   >
                     <FormGroup>
+                      <Typography style={{ color: 'black' }}>
+                        Fair Data Society Login
+                      </Typography>
                       <TextField
                         margin="normal"
                         required
@@ -899,10 +917,15 @@ function App() {
             return (
               <Container component="main" maxWidth="xs">
                 <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
-                  <h2 style={{ color: 'black' }}>
-                    Pods
-                    <Typography>{username}</Typography>
-                  </h2>
+                  <h2 style={{ color: 'black', marginBottom: '0px' }}>Pods</h2>
+                </Tooltip>
+                <Tooltip title="Current account name">
+                  <Typography
+                    style={{ color: 'gray' }}
+                    onClick={() => setShowAccounts(true)}
+                  >
+                    {username}
+                  </Typography>
                 </Tooltip>
 
                 <Box

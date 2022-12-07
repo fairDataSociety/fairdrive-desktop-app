@@ -239,6 +239,9 @@ func mountOptions(pod string) (options []string) {
 
 	if runtime.GOOS == "windows" {
 		options = append(options, "--FileSystemName="+pod)
+		options = append(options, "kernel_cache")
+		options = append(options, "noauto_cache")
+		options = append(options, "norellinks")
 	} else {
 		options = append(options, "-o", "fsname="+pod)
 		//options = append(options, "-o", "atomic_o_trunc")
