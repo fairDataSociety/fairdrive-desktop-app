@@ -241,12 +241,12 @@ func mountOptions(pod string) (options []string) {
 		options = append(options, "--FileSystemName="+pod)
 	} else {
 		options = append(options, "-o", "fsname="+pod)
-		options = append(options, "-o", "atomic_o_trunc")
+		//options = append(options, "-o", "atomic_o_trunc")
 		if runtime.GOOS == "darwin" {
 			options = append(options, "-o", "volname="+pod)
 
 			options = append(options, "-o", "noappledouble")
-			options = append(options, "-o", "noapplexattr")
+			//options = append(options, "-o", "noapplexattr")
 		}
 	}
 	return options
