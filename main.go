@@ -45,9 +45,9 @@ func main() {
 	fileMenu.AddText("About", nil, func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "about")
 	})
-	fileMenu.AddText("Check for updates...", nil, func(_ *menu.CallbackData) {
-		// TODO check for update
-	})
+	//fileMenu.AddText("Check for updates...", nil, func(_ *menu.CallbackData) {
+	//	// TODO check for update
+	//})
 	fileMenu.AddSeparator()
 
 	fileMenu.AddText("Accounts", keys.CmdOrCtrl("s"), func(_ *menu.CallbackData) {
@@ -69,22 +69,22 @@ func main() {
 	podMenu.AddText("New", keys.CmdOrCtrl("n"), func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "podNew")
 	})
-	podMenu.AddSeparator()
-	auto := podMenu.AddText("Auto mount", nil, func(it *menu.CallbackData) {
-		err = cnf.setAutomount(it.MenuItem.Checked)
-		if err != nil {
-			println("saving auto mount config failed ", err.Error())
-			return
-		}
-	})
-	auto.Type = menu.CheckboxType
-	helpMenu := appMenu.AddSubmenu("Help")
-	helpMenu.AddText("Report a problem", nil, func(_ *menu.CallbackData) {
-		// TODO Report a problem
-	})
-	helpMenu.AddText("Fairdrive Help", nil, func(_ *menu.CallbackData) {
-		// TODO redirect to FAQ
-	})
+	//podMenu.AddSeparator()
+	//auto := podMenu.AddText("Auto mount", nil, func(it *menu.CallbackData) {
+	//	err = cnf.setAutomount(it.MenuItem.Checked)
+	//	if err != nil {
+	//		println("saving auto mount config failed ", err.Error())
+	//		return
+	//	}
+	//})
+	//auto.Type = menu.CheckboxType
+	//helpMenu := appMenu.AddSubmenu("Help")
+	//helpMenu.AddText("Report a problem", nil, func(_ *menu.CallbackData) {
+	//	// TODO Report a problem
+	//})
+	//helpMenu.AddText("Fairdrive Help", nil, func(_ *menu.CallbackData) {
+	//	// TODO redirect to FAQ
+	//})
 
 	// Create application with options
 	app := application.NewWithOptions(&options.App{
@@ -182,7 +182,7 @@ func main() {
 			}
 
 			if cnf.IsSet() {
-				auto.Checked = cnf.autoMount
+				//auto.Checked = cnf.autoMount
 				wRuntime.MenuUpdateApplicationMenu(startContext)
 				wRuntime.EventsEmit(startContext, "mountThesePods")
 			}

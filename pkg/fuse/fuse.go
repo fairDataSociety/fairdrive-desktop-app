@@ -159,6 +159,8 @@ func (f *Ffdfs) Statfs(_ string, stat *fuse.Statfs_t) int {
 	stat.Bsize = sysBlockSize
 	stat.Bfree = free / sysBlockSize
 	stat.Bavail = free / sysBlockSize
+	stat.Files = 1e9 // Total files in file system.
+	stat.Ffree = 1e9 // Free files in file system.
 	return 0
 }
 
