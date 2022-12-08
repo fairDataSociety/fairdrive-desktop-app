@@ -78,13 +78,13 @@ func main() {
 	//	}
 	//})
 	//auto.Type = menu.CheckboxType
-	//helpMenu := appMenu.AddSubmenu("Help")
-	//helpMenu.AddText("Report a problem", nil, func(_ *menu.CallbackData) {
-	//	// TODO Report a problem
-	//})
-	//helpMenu.AddText("Fairdrive Help", nil, func(_ *menu.CallbackData) {
-	//	// TODO redirect to FAQ
-	//})
+	helpMenu := appMenu.AddSubmenu("Help")
+	helpMenu.AddText("Report a problem", nil, func(_ *menu.CallbackData) {
+		wRuntime.BrowserOpenURL(startContext, "https://github.com/datafund/fairos-fuse/issues")
+	})
+	helpMenu.AddText("FDA Help", nil, func(_ *menu.CallbackData) {
+		wRuntime.BrowserOpenURL(startContext, "https://github.datafund.io/fairos-fuse/")
+	})
 
 	// Create application with options
 	app := application.NewWithOptions(&options.App{
