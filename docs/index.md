@@ -82,8 +82,7 @@ Download FDA for your operating system
 #### Where can I follow if the sync is happening?
 
 - If you are using the same bee node for accessing your data, then there is no need to wait for sync. 
-Once you create/mode/update/delete data from your mount it will reflect everywhere.
-
+Once you create/move/update/delete data from your mount it will reflect everywhere.
 
 [Bugs and issues](https://github.com/datafund/fairos-fuse/issues)
 
