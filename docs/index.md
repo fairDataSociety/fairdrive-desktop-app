@@ -75,19 +75,22 @@ Download FDA for your operating system
 
 ![mount](https://user-images.githubusercontent.com/15252513/206395147-e9961710-0aa7-49b7-8a9b-a864566c9e83.gif)
 
-### Which is better, local light node, a full node on raspberry, or gateway?
+#### Which is better, local light node, a full node on raspberry, or gateway?
 
 - Using your own bee is always better for performance. A light node is good enough for using FDA, but a full node will perform better.
 
-### Where can I follow if the sync is happening?
+#### Where can I follow if the sync is happening?
 
 - If you are using the same bee node for accessing your data, then there is no need to wait for sync. 
 Once you create/mode/update/delete data from your mount it will reflect everywhere.
 
 
 [Bugs and issues](https://github.com/datafund/fairos-fuse/issues)
+
 [Fair Data Society Discord](https://discord.gg/7qFEtJDghM)
+
 [FairOS-dfs](https://github.com/fairDataSociety/fairOS-dfs)
+
 [FairOS-dfs docs](https://docs.fairos.fairdatasociety.org/docs/)
 
 
