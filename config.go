@@ -107,25 +107,25 @@ func (c *conf) setMountedPods(pods []string) error {
 	return nil
 }
 
-func (c *conf) setAutomount(isChecked bool) error {
-	config := viper.New()
-	home, err := homedir.Dir()
-	if err != nil {
-		return err
-	}
-	cfgFile := filepath.Join(home, settings)
-	if _, err := os.Stat(cfgFile); err != nil {
-		return fmt.Errorf("config not found")
-	} else {
-		config.SetConfigFile(cfgFile)
-		if err := config.ReadInConfig(); err != nil {
-			return err
-		}
-	}
-	c.autoMount = isChecked
-	config.Set("autoMount", c.autoMount)
-	return config.WriteConfig()
-}
+//func (c *conf) setAutomount(isChecked bool) error {
+//	config := viper.New()
+//	home, err := homedir.Dir()
+//	if err != nil {
+//		return err
+//	}
+//	cfgFile := filepath.Join(home, settings)
+//	if _, err := os.Stat(cfgFile); err != nil {
+//		return fmt.Errorf("config not found")
+//	} else {
+//		config.SetConfigFile(cfgFile)
+//		if err := config.ReadInConfig(); err != nil {
+//			return err
+//		}
+//	}
+//	c.autoMount = isChecked
+//	config.Set("autoMount", c.autoMount)
+//	return config.WriteConfig()
+//}
 
 func (c *conf) IsSet() bool {
 	return c.fc != nil

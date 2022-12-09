@@ -40,15 +40,19 @@ func main() {
 
 	prefShortcut := keys.CmdOrCtrl(",")
 	if runtime.GOOS == "windows" {
-		prefShortcut = keys.Combo(",", keys.CmdOrCtrlKey, keys.ShiftKey)
+		prefShortcut = keys.Combo("P", keys.CmdOrCtrlKey, keys.ShiftKey)
 	}
 	fileMenu.AddText("About", nil, func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "about")
 	})
-	fileMenu.AddText("Check for updates...", nil, func(_ *menu.CallbackData) {
-		// TODO check for update
-	})
+	//fileMenu.AddText("Check for updates...", nil, func(_ *menu.CallbackData) {
+	//	// TODO check for update
+	//})
 	fileMenu.AddSeparator()
+
+	fileMenu.AddText("Accounts", keys.CmdOrCtrl("s"), func(_ *menu.CallbackData) {
+		wRuntime.EventsEmit(startContext, "showAccounts")
+	})
 
 	fileMenu.AddText("Preferences", prefShortcut, func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "preferences")
@@ -65,21 +69,21 @@ func main() {
 	podMenu.AddText("New", keys.CmdOrCtrl("n"), func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "podNew")
 	})
-	podMenu.AddSeparator()
-	auto := podMenu.AddText("Auto mount", nil, func(it *menu.CallbackData) {
-		err = cnf.setAutomount(it.MenuItem.Checked)
-		if err != nil {
-			println("saving auto mount config failed ", err.Error())
-			return
-		}
-	})
-	auto.Type = menu.CheckboxType
+	//podMenu.AddSeparator()
+	//auto := podMenu.AddText("Auto mount", nil, func(it *menu.CallbackData) {
+	//	err = cnf.setAutomount(it.MenuItem.Checked)
+	//	if err != nil {
+	//		println("saving auto mount config failed ", err.Error())
+	//		return
+	//	}
+	//})
+	//auto.Type = menu.CheckboxType
 	helpMenu := appMenu.AddSubmenu("Help")
 	helpMenu.AddText("Report a problem", nil, func(_ *menu.CallbackData) {
-		// TODO Report a problem
+		wRuntime.BrowserOpenURL(startContext, "https://github.com/datafund/fairos-fuse/issues")
 	})
-	helpMenu.AddText("Fairdrive Help", nil, func(_ *menu.CallbackData) {
-		// TODO redirect to FAQ
+	helpMenu.AddText("FDA Help", nil, func(_ *menu.CallbackData) {
+		wRuntime.BrowserOpenURL(startContext, "https://github.datafund.io/fairos-fuse/")
 	})
 
 	// Create application with options
@@ -100,6 +104,19 @@ func main() {
 		},
 		OnStartup: func(ctx context.Context) {
 			startContext = ctx
+			wRuntime.EventsOn(startContext, "open", func(l ...interface{}) {
+				location := ""
+				if len(l) == 1 {
+					location = fmt.Sprintf("%s", l[0])
+				}
+				if location != "" {
+					err := Run(location)
+					if err != nil {
+						println("directory open failed ", err.Error())
+						return
+					}
+				}
+			})
 			wRuntime.EventsOn(startContext, "disableMenus", func(_ ...interface{}) {
 				for _, item := range podMenu.Items {
 					if item.Label == "New" {
@@ -165,7 +182,7 @@ func main() {
 			}
 
 			if cnf.IsSet() {
-				auto.Checked = cnf.autoMount
+				//auto.Checked = cnf.autoMount
 				wRuntime.MenuUpdateApplicationMenu(startContext)
 				wRuntime.EventsEmit(startContext, "mountThesePods")
 			}

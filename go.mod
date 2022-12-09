@@ -3,7 +3,7 @@ module github.com/datafund/fdfs
 go 1.18
 
 require (
-	github.com/fairdatasociety/fairOS-dfs v0.9.0-rc7.0.20221201100426-ba66266cb4ec
+	github.com/fairdatasociety/fairOS-dfs v0.9.1-rc3
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/plexsysio/taskmanager v0.0.0-20211220123746-de5ebdd49ae2
 	github.com/sirupsen/logrus v1.6.0
@@ -22,8 +22,8 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
-	github.com/ethereum/go-ethereum v1.10.18 // indirect
-	github.com/ethersphere/bee v1.7.0 // indirect
+	github.com/ethereum/go-ethereum v1.10.26 // indirect
+	github.com/ethersphere/bee v1.9.0 // indirect
 	github.com/ethersphere/bmt v0.1.4 // indirect
 	github.com/fairdatasociety/fairOS-dfs-utils v0.0.0-20220208153721-e0f8b5b25222 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
