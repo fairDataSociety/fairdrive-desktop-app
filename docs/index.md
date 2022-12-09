@@ -29,13 +29,13 @@ install [winfsp](https://winfsp.dev/rel/)
 
 Download FDA for your operating system
 
-[MacOS (amd64)](https://github.com/datafund/fairos-fuse/releases/download/v0.1.0-rc4/fairdrive_darwin_amd64.dmg)
+[MacOS (amd64)](https://github.com/datafund/fairos-fuse/releases/download/v0.1.0-rc5/fairdrive_darwin_amd64.dmg)
 
-[MacOS (arm64)](https://github.com/datafund/fairos-fuse/releases/download/v0.1.0-rc4/fairdrive_darwin_arm64.dmg)
+[MacOS (arm64)](https://github.com/datafund/fairos-fuse/releases/download/v0.1.0-rc5/fairdrive_darwin_arm64.dmg)
 
-[Linux](https://github.com/datafund/fairos-fuse/releases/download/v0.1.0-rc4/fairdrive_linux)
+[Linux](https://github.com/datafund/fairos-fuse/releases/download/v0.1.0-rc5/fairdrive_linux)
 
-[Windows](https://github.com/datafund/fairos-fuse/releases/download/v0.1.0-rc4/fairdrive_windows.exe)
+[Windows](https://github.com/datafund/fairos-fuse/releases/download/v0.1.0-rc5/fairdrive_windows.exe)
 
 # How do I configure FDA to connect to a bee node?
 
