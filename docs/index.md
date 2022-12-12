@@ -3,6 +3,8 @@
 Fairdrive Desktop App is a FUSE client for fairOS-dfs. It lets you mount your
 pod on your own user space and interact with your data. 
 
+> **_IMPORTANT:_**  FDA is under heavy development and in beta stage. Some abnormal behaviour, data loss can be observed.
+
 ## How do I install FDA?
 
 > **_IMPORTANT:_**  To use FDA on your system you need to install [fuse](https://www.kernel.org/doc/html/latest/filesystems/fuse.html) first.
