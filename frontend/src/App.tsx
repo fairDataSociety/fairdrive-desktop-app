@@ -734,9 +734,15 @@ function App() {
             </Tooltip>
 
             {accounts.length === 0 && (
-              <Typography style={{ color: 'gray', margin: '20px' }}>
-                No accounts found
-              </Typography>
+              <>
+                <Typography style={{ color: 'black', margin: '20px' }}>
+                  No accounts found
+                </Typography>
+                <Typography style={{ color: 'gray', margin: '20px' }}>
+                  To add account to this list, click on "Remember me" checkbox before
+                  login.
+                </Typography>
+              </>
             )}
             <List>
               {accounts.map((account) => (
