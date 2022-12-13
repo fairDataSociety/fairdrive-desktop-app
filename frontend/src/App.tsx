@@ -739,7 +739,8 @@ function App() {
                   No accounts found
                 </Typography>
                 <Typography style={{ color: 'gray', margin: '20px' }}>
-                  To add account to this list, click on "Remember me" checkbox before
+                  To add account to this list, click on "Remember me" checkbox
+                  before. Accounts do not know about your connection preferences.
                   login.
                 </Typography>
               </>
