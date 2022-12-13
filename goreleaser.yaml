@@ -3,8 +3,9 @@ project_name: fda
 release:
   prerelease: auto
   extra_files:
-    - glob: ./build/bin/fairdrive
-    - glob: ./build/bin/fairdrive.dmg
-    - glob: ./build/bin/fairdrive.exe
+    - glob: ./build/bin/fairdrive_linux
+    - glob: ./build/bin/fairdrive_darwin_amd64.dmg
+    - glob: ./build/bin/fairdrive_darwin_arm64.dmg
+    - glob: ./build/bin/fairdrive_windows.exe
 builds:
   - skip: true

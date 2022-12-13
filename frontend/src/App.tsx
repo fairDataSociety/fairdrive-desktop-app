@@ -1,6 +1,9 @@
 import { forwardRef, SyntheticEvent, useEffect, useState } from 'react'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 import logo from './assets/images/fairdata.svg'
+import dfLogo from './assets/images/datafund.svg'
+import backgroundImage from './assets/images/sculptures_of_data_s.jpg'
+
 import './App.css'
 import {
   Login,
@@ -11,10 +14,22 @@ import {
   Close,
   Logout,
   CreatePod,
-  GetCashedPods
-} from "../wailsjs/go/handler/Handler"
-import { SetupConfig, IsSet, GetConfig, GetMountPoint, GetAutoMount, GetMountedPods } from "../wailsjs/go/main/conf"
-import { RememberPassword, HasRemembered, ForgetPassword, Get } from "../wailsjs/go/main/Account"
+  GetCashedPods,
+} from '../wailsjs/go/handler/Handler'
+import {
+  SetupConfig,
+  IsSet,
+  GetConfig,
+  GetMountPoint,
+  GetAutoMount,
+  GetMountedPods,
+} from '../wailsjs/go/main/conf'
+import {
+  RememberPassword,
+  HasRemembered,
+  ForgetPassword,
+  Get,
+} from '../wailsjs/go/main/Account'
 
 import {
   TextField,
@@ -44,22 +59,53 @@ import {
   styled,
   DialogActions,
   LinearProgress,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material'
 import MuiAlert from '@mui/material/Alert'
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import { api, handler } from '../wailsjs/go/models'
-import { EventsEmit, EventsOn } from '../wailsjs/runtime'
+import { BrowserOpenURL, EventsEmit, EventsOn } from '../wailsjs/runtime'
 import { Folder } from '@mui/icons-material'
 import CloseIcon from '@mui/icons-material/Close'
 import { BuildTime, Version } from '../wailsjs/go/main/about'
-import PodMountedInfo = handler.PodMountedInfo;
+import PodMountedInfo = handler.PodMountedInfo
+
+interface UserInfo {
+  username: string | any
+  password: string | any
+}
+
+interface AccountInfo {
+  userInfo: UserInfo[] | any
+  pods: PodMountedInfo[] | any
+}
+
+function createUserInfo(username: string, password: string): UserInfo {
+  return { username, password }
+}
+
+function addAccount(userInfo: UserInfo, pods: PodMountedInfo[]): AccountInfo {
+  return { userInfo, pods }
+}
+
+function createAccountInfo(
+  username: string,
+  password: string,
+  pods: PodMountedInfo[],
+): AccountInfo {
+  return { userInfo: createUserInfo(username, password), pods }
+}
 
 const theme = createTheme({
   typography: {
-    "fontFamily": `"WorkSans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    fontFamily: `"WorkSans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
     "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif`
-  }
+    sans-serif`,
+  },
 })
 const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />
@@ -97,6 +143,7 @@ function App() {
   const [newPodName, setNewPodName] = useState('')
 
   const handlePodNew = async () => {
+    setIsLoading(true)
     try {
       if (newPodName !== '') {
         await CreatePod(newPodName)
@@ -109,6 +156,7 @@ function App() {
     } catch (e: any) {
       showError(e)
     }
+    setIsLoading(false)
   }
 
   const [version, setVersion] = useState('')
@@ -118,13 +166,28 @@ function App() {
   const [showLogin, setShowLogin] = useState<boolean>(true)
   const [showPods, setShowPods] = useState<boolean>(true)
 
+  const [showAccounts, setShowAccounts] = useState<boolean>(false)
+
   const [username, setName] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState<boolean>(false)
   const [message, setMessage] = useState('')
+
+  async function LoadStoredAccounts() {
+    let storedAccounts = localStorage.getItem('accounts')
+    if (storedAccounts !== null) {
+      setAccounts(JSON.parse(storedAccounts))
+    }
+    //console.log('accounts loaded', storedAccounts)
+  }
+
   useEffect(() => {
+    LoadStoredAccounts()
     EventsOn('preferences', () => {
       setShowConfig(true)
+    })
+    EventsOn('showAccounts', () => {
+      setShowAccounts(true)
     })
     EventsOn('podNew', () => {
       setPodNew(true)
@@ -176,27 +239,32 @@ function App() {
           if (acc.Username === '' || acc.Password === '') {
             EventsEmit('disableMenus')
           } else {
-            setName(acc.Username)
-            setPassword(acc.Password)
+            let p = await doLogin(acc.Username, acc.Password)
 
-            await Login(acc.Username, acc.Password)
-            let p = await GetPodsList()
+            // setName(acc.Username)
+            // setPassword(acc.Password)
 
-            setPods(p)
-            setShowLogin(false)
+            // await Login(acc.Username, acc.Password)
+            // let p = await GetPodsList()
+
+            // setPods(p)
+            // setShowLogin(false)
 
             let _mountPoint = await GetMountPoint()
             setMountPoint(_mountPoint)
 
             let autoMount = await GetAutoMount()
-            if(autoMount) {
+            if (autoMount) {
               let mountedPods = await GetMountedPods()
-              mountedPods.map(async (pod) => {
-                await Mount(pod, _mountPoint, false)
-                let pods = await GetCashedPods()
-                setPods(pods)
-              })
+              if (mountedPods != null) {
+                mountedPods.map(async (pod) => {
+                  await Mount(pod, _mountPoint, false)
+                  let pods = await GetCashedPods()
+                  setPods(pods)
+                })
+              }
             }
+            //EventsEmit('enableMenus') // if we get to the pods abd we are logged in, and got pods, then enable the menus, so that we get Logout option
           }
         } catch (e: any) {
           EventsEmit('disableMenus')
@@ -206,15 +274,35 @@ function App() {
       }
     })
     HasRemembered().then((isSet) => {
-      if (!isSet) {
-        setRemember(true)
-      }
+      setRemember(isSet)
     })
   }, [])
   const [pods, setPods] = useState<PodMountedInfo[]>([])
   const updateName = (e: any) => setName(e.target.value)
   const updatePassword = (e: any) => setPassword(e.target.value)
   const updateRemember = (e: any) => setRemember(e.target.checked)
+
+  const [accounts, setAccounts] = useState<AccountInfo[]>([])
+
+  const addAccount = async (
+    username: string,
+    password: string,
+    pods: handler.PodMountedInfo[],
+  ) => {
+    const account = accounts.find((obj) => {
+      return obj.userInfo.username === username
+    })
+
+    if (account === undefined) {
+      let newAccountInfo = createAccountInfo(username, password, pods)
+      let newAccounts = [...accounts, newAccountInfo]
+      setAccounts(newAccounts)
+      localStorage.setItem('accounts', JSON.stringify(newAccounts))
+      return newAccountInfo
+    }
+    // TDOD update pod info
+    return account
+  }
 
   const mount = async (e: any) => {
     setIsLoading(true)
@@ -239,8 +327,8 @@ function App() {
     setIsLoading(false)
   }
   const [mountPoint, setMountPoint] = useState('')
-  const [isProxy, setProxy] = useState<boolean>(true)
-  const [proxyValue, setProxyValue] = useState('yes')
+  const [isProxy, setProxy] = useState<boolean>(false)
+  const [proxyValue, setProxyValue] = useState('no')
   const [bee, setBee] = useState('https://bee-1.dev.fairdatasociety.org')
   const [batch, setBatch] = useState('')
   const [rpc, setRPC] = useState('https://xdai.dev.fairdatasociety.org')
@@ -286,20 +374,73 @@ function App() {
     setIsLoading(false)
   }
 
+  async function openSignUp() {
+    BrowserOpenURL('https://create.staging.fairdatasociety.org/#/register')
+  }
+
+  async function openBrowserLicense() {
+    BrowserOpenURL('https://github.com/datafund/fairos-fuse/blob/master/LICENSE')
+  }
+  async function openBrowserFairOS() {
+    BrowserOpenURL(
+      'https://docs.fairos.fairdatasociety.org/docs/fairos-dfs/api-reference',
+    )
+  }
+  async function openBrowserFDPprotocol() {
+    BrowserOpenURL('https://fdp.fairdatasociety.org/')
+  }
+
+  async function openBrowserFairDataSociety() {
+    BrowserOpenURL('https://fairdatasociety.org/')
+  }
+
+  async function openBrowserDatafund() {
+    BrowserOpenURL('https://datafund.io/')
+  }
+
+  async function handleAccountSwitch(account: AccountInfo) {
+    setIsLoading(true)
+    try {
+      setShowLogin(false)
+      setShowPods(false)
+      setName(account.userInfo.username)
+      setPassword(account.userInfo.password)
+      doLogin(account.userInfo.username, account.userInfo.password)
+      setShowAccounts(false)
+    } catch (e: any) {
+      showError(e)
+      setShowLogin(true)
+    }
+    setIsLoading(false)
+  }
+
+  async function doLogin(user: string, pass: string) {
+    // TODO: logout existing user and maybe unmount all pods
+    try {
+      await Logout()
+    } catch (e: any) {
+      console.log(e)
+    }
+    await Login(user, pass)
+    let p = await GetPodsList()
+    setShowLogin(false)
+    setPods(p)
+    setShowPods(true)
+    EventsEmit('enableMenus')
+    return p
+  }
+
   async function login() {
     setIsLoading(true)
     try {
-      await Login(username, password)
-      let p = await GetPodsList()
-      setShowLogin(false)
-      setPods(p)
-      setShowPods(true)
+      let p = await doLogin(username, password)
+
       if (remember) {
         await RememberPassword(username, password)
+        addAccount(username, password, p) // add only if remember is checked and login is successful
       } else {
         await ForgetPassword()
       }
-      EventsEmit('enableMenus')
     } catch (e: any) {
       showError(e)
     }
@@ -355,7 +496,7 @@ function App() {
         >
           <Box
             sx={{
-              marginTop: 8,
+              margin: 1,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -365,9 +506,14 @@ function App() {
             }}
           >
             <FormGroup>
-              <FormLabel id="demo-controlled-radio-buttons-group">
-                Is bee node running behind proxy?
-              </FormLabel>
+              <Tooltip
+                title="Usually bee nodes and gateways are not behind proxy. Please check before connecting via proxy."
+                placement="top"
+              >
+                <FormLabel id="demo-controlled-radio-buttons-group">
+                  Is bee node running behind proxy?
+                </FormLabel>
+              </Tooltip>
               <RadioGroup
                 aria-labelledby="demo-controlled-radio-buttons-group"
                 name="controlled-radio-buttons-group"
@@ -387,7 +533,7 @@ function App() {
                   </Grid>
 
                   <Grid item>
-                    <Tooltip title="Select if your bee is behind proxy">
+                    <Tooltip title="Select if your bee is behind proxy (gateways are not proxies)">
                       <FormControlLabel
                         value={'yes'}
                         control={<Radio />}
@@ -399,7 +545,7 @@ function App() {
                 </Grid>
               </RadioGroup>
               <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                <Tooltip title="Bee API endpoint, recomended http://localhost:1635">
+                <Tooltip title="Bee API endpoint, recommended http://localhost:1635">
                   <TextField
                     margin="normal"
                     value={bee}
@@ -443,7 +589,10 @@ function App() {
                 </Tooltip>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                <Tooltip title="Specify Network type for ENS based authentication">
+                <Tooltip
+                  title="Specify Network type for ENS based authentication"
+                  placement="top"
+                >
                   <Select
                     required
                     fullWidth
@@ -452,6 +601,7 @@ function App() {
                     onChange={updateNetwork}
                     displayEmpty={true}
                     value={network}
+                    style={{ color: 'black' }}
                   >
                     <MenuItem value={'testnet'}>Testnet</MenuItem>
                     <MenuItem value={'play'}>FDP play</MenuItem>
@@ -479,22 +629,82 @@ function App() {
                 </Tooltip>
               </Box>
               <Stack mt={3} mb={3} spacing={2} direction="row">
-                <Button fullWidth variant="contained" onClick={closeSettings}>
-                  Close
-                </Button>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  sx={{ mt: 3, mb: 2 }}
-                  onClick={initFairOs}
-                  disabled={isLoading}
-                >
-                  Start
-                </Button>
+                <Tooltip title="Closes this dialog without saving">
+                  <Button fullWidth variant="contained" onClick={closeSettings}>
+                    Close
+                  </Button>
+                </Tooltip>
+                <Tooltip title="Save settings and connect">
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    sx={{ mt: 3, mb: 2 }}
+                    onClick={initFairOs}
+                    disabled={isLoading}
+                  >
+                    Start
+                  </Button>
+                </Tooltip>
               </Stack>
             </FormGroup>
           </Box>
         </Modal>
+
+        <div
+          style={{
+            position: 'absolute',
+            top: '0px',
+            zIndex: '10000',
+            width: '100%',
+            height: '10px',
+          }}
+        >
+          {isLoading && (
+            <LinearProgress
+              sx={{
+                height: 10,
+              }}
+            />
+          )}
+        </div>
+
+        {showAccounts && (
+          <Dialog open={showAccounts}>
+            <Tooltip
+              title="Your previously logged accounts. Click on account name to login."
+              placement="top"
+            >
+              <DialogTitle>Accounts</DialogTitle>
+            </Tooltip>
+
+            {accounts.length === 0 && (
+              <Typography style={{ color: 'gray', margin: '20px' }}>
+                No accounts found
+              </Typography>
+            )}
+            <List>
+              {accounts.map((account) => (
+                <ListItem
+                  key={account.userInfo.username}
+                  onClick={() => handleAccountSwitch(account)}
+                  style={{ cursor: 'pointer' }}
+                  className="account-switch"
+                  disabled={isLoading}
+                >
+                  <Typography>{account.userInfo.username}</Typography>
+                </ListItem>
+              ))}
+            </List>
+            {/* <ListItem key = {account.userInfo.username} onClick={() => handleAccountSwitch(account)}> */}
+            <DialogActions
+              style={{ justifyContent: 'space-between', alignItems: 'center' }}
+            >
+              <Button onClick={() => setShowAccounts(false)} disabled={isLoading}>
+                Close
+              </Button>
+            </DialogActions>
+          </Dialog>
+        )}
 
         {/*about dialog*/}
         {(() => {
@@ -517,26 +727,67 @@ function App() {
                   </IconButton>
                 </DialogTitle>
                 <DialogContent dividers>
-                  <Typography gutterBottom align="left">
-                    Version {version}
+                  <Typography gutterBottom align="center">
+                    Powered by&nbsp;
+                    <Link href="#" variant="body2" onClick={openBrowserFairOS}>
+                      FairOS
+                    </Link>
+                    &nbsp;
+                    <Link href="#" variant="body2" onClick={openBrowserFDPprotocol}>
+                      FairDataProtocol
+                    </Link>
                   </Typography>
-                  <Typography gutterBottom align="left">
-                    Built on {buildTime}
-                  </Typography>
-                  <Typography gutterBottom align="left">
-                    <Link href="#" variant="body2">
+
+                  <Typography gutterBottom align="center">
+                    <Link href="#" variant="body2" onClick={openBrowserLicense}>
                       License
                     </Link>
-                  </Typography>
-                  <Typography gutterBottom align="left">
-                    <Link href="#" variant="body2">
-                      Powered by FairOS
+                    &nbsp;
+                    <Link href="#" variant="body2" onClick={openBrowserLicense}>
+                      Source
                     </Link>
                   </Typography>
-                  <br />
-                  <Typography gutterBottom align="left">
-                    © FairDataSociety 2022
+
+                  <Typography
+                    align="center"
+                    sx={{ fontWeight: 'light', fontSize: '0.7rem' }}
+                  >
+                    Version <strong>{version}</strong> Built on{' '}
+                    <strong>{buildTime}</strong>
                   </Typography>
+
+                  <img
+                    src={logo}
+                    id="logo"
+                    alt="logo"
+                    className="logo-icon"
+                    onClick={openBrowserFairDataSociety}
+                  />
+
+                  <Typography gutterBottom align="center">
+                    ©&nbsp;
+                    <Link
+                      href="#"
+                      variant="body2"
+                      onClick={openBrowserFairDataSociety}
+                    >
+                      FairDataSociety
+                    </Link>
+                    &nbsp;2022
+                  </Typography>
+
+                  <img
+                    src={dfLogo}
+                    id="logo"
+                    alt="logo"
+                    className="logo-icon-df"
+                    onClick={openBrowserDatafund}
+                  />
+                  {/* <Typography gutterBottom align="center">
+                    <Link href="#" variant="body2" onClick={openBrowserDatafund}>
+                      Initiative
+                    </Link>
+                  </Typography> */}
                 </DialogContent>
               </AboutDialog>
             )
@@ -577,17 +828,24 @@ function App() {
           if (showLogin) {
             return (
               <>
-                <img src={logo} id="logo" alt="logo" className="logo-icon" />
+                <img
+                  src={logo}
+                  id="logo"
+                  alt="logo"
+                  className="logo-icon"
+                  onClick={() => setShowAccounts(true)}
+                />
                 <Container component="main" maxWidth="xs">
                   <Box
                     sx={{
-                      marginTop: 8,
+                      marginTop: 1,
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                     }}
                   >
                     <FormGroup>
+                      <h2 style={{ color: 'black' }}>Fair Data Society Login</h2>
                       <TextField
                         margin="normal"
                         required
@@ -614,7 +872,12 @@ function App() {
                           <Checkbox color="primary" onChange={updateRemember} />
                         }
                         label={
-                          <Typography>Remember and keep me logged-in</Typography>
+                          <Tooltip
+                            title="This will also add information to a list of available accounts for faster switching"
+                            placement="top"
+                          >
+                            <Typography>Remember and keep me logged-in</Typography>
+                          </Tooltip>
                         }
                         style={{ color: 'black' }}
                       />
@@ -627,14 +890,20 @@ function App() {
                       >
                         Login
                       </Button>
-                      <Grid container>
-                        <Grid item>
-                          {/*TODO add create account website and fairdrive */}
-                          <Link href="#" variant="body2">
-                            {"Don't have an account? Sign Up"}
-                          </Link>
-                        </Grid>
-                      </Grid>
+                      <>
+                        <br />
+                        <Typography style={{ color: 'black' }}>
+                          Don't have an account?
+                        </Typography>
+                        <Link
+                          href="#"
+                          variant="body2"
+                          onClick={openSignUp}
+                          align="center"
+                        >
+                          Sign Up
+                        </Link>
+                      </>
                     </FormGroup>
                   </Box>
                 </Container>
@@ -645,23 +914,28 @@ function App() {
           if (showPods && pods != null) {
             return (
               <Container component="main" maxWidth="xs">
-                <Tooltip title="Here you can mount/unmount your pods">
-                  <h2 style={{ color: 'black' }}>Pods</h2>
+                <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
+                  <h2 style={{ color: 'black', marginBottom: '0px' }}>Pods</h2>
                 </Tooltip>
-                <FormGroup>
-                  {pods.map((pod) => (
-                    <Grid container key={pod.podName}>
-                      <Grid item>
-                        <Checkbox
-                          onChange={mount}
-                          value={pod.podName}
-                          color="primary"
-                          disabled={isLoading}
-                          checked={pod.isMounted}
-                        />
-                        <FormControlLabel
-                          control={
-                            pod.isMounted ? (
+                <Tooltip title="Current account name">
+                  <Typography
+                    style={{ color: 'gray' }}
+                    onClick={() => setShowAccounts(true)}
+                  >
+                    {username}
+                  </Typography>
+                </Tooltip>
+
+                <Box
+                  sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
+                >
+                  <List>
+                    {pods.map((pod) =>
+                      pod.isMounted ? (
+                        <ListItem
+                          key={pod.podName}
+                          secondaryAction={
+                            <div>
                               <Tooltip title={pod.mountPoint}>
                                 <IconButton
                                   onClick={() => copyUrlToClipboard(pod.mountPoint)}
@@ -669,39 +943,90 @@ function App() {
                                   <ContentCopyIcon />
                                 </IconButton>
                               </Tooltip>
-                            ) : (
-                              <></>
-                            )
+                              <Tooltip title="Open">
+                                <IconButton
+                                  onClick={() => EventsEmit('open', pod.mountPoint)}
+                                >
+                                  <Folder />
+                                </IconButton>
+                              </Tooltip>
+                            </div>
                           }
-                          label={pod.podName}
-                          style={{ color: 'black' }}
-                        />
-                      </Grid>
-                    </Grid>
-                  ))}
-                </FormGroup>
+                          disablePadding
+                        >
+                          <ListItemButton>
+                            <ListItemIcon>
+                              <Tooltip
+                                title={
+                                  pod.isMounted
+                                    ? 'Unmount this pod'
+                                    : 'Mount this pod'
+                                }
+                              >
+                                <Checkbox
+                                  onChange={mount}
+                                  value={pod.podName}
+                                  color="primary"
+                                  disabled={isLoading}
+                                  checked={pod.isMounted}
+                                />
+                              </Tooltip>
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={pod.podName}
+                              style={{ color: 'black' }}
+                            />
+                          </ListItemButton>
+                        </ListItem>
+                      ) : (
+                        <ListItem key={pod.podName} disablePadding>
+                          <ListItemButton>
+                            <ListItemIcon>
+                              <Tooltip
+                                title={
+                                  pod.isMounted
+                                    ? 'Unmount this pod'
+                                    : 'Mount this pod'
+                                }
+                              >
+                                <Checkbox
+                                  onChange={mount}
+                                  value={pod.podName}
+                                  color="primary"
+                                  disabled={isLoading}
+                                  checked={pod.isMounted}
+                                />
+                              </Tooltip>
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={pod.podName}
+                              style={{ color: 'black' }}
+                            />
+                          </ListItemButton>
+                        </ListItem>
+                      ),
+                    )}
+                  </List>
+                </Box>
               </Container>
             )
           }
         })()}
 
-        <div
+        <img
+          src={backgroundImage}
+          id="background"
+          alt="background"
           style={{
-            position: 'absolute',
-            top: '0px',
-            zIndex: '10000',
+            opacity: '0.1',
+            position: 'fixed',
+            top: '0',
+            left: '0',
             width: '100%',
-            height: '10px',
+            height: '100%',
+            pointerEvents: 'none',
           }}
-        >
-          {isLoading && (
-            <LinearProgress
-              sx={{
-                height: 10,
-              }}
-            />
-          )}
-        </div>
+        />
       </ThemeProvider>
     </div>
   )

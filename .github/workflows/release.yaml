@@ -13,80 +13,130 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    env:
-      GOARCH: ${{ matrix.arch }}
-      CGO_ENABLED: ${{ matrix.cgo }}
-      CPATH: ${{ matrix.cpath }}
-      GODEBUG: cgocheck=2
+    timeout-minutes: 60
     strategy:
-      matrix:
-        include:
-          - os: windows-latest
-            arch: amd64
-            cgo: 1
-            cpath: C:\Program Files (x86)\WinFsp\inc\fuse
-          - os: ubuntu-latest
-            arch: amd64
-            cgo: 1
-          - os: macos-10.15
-            arch: amd64
-            cgo: 1
       fail-fast: false
+      matrix:
+        job_name: [ 'linux', 'mac_amd64', 'mac_arm64', 'windows' ]
+        include:
+          - job_name: linux
+            os: ubuntu-latest
+            go: '1.19'
+            gotags: cmount
+            build_flags: '-include "^linux/"'
+            check: true
+            quicktest: true
+            racequicktest: true
+            deploy: true
+
+          - job_name: mac_amd64
+            os: macos-11
+            go: '1.19'
+            gotags: 'cmount'
+            build_flags: '-include "^darwin/amd64" -cgo'
+            quicktest: true
+            racequicktest: true
+            deploy: true
+
+          - job_name: mac_arm64
+            os: macos-11
+            go: '1.19'
+            gotags: 'cmount'
+            build_flags: '-include "^darwin/arm64" -cgo -macos-arch arm64 -cgo-cflags=-I/usr/local/include -cgo-ldflags=-L/usr/local/lib'
+            deploy: true
+
+          - job_name: windows
+            os: windows-latest
+            go: '1.19'
+            gotags: cmount
+            cgo: '0'
+            build_flags: '-include "^windows/"'
+            build_args: '-buildmode exe'
+            quicktest: true
+            deploy: true
+
+    name: ${{ matrix.job_name }}
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
-          submodules: recursive
-      - name: Install go
-        uses: actions/setup-go@v2
-        with:
-          stable: true
-          go-version: 1.18.*
+          fetch-depth: 0
 
-      - name: Install winfsp (Windows)
-        if: runner.os == 'Windows'
+      - name: Install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
+          check-latest: true
+
+      - name: Set environment variables
+        shell: bash
         run: |
-          $releases = Invoke-WebRequest https://api.github.com/repos/winfsp/winfsp/releases | ConvertFrom-Json
-          $asseturi = $releases[0].assets.browser_download_url | Where-Object { $_ -match "winfsp-.*\.msi" }
-          Invoke-WebRequest -Uri $asseturi -Out winfsp.msi
-          Start-Process -NoNewWindow -Wait msiexec "/i winfsp.msi /qn INSTALLLEVEL=1000"
+          echo 'GOTAGS=${{ matrix.gotags }}' >> $GITHUB_ENV
+          echo 'BUILD_FLAGS=${{ matrix.build_flags }}' >> $GITHUB_ENV
+          echo 'BUILD_ARGS=${{ matrix.build_args }}' >> $GITHUB_ENV
+          if [[ "${{ matrix.goarch }}" != "" ]]; then echo 'GOARCH=${{ matrix.goarch }}' >> $GITHUB_ENV ; fi
+          if [[ "${{ matrix.cgo }}" != "" ]]; then echo 'CGO_ENABLED=${{ matrix.cgo }}' >> $GITHUB_ENV ; fi
+      - name: Install Libraries on Linux
+        shell: bash
+        run: |
+          sudo modprobe fuse
+          sudo chmod 666 /dev/fuse
+          sudo chown root:$USER /etc/fuse.conf
+          sudo apt-get install fuse libfuse-dev rpm pkg-config build-essential libgtk-3-dev libwebkit2gtk-4.0-dev
+        if: matrix.os == 'ubuntu-latest'
+
+      - name: Install Libraries on macOS
+        shell: bash
+        run: |
+          brew update
+          brew install --cask macfuse
+        if: matrix.os == 'macos-11'
+
+      - name: Install Libraries on Windows
         shell: powershell
-
-      - name: Install FUSE (Linux)
-        if: runner.os == 'Linux'
         run: |
-          sudo apt-get update
-          sudo apt-get -qq install libfuse-dev
-          sudo apt-get -qq install libacl1-dev
-          sudo apt-get install build-essential libgtk-3-dev libwebkit2gtk-4.0-dev
+          $ProgressPreference = 'SilentlyContinue'
+          choco install -y winfsp zip
+          echo "CPATH=C:\Program Files\WinFsp\inc\fuse;C:\Program Files (x86)\WinFsp\inc\fuse" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          if ($env:GOARCH -eq "386") {
+            choco install -y mingw --forcex86 --force
+            echo "C:\\ProgramData\\chocolatey\\lib\\mingw\\tools\\install\\mingw32\\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+          # Copy mingw32-make.exe to make.exe so the same command line
+          # can be used on Windows as on macOS and Linux
+          $path = (get-command mingw32-make.exe).Path
+          Copy-Item -Path $path -Destination (Join-Path (Split-Path -Path $path) 'make.exe')
+        if: matrix.os == 'windows-latest'
 
-      - name: Install FUSE (macOS)
-        if: runner.os == 'macOS'
+      - name: Print Go version and environment
+        shell: bash
         run: |
-          # requires macos-10.15; does not work on macos-latest
-          # see https://github.com/actions/virtual-environments/issues/4731
-          brew install macfuse
+          printf "Using go at: $(which go)\n"
+          printf "Go version: $(go version)\n"
+          printf "\n\nGo environment:\n\n"
+          go env
+          printf "\n\nSystem environment:\n\n"
+          env
 
-      - name: Set git to use LF
-        # make sure that line endings are not converted on windows
-        # as gofmt linter will report that they need to be changed
-        run: git config --global core.autocrlf false
-      - name: Cache Go modules
-        uses: actions/cache@v1
+      - name: Go module cache
+        uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
-          key: ${{ runner.os }}-build-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.OS }}-build-${{ env.cache-name }}-
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
+            ${{ runner.os }}-go-
+
       - name: Install wails
         run: |
           GO111MODULE=on go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
       - name: Build
-        run: make binary
+        run: |
+          make binary
+
       - uses: actions/upload-artifact@v3
         if: matrix.os == 'windows-latest'
         with:
@@ -97,11 +147,29 @@ jobs:
         with:
           name: linux
           path: build/bin/*
-      - uses: actions/upload-artifact@v3
-        if: matrix.os == 'macos-10.15'
+      - uses: actions/setup-node@v3
+        if: matrix.os == 'macos-11'
         with:
-          name: mac
+          node-version: 18
+      - shell: bash
+        if: matrix.os == 'macos-11'
+        run: |
+          chmod +x scripts/add-cert.sh && ./scripts/add-cert.sh
+          npm install --global create-dmg
+          chmod +x 'build/bin/Fairdrive Desktop App.app/Contents/MacOS/Fairdrive Desktop App'
+          create-dmg 'build/bin/Fairdrive Desktop App.app' build/bin --identity '${{ secrets.ID }}'
+          mv 'build/bin/FDA 0.1.0.dmg' build/bin/FDA.dmg
+          rm -rf 'build/bin/Fairdrive Desktop App.app'
+        env:
+          CERTIFICATE_OSX_APPLICATION: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+
+      - uses: actions/upload-artifact@v3
+        if: matrix.os == 'macos-11'
+        with:
+          name: ${{ matrix.job_name }}
           path: build/bin/*
+
   release:
     needs: build
     runs-on: macos-latest
@@ -113,39 +181,24 @@ jobs:
           path: build/bin/windows
       - uses: actions/download-artifact@v3
         with:
-          name: mac
-          path: build/bin/mac
+          name: mac_arm64
+          path: build/bin/mac_arm64
+      - uses: actions/download-artifact@v3
+        with:
+          name: mac_amd64
+          path: build/bin/mac_amd64
       - uses: actions/download-artifact@v3
         with:
           name: linux
           path: build/bin/linux
       - name: Display structure of downloaded files
         run: ls -R
-      - run: mv build/bin/linux/FDA build/bin/fairdrive
-      - run: mv build/bin/windows/FDA.exe build/bin/fairdrive.exe
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - name: Import Code-Signing Certificates for macOS
-        uses: Apple-Actions/import-codesign-certs@v1
-        with:
-          p12-file-base64: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
-          p12-password: ${{ secrets.CERTIFICATE_PASSWORD }}
-
-      - name: Sign and notarize
-        shell: bash
+      - name: Rename binaries
         run: |
-          chmod +x scripts/gon-config.sh && ./scripts/gon-config.sh
-          brew tap mitchellh/gon
-          brew install mitchellh/gon/gon
-          gon -log-level=info -log-json build/bin/config.json
-        env:
-          CERTIFICATE_OSX_APPLICATION: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
-          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
-          APPLE_USER: ${{ secrets.APPLE_USER }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          ID: ${{ secrets.ID }}
+          mv build/bin/linux/FDA build/bin/fairdrive_linux
+          mv build/bin/windows/FDA.exe build/bin/fairdrive_windows.exe
+          mv build/bin/mac_arm64/FDA.dmg build/bin/fairdrive_darwin_arm64.dmg
+          mv build/bin/mac_amd64/FDA.dmg build/bin/fairdrive_darwin_amd64.dmg
 
       - name : Run GoReleaser
         uses: goreleaser/goreleaser-action@v2

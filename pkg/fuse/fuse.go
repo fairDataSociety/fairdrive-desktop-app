@@ -156,9 +156,12 @@ func New(sessionId string, pod *pod.Info, api *api.DfsAPI, logger logging.Logger
 func (f *Ffdfs) Statfs(_ string, stat *fuse.Statfs_t) int {
 	// TODO fix space availability logic based on batchID
 	// bFree is just a place holder for now for demo
+	stat.Frsize = sysBlockSize
 	stat.Bsize = sysBlockSize
 	stat.Bfree = free / sysBlockSize
 	stat.Bavail = free / sysBlockSize
+	stat.Files = 1e9 // Total files in file system.
+	stat.Ffree = 1e9 // Free files in file system.
 	return 0
 }
 
