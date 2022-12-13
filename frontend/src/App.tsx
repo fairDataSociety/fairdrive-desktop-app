@@ -122,13 +122,22 @@ const AboutDialog = styled(Dialog)(({ theme }) => ({
 
 function App() {
   const [isLoading, setIsLoading] = useState(false)
-  const [open, setOpen] = useState(false)
-  const handleClose = (event?: SyntheticEvent | Event, reason?: string) => {
+  const [openError, setOpenError] = useState(false)
+  const [openInfo, setOpenInfo] = useState(false)
+
+  const handleCloseError = (event?: SyntheticEvent | Event, reason?: string) => {
     if (reason === 'clickaway') {
       return
     }
 
-    setOpen(false)
+    setOpenError(false)
+  }
+  const handleCloseInfo = (event?: SyntheticEvent | Event, reason?: string) => {
+    if (reason === 'clickaway') {
+      return
+    }
+
+    setOpenInfo(false)
   }
 
   const [showAbout, setShowAbout] = useState<boolean>(false)
@@ -171,7 +180,8 @@ function App() {
   const [username, setName] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState<boolean>(false)
-  const [message, setMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('') // error message
+  const [infoMessage, setInfoMessage] = useState('') // info messages
 
   async function LoadStoredAccounts() {
     let storedAccounts = localStorage.getItem('accounts')
@@ -333,6 +343,7 @@ function App() {
   const [batch, setBatch] = useState('')
   const [rpc, setRPC] = useState('https://xdai.dev.fairdatasociety.org')
   const [network, setNetwork] = useState('testnet')
+  const [preferencesUpdated, setPreferencesUpdated] = useState(false)
   const updateProxy = (e: any) => {
     setProxyValue(e.target.value)
     if (e.target.value === 'no') {
@@ -340,16 +351,37 @@ function App() {
     } else {
       setProxy(true)
     }
+
+    setPreferencesUpdated(true)
   }
 
-  const updateBee = (e: any) => setBee(e.target.value)
-  const updateBatch = (e: any) => setBatch(e.target.value)
-  const updateRPC = (e: any) => setRPC(e.target.value)
-  const updateNetwork = (e: any) => setNetwork(e.target.value)
-  const updateNewPodName = (e: any) => setNewPodName(e.target.value)
+  const updateBee = (e: any) => {
+    setBee(e.target.value)
+    setPreferencesUpdated(true)
+  }
+  const updateBatch = (e: any) => {
+    setBatch(e.target.value)
+    setPreferencesUpdated(true)
+  }
+  const updateRPC = (e: any) => {
+    setRPC(e.target.value)
+    setPreferencesUpdated(true)
+  }
+  const updateNetwork = (e: any) => {
+    setNetwork(e.target.value)
+    setPreferencesUpdated(true)
+  }
+  const updateNewPodName = (e: any) => {
+    setNewPodName(e.target.value)
+    setPreferencesUpdated(true)
+  }
 
   async function closeSettings() {
     setShowConfig(false)
+    if (preferencesUpdated) {
+      showInfoMessage('Preferences were updated, changes not saved.')
+      setPreferencesUpdated(false)
+    }
   }
 
   async function initFairOs() {
@@ -368,6 +400,16 @@ function App() {
       await SetupConfig(bee, batch, network, rpc, mountPoint, isProxy)
       await Start(cfg)
       setShowConfig(false)
+
+      if (preferencesUpdated) {
+        setPreferencesUpdated(false)
+        try {
+          await Logout()
+          showInfoMessage('Preferences changed. Logout.')
+        } catch (e: any) {
+          showInfoMessage('Preferences changed.')
+        }
+      }
     } catch (e: any) {
       showError(e)
     }
@@ -453,14 +495,18 @@ function App() {
 
   function showError(error: any) {
     if (typeof error === 'string') {
-      setMessage(error.toUpperCase())
-      if (message === 'USER NOT LOGGED IN') {
+      setErrorMessage(error.toUpperCase())
+      if (error === 'USER NOT LOGGED IN') {
         setShowLogin(true)
       }
     } else if (error instanceof Error) {
-      setMessage(error.message) // works, `e` narrowed to Error
+      setErrorMessage(error.message) // works, `e` narrowed to Error
     }
-    setOpen(true)
+    setOpenError(true)
+  }
+  function showInfoMessage(message: any) {
+    setInfoMessage(message)
+    setOpenInfo(true)
   }
 
   function copyUrlToClipboard(location: string) {
@@ -478,10 +524,20 @@ function App() {
       <ThemeProvider theme={theme}>
         {/* <h1 style={{ color: 'black' }}>Fairdrive</h1> */}
 
+        {/*shows info*/}
+        <Snackbar
+          open={openInfo}
+          onClose={handleCloseInfo}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <Alert onClose={handleCloseInfo} severity="info" sx={{ width: '100%' }}>
+            {infoMessage}
+          </Alert>
+        </Snackbar>
         {/*shows error*/}
-        <Snackbar open={open} onClose={handleClose}>
-          <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
-            {message}
+        <Snackbar open={openError} onClose={handleCloseError}>
+          <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
+            {errorMessage}
           </Alert>
         </Snackbar>
 
