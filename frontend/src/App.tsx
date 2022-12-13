@@ -313,6 +313,13 @@ function App() {
     // TDOD update pod info
     return account
   }
+  const removeAccount = async (account: AccountInfo) => {
+    let newAccounts = accounts.filter((obj) => {
+      return obj.userInfo.username !== account.userInfo.username
+    })
+    setAccounts(newAccounts)
+    localStorage.setItem('accounts', JSON.stringify(newAccounts))
+  }
 
   const mount = async (e: any) => {
     setIsLoading(true)
@@ -453,6 +460,12 @@ function App() {
       showError(e)
       setShowLogin(true)
     }
+    setIsLoading(false)
+  }
+  async function handleAccountRemove(account: AccountInfo) {
+    setIsLoading(true)
+    removeAccount(account)
+    setInfoMessage('Account removed.')
     setIsLoading(false)
   }
 
@@ -747,14 +760,30 @@ function App() {
             )}
             <List>
               {accounts.map((account) => (
-                <ListItem
-                  key={account.userInfo.username}
-                  onClick={() => handleAccountSwitch(account)}
-                  style={{ cursor: 'pointer' }}
-                  className="account-switch"
-                  disabled={isLoading}
-                >
-                  <Typography>{account.userInfo.username}</Typography>
+                <ListItem key={account.userInfo.username} disabled={isLoading}>
+                  <Tooltip title="Switch account" placement="left">
+                    <Typography
+                      onClick={() => handleAccountSwitch(account)}
+                      style={{ cursor: 'pointer' }}
+                      className="account-switch"
+                    >
+                      {account.userInfo.username}&nbsp;
+                    </Typography>
+                  </Tooltip>
+
+                  <Tooltip title="Remove account" placement="top">
+                    <Typography
+                      onClick={() => handleAccountRemove(account)}
+                      style={{
+                        cursor: 'pointer',
+                        position: 'absolute',
+                        right: '5px',
+                        top: '6px',
+                      }}
+                    >
+                      x
+                    </Typography>
+                  </Tooltip>
                 </ListItem>
               ))}
             </List>
