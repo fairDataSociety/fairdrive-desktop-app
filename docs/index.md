@@ -77,6 +77,14 @@ Download FDA for your operating system
 
 ![mount](https://user-images.githubusercontent.com/15252513/206395147-e9961710-0aa7-49b7-8a9b-a864566c9e83.gif)
 
+- If you have not saved your bee preferences, Go to Files -> Settings and save
+- Check "Remember Me" option before Login to save your login credentials. (You can also switch between accounts later if you check this option)
+- Login
+- After you login you should see all you pods, if you do not have one hit "ctrl/cmd + N" to create a new pod
+- Click on the checkbox on the left of your pod name. The pod should mount in your user space
+- Click on the folder icon on the right side of the pod name to open it in your file manager
+- CONGRATULATIOS !! you have successfully mounted your fairdrive pod in your user space
+
 #### Which is better, local light node, a full node on raspberry, or gateway?
 
 - Using your own bee is always better for performance. A light node is good enough for using FDA, but a full node will perform better.
