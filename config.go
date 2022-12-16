@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/datafund/fdfs/pkg/api"
+	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/api"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
