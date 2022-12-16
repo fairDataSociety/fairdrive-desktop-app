@@ -342,7 +342,7 @@ function App() {
 
   const [isProxy, setProxy] = useState<boolean>(false)
   const [proxyValue, setProxyValue] = useState('no')
-  const [bee, setBee] = useState('https://bee-1.dev.fairdatasociety.org')
+  const [bee, setBee] = useState('http://localhost:1635') // should be localhost as default, as per swarm web3 PC, previously https://bee-1.dev.fairdatasociety.org // TODO check in go code
   const [batch, setBatch] = useState('')
   const [rpc, setRPC] = useState('https://xdai.dev.fairdatasociety.org')
   const [network, setNetwork] = useState('testnet')

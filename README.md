@@ -74,3 +74,8 @@ This could be a problem to various reasons why your node,npm,nvm installation is
 - [cobra](github.com/spf13/cobra)
 - [fairOS-dfs](github.com/fairdatasociety/fairOS-dfs)
 - [wails.io](https://wails.io/)
+
+
+## Thanks 
+
+This project would not exists without [fairOS-dfs](github.com/fairdatasociety/fairOS-dfs) and [bee-fs] (https://github.com/aloknerurkar/bee-fs). 
