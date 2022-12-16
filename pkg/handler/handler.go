@@ -9,10 +9,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/datafund/fdfs/pkg/api"
-	dfuse "github.com/datafund/fdfs/pkg/fuse"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/api"
+	dfuse "github.com/fairdatasociety/fairdrive-desktop-app/pkg/fuse"
 	"github.com/mitchellh/go-homedir"
 	"github.com/winfsp/cgofuse/fuse"
 )

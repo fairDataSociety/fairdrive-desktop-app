@@ -31,13 +31,13 @@ install [winfsp](https://winfsp.dev/rel/)
 
 Download FDA for your operating system
 
-[MacOS (amd64)](https://github.com/datafund/fairos-fuse/releases/download/v0.1.0-rc5/fairdrive_darwin_amd64.dmg)
+[MacOS (amd64)](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc5/fairdrive_darwin_amd64.dmg)
 
-[MacOS (arm64)](https://github.com/datafund/fairos-fuse/releases/download/v0.1.0-rc5/fairdrive_darwin_arm64.dmg)
+[MacOS (arm64)](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc5/fairdrive_darwin_arm64.dmg)
 
-[Linux](https://github.com/datafund/fairos-fuse/releases/download/v0.1.0-rc5/fairdrive_linux)
+[Linux](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc5/fairdrive_linux)
 
-[Windows](https://github.com/datafund/fairos-fuse/releases/download/v0.1.0-rc5/fairdrive_windows.exe)
+[Windows](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc5/fairdrive_windows.exe)
 
 # How do I configure FDA to connect to a bee node?
 
@@ -94,7 +94,7 @@ Download FDA for your operating system
 - If you are using the same bee node for accessing your data, then there is no need to wait for sync. 
 Once you create/move/update/delete data from your mount it will reflect everywhere.
 
-[Bugs and issues](https://github.com/datafund/fairos-fuse/issues)
+[Bugs and issues](https://github.com/fairDataSociety/fairdrive-desktop-app/issues/issues)
 
 [Fair Data Society Discord](https://discord.gg/7qFEtJDghM)
 

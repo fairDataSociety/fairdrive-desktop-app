@@ -9,10 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
-
-	"github.com/datafund/fdfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/api"
 	"github.com/winfsp/cgofuse/fuse"
 )
 

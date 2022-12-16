@@ -2,10 +2,10 @@
 
 echo "{
   \"source\" : [\"./build/bin/mac/Fairdrive Desktop App.app\"],
-  \"bundle_id\" : \"io.datafund.fda\",
+  \"bundle_id\" : \"io.fairdatasociety.fda\",
   \"notarize\": [{
     \"path\": \"./build/bin/fairdrive.dmg\",
-    \"bundle_id\": \"io.datafund.fda\",
+    \"bundle_id\": \"io.fairdatasociety.fda\",
     \"staple\": true
   }],
   \"apple_id\": {
