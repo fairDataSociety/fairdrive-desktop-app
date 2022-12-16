@@ -404,6 +404,8 @@ function App() {
       if (preferencesUpdated) {
         setPreferencesUpdated(false)
         try {
+          setShowLogin(true)
+          setShowPods(false)
           await Logout()
           showInfoMessage('Preferences changed. Logout.')
         } catch (e: any) {
