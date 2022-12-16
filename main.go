@@ -86,12 +86,19 @@ func main() {
 		wRuntime.BrowserOpenURL(startContext, "https://github.datafund.io/fairos-fuse/")
 	})
 
+	// This is a quick fix for https://github.com/datafund/fairos-fuse/issues/91
+	// This is happening on FDA only, tried with wails new app on linux, ran without an issue
+	// TODO find the reason for this
+	disableResize := true
+	if runtime.GOOS == "linux" {
+		disableResize = false
+	}
 	// Create application with options
 	app := application.NewWithOptions(&options.App{
 		Title:         "Fairdrive",
 		Width:         375,
 		Height:        667,
-		DisableResize: true,
+		DisableResize: disableResize,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
