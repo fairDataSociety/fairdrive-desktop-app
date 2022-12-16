@@ -30,7 +30,6 @@ import {
   ForgetPassword,
   Get,
 } from '../wailsjs/go/main/Account'
-
 import {
   TextField,
   Button,
@@ -1003,105 +1002,142 @@ function App() {
             )
           }
 
-          if (showPods && pods != null) {
-            return (
-              <Container component="main" maxWidth="xs">
-                <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
-                  <h2 style={{ color: 'black', marginBottom: '0px' }}>Pods</h2>
-                </Tooltip>
-                <Tooltip title="Current account name">
-                  <Typography
-                    style={{ color: 'gray' }}
-                    onClick={() => setShowAccounts(true)}
-                  >
-                    {username}
-                  </Typography>
-                </Tooltip>
+          if (showPods) {
+            if (pods != null && pods.length != 0) {
+              return (
+                <Container component="main" maxWidth="xs">
+                  <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
+                    <h2 style={{ color: 'black', marginBottom: '0px' }}>Pods</h2>
+                  </Tooltip>
+                  <Tooltip title="Current account name">
+                    <Typography
+                        style={{ color: 'gray' }}
+                        onClick={() => setShowAccounts(true)}
+                    >
+                      {username}
+                    </Typography>
+                  </Tooltip>
 
-                <Box
-                  sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
-                >
-                  <List>
-                    {pods.map((pod) =>
-                      pod.isMounted ? (
-                        <ListItem
-                          key={pod.podName}
-                          secondaryAction={
-                            <div>
-                              <Tooltip title={pod.mountPoint}>
-                                <IconButton
-                                  onClick={() => copyUrlToClipboard(pod.mountPoint)}
+                  <Box
+                      sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
+                  >
+                    <List>
+                      {pods.map((pod) =>
+                        pod.isMounted ? (
+                          <ListItem
+                            key={pod.podName}
+                            secondaryAction={
+                              <div>
+                                <Tooltip title={pod.mountPoint}>
+                                  <IconButton
+                                      onClick={() => copyUrlToClipboard(pod.mountPoint)}
+                                  >
+                                    <ContentCopyIcon />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Open">
+                                  <IconButton
+                                      onClick={() => EventsEmit('open', pod.mountPoint)}
+                                  >
+                                    <Folder />
+                                  </IconButton>
+                                </Tooltip>
+                              </div>
+                            }
+                            disablePadding
+                          >
+                            <ListItemButton>
+                              <ListItemIcon>
+                                <Tooltip
+                                    title={
+                                      pod.isMounted
+                                          ? 'Unmount this pod'
+                                          : 'Mount this pod'
+                                    }
                                 >
-                                  <ContentCopyIcon />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Open">
-                                <IconButton
-                                  onClick={() => EventsEmit('open', pod.mountPoint)}
+                                  <Checkbox
+                                      onChange={mount}
+                                      value={pod.podName}
+                                      color="primary"
+                                      disabled={isLoading}
+                                      checked={pod.isMounted}
+                                  />
+                                </Tooltip>
+                              </ListItemIcon>
+                              <ListItemText
+                                  primary={pod.podName}
+                                  style={{ color: 'black' }}
+                              />
+                            </ListItemButton>
+                          </ListItem>
+                        ) : (
+                          <ListItem key={pod.podName} disablePadding>
+                            <ListItemButton>
+                              <ListItemIcon>
+                                <Tooltip
+                                    title={
+                                      pod.isMounted
+                                          ? 'Unmount this pod'
+                                          : 'Mount this pod'
+                                    }
                                 >
-                                  <Folder />
-                                </IconButton>
-                              </Tooltip>
-                            </div>
-                          }
-                          disablePadding
-                        >
-                          <ListItemButton>
-                            <ListItemIcon>
-                              <Tooltip
-                                title={
-                                  pod.isMounted
-                                    ? 'Unmount this pod'
-                                    : 'Mount this pod'
-                                }
-                              >
-                                <Checkbox
-                                  onChange={mount}
-                                  value={pod.podName}
-                                  color="primary"
-                                  disabled={isLoading}
-                                  checked={pod.isMounted}
-                                />
-                              </Tooltip>
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={pod.podName}
-                              style={{ color: 'black' }}
-                            />
-                          </ListItemButton>
-                        </ListItem>
-                      ) : (
-                        <ListItem key={pod.podName} disablePadding>
-                          <ListItemButton>
-                            <ListItemIcon>
-                              <Tooltip
-                                title={
-                                  pod.isMounted
-                                    ? 'Unmount this pod'
-                                    : 'Mount this pod'
-                                }
-                              >
-                                <Checkbox
-                                  onChange={mount}
-                                  value={pod.podName}
-                                  color="primary"
-                                  disabled={isLoading}
-                                  checked={pod.isMounted}
-                                />
-                              </Tooltip>
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={pod.podName}
-                              style={{ color: 'black' }}
-                            />
-                          </ListItemButton>
-                        </ListItem>
-                      ),
-                    )}
-                  </List>
-                </Box>
-              </Container>
-            )
+                                  <Checkbox
+                                      onChange={mount}
+                                      value={pod.podName}
+                                      color="primary"
+                                      disabled={isLoading}
+                                      checked={pod.isMounted}
+                                  />
+                                </Tooltip>
+                              </ListItemIcon>
+                              <ListItemText
+                                  primary={pod.podName}
+                                  style={{ color: 'black' }}
+                              />
+                            </ListItemButton>
+                          </ListItem>
+                        ),
+                      )}
+                    </List>
+                  </Box>
+                </Container>
+              )
+            } else {
+              return (
+                <Container component="main" maxWidth="xs">
+                  <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
+                    <h2 style={{ color: 'black', marginBottom: '0px' }}>Pods</h2>
+                  </Tooltip>
+                  <Tooltip title="Current account name">
+                    <Typography
+                        style={{ color: 'gray' }}
+                        onClick={() => setShowAccounts(true)}
+                    >
+                      {username}
+                    </Typography>
+                  </Tooltip>
+
+                  <Box
+                    sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
+                  >
+                    <br/>
+                    <Typography gutterBottom align="center" style={{ color: 'black' }}>
+                      Still do not have pods?
+                    </Typography>
+
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      sx={{ mt: 3, mb: 2 }}
+                      onClick={() => setPodNew(true)}
+                      disabled={isLoading}
+                    >
+                      Create Pod
+                    </Button>
+                  </Box>
+                </Container>
+              )
+            }
           }
         })()}
 
