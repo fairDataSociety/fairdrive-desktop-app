@@ -64,6 +64,7 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Switch,
 } from '@mui/material'
 import MuiAlert from '@mui/material/Alert'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
@@ -259,7 +260,7 @@ function App() {
               let mountedPods = await GetMountedPods()
               if (mountedPods != null) {
                 mountedPods.map(async (pod) => {
-                  await Mount(pod, _mountPoint, batch === "")
+                  await Mount(pod, _mountPoint, batch === '')
                   let pods = await GetCashedPods()
                   setPods(pods)
                 })
@@ -317,7 +318,7 @@ function App() {
     if (e.target.checked) {
       // TODO need to check how mount point can be passed for Windows and linux
       try {
-        await Mount(e.target.value, mountPoint, batch === "")
+        await Mount(e.target.value, mountPoint, batch === '')
         EventsEmit('Mount')
       } catch (e: any) {
         showError(e)
@@ -335,6 +336,10 @@ function App() {
     setIsLoading(false)
   }
   const [mountPoint, setMountPoint] = useState('')
+
+  const [toggleConfigAdvanced, setToggleConfigAdvanced] = useState<boolean>(false)
+  const [switchLocalGateway, setSwitchLocalGateway] = useState<boolean>(false)
+
   const [isProxy, setProxy] = useState<boolean>(false)
   const [proxyValue, setProxyValue] = useState('no')
   const [bee, setBee] = useState('https://bee-1.dev.fairdatasociety.org')
@@ -342,6 +347,7 @@ function App() {
   const [rpc, setRPC] = useState('https://xdai.dev.fairdatasociety.org')
   const [network, setNetwork] = useState('testnet')
   const [preferencesUpdated, setPreferencesUpdated] = useState(false)
+
   const updateProxy = (e: any) => {
     setProxyValue(e.target.value)
     if (e.target.value === 'no') {
@@ -568,157 +574,350 @@ function App() {
         >
           <Box
             sx={{
-              margin: 1,
+              margin: 0,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               boxShadow: 24,
               bgcolor: 'white',
-              p: 4,
+              p: 2,
             }}
           >
-            <FormGroup>
-              <Tooltip
-                title="Usually bee nodes and gateways are not behind proxy. Please check before connecting via proxy."
-                placement="top"
+            {/* Preferences switch */}
+            <div style={{ marginTop: '-5px' }}>
+              <div
+                style={{ color: 'black', fontWeight: 'bolder', marginBottom: '5px' }}
               >
-                <FormLabel id="demo-controlled-radio-buttons-group">
-                  Is bee node running behind proxy?
-                </FormLabel>
-              </Tooltip>
-              <RadioGroup
-                aria-labelledby="demo-controlled-radio-buttons-group"
-                name="controlled-radio-buttons-group"
-                onChange={updateProxy}
-                value={proxyValue}
+                Preferences
+              </div>
+              <span
+                style={{
+                  color: toggleConfigAdvanced ? 'gray' : 'black',
+                  fontWeight: toggleConfigAdvanced ? 'normal' : 'bold',
+                }}
               >
-                <Grid container>
-                  <Grid item>
-                    <Tooltip title="Select if you directly access Bee">
-                      <FormControlLabel
-                        value={'no'}
-                        control={<Radio />}
-                        label="No"
-                        style={{ color: 'black' }}
-                      />
-                    </Tooltip>
-                  </Grid>
+                Simple
+              </span>
+              <Switch
+                checked={toggleConfigAdvanced}
+                onChange={() => setToggleConfigAdvanced(!toggleConfigAdvanced)}
+              />
+              <span
+                style={{
+                  color: toggleConfigAdvanced ? 'black' : 'gray',
+                  fontWeight: toggleConfigAdvanced ? 'bold' : 'normal',
+                }}
+              >
+                Advanced
+              </span>
+            </div>
 
-                  <Grid item>
-                    <Tooltip title="Select if your bee is behind proxy (gateways are not proxies)">
-                      <FormControlLabel
-                        value={'yes'}
-                        control={<Radio />}
-                        label="Yes"
-                        style={{ color: 'black' }}
-                      />
-                    </Tooltip>
-                  </Grid>
-                </Grid>
-              </RadioGroup>
-              <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                <Tooltip title="Bee API endpoint, recommended http://localhost:1635">
-                  <TextField
-                    margin="normal"
-                    value={bee}
-                    required
-                    fullWidth
-                    id="bee"
-                    label="Bee"
-                    onChange={updateBee}
-                    autoComplete="off"
-                  />
-                </Tooltip>
-              </Box>
-
-              <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                <Tooltip title="BatchID to use for uploads, leave empty if you are using gateway.">
-                  <TextField
-                    margin="normal"
-                    value={batch}
-                    required
-                    fullWidth
-                    id="batch"
-                    label="BatchID"
-                    onChange={updateBatch}
-                    autoComplete="off"
-                  />
-                </Tooltip>
-              </Box>
-
-              <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                <Tooltip title="RPC Endpoint for ENS based authentication">
-                  <TextField
-                    margin="normal"
-                    value={rpc}
-                    required
-                    fullWidth
-                    id="rpc"
-                    label="RPC"
-                    onChange={updateRPC}
-                    autoComplete="off"
-                  />
-                </Tooltip>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+            {/* Advanced configuration */}
+            {toggleConfigAdvanced === true && (
+              <FormGroup>
                 <Tooltip
-                  title="Specify Network type for ENS based authentication"
-                  placement="top"
+                  title="Usually bee nodes and gateways are not behind proxy. Please check before connecting via proxy."
+                  placement="bottom"
                 >
-                  <Select
-                    required
-                    fullWidth
-                    id="network"
-                    label="Network"
-                    onChange={updateNetwork}
-                    displayEmpty={true}
-                    value={network}
-                    style={{ color: 'black' }}
-                  >
-                    <MenuItem value={'testnet'}>Testnet</MenuItem>
-                    <MenuItem value={'play'}>FDP play</MenuItem>
-                  </Select>
+                  <FormLabel id="demo-controlled-radio-buttons-group">
+                    Is bee node running behind proxy?
+                  </FormLabel>
                 </Tooltip>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                <Tooltip title="Location of the Fairdrive folder, a mounting point">
-                  <TextField
-                    margin="normal"
-                    value={mountPoint}
-                    disabled={true}
-                    required
-                    fullWidth
-                    id="mountPoint"
-                    label="Mount Location"
-                    autoComplete="off"
-                  />
+                <RadioGroup
+                  aria-labelledby="demo-controlled-radio-buttons-group"
+                  name="controlled-radio-buttons-group"
+                  onChange={updateProxy}
+                  value={proxyValue}
+                >
+                  <Grid container>
+                    <Grid item>
+                      <Tooltip title="Select if you directly access Bee">
+                        <FormControlLabel
+                          value={'no'}
+                          control={<Radio />}
+                          label="No"
+                          style={{ color: 'black' }}
+                        />
+                      </Tooltip>
+                    </Grid>
+
+                    <Grid item>
+                      <Tooltip title="Select if your bee is behind proxy (gateways are not proxies)">
+                        <FormControlLabel
+                          value={'yes'}
+                          control={<Radio />}
+                          label="Yes"
+                          style={{ color: 'black' }}
+                        />
+                      </Tooltip>
+                    </Grid>
+                  </Grid>
+                </RadioGroup>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <Tooltip title="Bee API endpoint, recommended http://localhost:1635">
+                    <TextField
+                      margin="normal"
+                      value={bee}
+                      required
+                      fullWidth
+                      id="bee"
+                      label="Bee"
+                      onChange={updateBee}
+                      autoComplete="off"
+                    />
+                  </Tooltip>
+                </Box>
+
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <Tooltip title="BatchID to use for uploads, leave empty if you are using gateway.">
+                    <TextField
+                      margin="normal"
+                      value={batch}
+                      required
+                      fullWidth
+                      id="batch"
+                      label="BatchID"
+                      onChange={updateBatch}
+                      autoComplete="off"
+                    />
+                  </Tooltip>
+                </Box>
+
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <Tooltip title="RPC Endpoint for ENS based authentication">
+                    <TextField
+                      margin="normal"
+                      value={rpc}
+                      required
+                      fullWidth
+                      id="rpc"
+                      label="RPC"
+                      onChange={updateRPC}
+                      autoComplete="off"
+                    />
+                  </Tooltip>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <Tooltip
+                    title="Specify Network type for ENS based authentication"
+                    placement="top"
+                  >
+                    <Select
+                      required
+                      fullWidth
+                      id="network"
+                      label="Network"
+                      onChange={updateNetwork}
+                      displayEmpty={true}
+                      value={network}
+                      style={{ color: 'black' }}
+                    >
+                      <MenuItem value={'testnet'}>Testnet</MenuItem>
+                      <MenuItem value={'play'}>FDP play</MenuItem>
+                    </Select>
+                  </Tooltip>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <Tooltip title="Location of the Fairdrive folder, a mounting point">
+                    <TextField
+                      margin="normal"
+                      value={mountPoint}
+                      disabled={true}
+                      required
+                      fullWidth
+                      id="mountPoint"
+                      label="Mount Location"
+                      autoComplete="off"
+                    />
+                  </Tooltip>
+
+                  <Tooltip title="Select mounting point location">
+                    <IconButton onClick={showMountPointSelector}>
+                      <Folder />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+                <Stack mt={3} mb={3} spacing={2} direction="row">
+                  <Tooltip title="Closes this dialog without saving">
+                    <Button fullWidth variant="contained" onClick={closeSettings}>
+                      Close
+                    </Button>
+                  </Tooltip>
+                  <Tooltip title="Save settings and connect">
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      sx={{ mt: 3, mb: 2 }}
+                      onClick={initFairOs}
+                      disabled={isLoading}
+                    >
+                      Start
+                    </Button>
+                  </Tooltip>
+                </Stack>
+              </FormGroup>
+            )}
+            {/* Simple configuration */}
+            {toggleConfigAdvanced === false && (
+              <FormGroup>
+                <Tooltip
+                  title="Toggle between bee location or gateway bee."
+                  placement="bottom"
+                >
+                  <>
+                    <span style={{ color: 'black' }}>Bee location</span>
+                    <div>
+                      <span
+                        style={{
+                          color: switchLocalGateway ? 'gray' : 'black',
+                          fontWeight: switchLocalGateway ? 'normal' : 'bold',
+                        }}
+                      >
+                        localhost
+                      </span>
+                      <Switch
+                        checked={switchLocalGateway}
+                        onChange={() => {
+                          updateBee({
+                            target: {
+                              value: switchLocalGateway
+                                ? 'http://localhost:1635'
+                                : 'https://bee-1.fairdatasociety.org',
+                            },
+                          })
+                          updateRPC({
+                            target: {
+                              value: switchLocalGateway
+                                ? 'https://xdai.dev.fairdatasociety.org' // NOT SURE WHAT TO PUT HERE
+                                : 'https://xdai.dev.fairdatasociety.org',
+                            },
+                          })
+                          updateBatch({
+                            target: {
+                              value: switchLocalGateway ? batch : '',
+                            },
+                          })
+                          setSwitchLocalGateway(!switchLocalGateway)
+                        }}
+                      />
+                      <span
+                        style={{
+                          color: switchLocalGateway ? 'black' : 'gray',
+                          fontWeight: switchLocalGateway ? 'bold' : 'normal',
+                        }}
+                      >
+                        gateway
+                      </span>
+                    </div>
+                  </>
                 </Tooltip>
 
-                <Tooltip title="Select mounting point location">
-                  <IconButton onClick={showMountPointSelector}>
-                    <Folder />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-              <Stack mt={3} mb={3} spacing={2} direction="row">
-                <Tooltip title="Closes this dialog without saving">
-                  <Button fullWidth variant="contained" onClick={closeSettings}>
-                    Close
-                  </Button>
-                </Tooltip>
-                <Tooltip title="Save settings and connect">
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    sx={{ mt: 3, mb: 2 }}
-                    onClick={initFairOs}
-                    disabled={isLoading}
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <Tooltip title="Bee API endpoint, recommended http://localhost:1635">
+                    <TextField
+                      margin="normal"
+                      value={bee}
+                      required
+                      fullWidth
+                      id="bee"
+                      label="Bee"
+                      onChange={updateBee}
+                      autoComplete="off"
+                    />
+                  </Tooltip>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <Tooltip title="BatchID to use for uploads, leave empty if you are using gateway.">
+                    <TextField
+                      margin="normal"
+                      value={batch}
+                      required
+                      fullWidth
+                      id="batch"
+                      label="BatchID"
+                      onChange={updateBatch}
+                      autoComplete="off"
+                      disabled={switchLocalGateway}
+                    />
+                  </Tooltip>
+                </Box>
+
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <Tooltip title="RPC Endpoint for ENS based authentication">
+                    <TextField
+                      margin="normal"
+                      value={rpc}
+                      required
+                      fullWidth
+                      id="rpc"
+                      label="RPC"
+                      onChange={updateRPC}
+                      autoComplete="off"
+                      disabled={!toggleConfigAdvanced}
+                    />
+                  </Tooltip>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <Tooltip
+                    title="Specify Network type for ENS based authentication"
+                    placement="top"
                   >
-                    Start
-                  </Button>
-                </Tooltip>
-              </Stack>
-            </FormGroup>
+                    <Select
+                      required
+                      fullWidth
+                      id="network"
+                      label="Network"
+                      onChange={updateNetwork}
+                      displayEmpty={true}
+                      value={network}
+                      style={{ color: 'black' }}
+                      disabled={!toggleConfigAdvanced}
+                    >
+                      <MenuItem value={'testnet'}>Testnet</MenuItem>
+                      <MenuItem value={'play'}>FDP play</MenuItem>
+                    </Select>
+                  </Tooltip>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <Tooltip title="Location of the Fairdrive folder, a mounting point">
+                    <TextField
+                      margin="normal"
+                      value={mountPoint}
+                      disabled={true}
+                      required
+                      fullWidth
+                      id="mountPoint"
+                      label="Mount Location"
+                      autoComplete="off"
+                    />
+                  </Tooltip>
+
+                  <Tooltip title="Select mounting point location">
+                    <IconButton onClick={showMountPointSelector}>
+                      <Folder />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+                <Stack mt={3} mb={3} spacing={2} direction="row">
+                  <Tooltip title="Closes this dialog without saving">
+                    <Button fullWidth variant="contained" onClick={closeSettings}>
+                      Close
+                    </Button>
+                  </Tooltip>
+                  <Tooltip title="Save settings and connect">
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      sx={{ mt: 3, mb: 2 }}
+                      onClick={initFairOs}
+                      disabled={isLoading}
+                    >
+                      Start
+                    </Button>
+                  </Tooltip>
+                </Stack>
+              </FormGroup>
+            )}
           </Box>
         </Modal>
 
@@ -755,8 +954,8 @@ function App() {
                   No accounts found
                 </Typography>
                 <Typography style={{ color: 'gray', margin: '20px' }}>
-                  To add account to this list, click on "Remember me" checkbox
-                  before login. Accounts do not know about your connection preferences.
+                  To add account to this list, click on "Remember me" checkbox before
+                  login. Accounts do not know about your connection preferences.
                 </Typography>
               </>
             )}
@@ -1012,15 +1211,19 @@ function App() {
                   </Tooltip>
                   <Tooltip title="Current account name">
                     <Typography
-                        style={{ color: 'gray' }}
-                        onClick={() => setShowAccounts(true)}
+                      style={{ color: 'gray' }}
+                      onClick={() => setShowAccounts(true)}
                     >
                       {username}
                     </Typography>
                   </Tooltip>
 
                   <Box
-                      sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
+                    sx={{
+                      width: '100%',
+                      maxWidth: 360,
+                      bgcolor: 'background.paper',
+                    }}
                   >
                     <List>
                       {pods.map((pod) =>
@@ -1031,14 +1234,18 @@ function App() {
                               <div>
                                 <Tooltip title={pod.mountPoint}>
                                   <IconButton
-                                      onClick={() => copyUrlToClipboard(pod.mountPoint)}
+                                    onClick={() =>
+                                      copyUrlToClipboard(pod.mountPoint)
+                                    }
                                   >
                                     <ContentCopyIcon />
                                   </IconButton>
                                 </Tooltip>
                                 <Tooltip title="Open">
                                   <IconButton
-                                      onClick={() => EventsEmit('open', pod.mountPoint)}
+                                    onClick={() =>
+                                      EventsEmit('open', pod.mountPoint)
+                                    }
                                   >
                                     <Folder />
                                   </IconButton>
@@ -1050,24 +1257,24 @@ function App() {
                             <ListItemButton>
                               <ListItemIcon>
                                 <Tooltip
-                                    title={
-                                      pod.isMounted
-                                          ? 'Unmount this pod'
-                                          : 'Mount this pod'
-                                    }
+                                  title={
+                                    pod.isMounted
+                                      ? 'Unmount this pod'
+                                      : 'Mount this pod'
+                                  }
                                 >
                                   <Checkbox
-                                      onChange={mount}
-                                      value={pod.podName}
-                                      color="primary"
-                                      disabled={isLoading}
-                                      checked={pod.isMounted}
+                                    onChange={mount}
+                                    value={pod.podName}
+                                    color="primary"
+                                    disabled={isLoading}
+                                    checked={pod.isMounted}
                                   />
                                 </Tooltip>
                               </ListItemIcon>
                               <ListItemText
-                                  primary={pod.podName}
-                                  style={{ color: 'black' }}
+                                primary={pod.podName}
+                                style={{ color: 'black' }}
                               />
                             </ListItemButton>
                           </ListItem>
@@ -1076,24 +1283,24 @@ function App() {
                             <ListItemButton>
                               <ListItemIcon>
                                 <Tooltip
-                                    title={
-                                      pod.isMounted
-                                          ? 'Unmount this pod'
-                                          : 'Mount this pod'
-                                    }
+                                  title={
+                                    pod.isMounted
+                                      ? 'Unmount this pod'
+                                      : 'Mount this pod'
+                                  }
                                 >
                                   <Checkbox
-                                      onChange={mount}
-                                      value={pod.podName}
-                                      color="primary"
-                                      disabled={isLoading}
-                                      checked={pod.isMounted}
+                                    onChange={mount}
+                                    value={pod.podName}
+                                    color="primary"
+                                    disabled={isLoading}
+                                    checked={pod.isMounted}
                                   />
                                 </Tooltip>
                               </ListItemIcon>
                               <ListItemText
-                                  primary={pod.podName}
-                                  style={{ color: 'black' }}
+                                primary={pod.podName}
+                                style={{ color: 'black' }}
                               />
                             </ListItemButton>
                           </ListItem>
@@ -1111,18 +1318,26 @@ function App() {
                   </Tooltip>
                   <Tooltip title="Current account name">
                     <Typography
-                        style={{ color: 'gray' }}
-                        onClick={() => setShowAccounts(true)}
+                      style={{ color: 'gray' }}
+                      onClick={() => setShowAccounts(true)}
                     >
                       {username}
                     </Typography>
                   </Tooltip>
 
                   <Box
-                    sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
+                    sx={{
+                      width: '100%',
+                      maxWidth: 360,
+                      bgcolor: 'background.paper',
+                    }}
                   >
-                    <br/>
-                    <Typography gutterBottom align="center" style={{ color: 'black' }}>
+                    <br />
+                    <Typography
+                      gutterBottom
+                      align="center"
+                      style={{ color: 'black' }}
+                    >
                       Still do not have pods?
                     </Typography>
 
