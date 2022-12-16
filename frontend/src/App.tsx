@@ -404,6 +404,7 @@ function App() {
       if (preferencesUpdated) {
         setPreferencesUpdated(false)
         try {
+          setShowAccounts(false)
           setShowLogin(true)
           setShowPods(false)
           await Logout()
