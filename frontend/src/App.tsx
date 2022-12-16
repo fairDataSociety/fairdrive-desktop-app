@@ -30,7 +30,6 @@ import {
   ForgetPassword,
   Get,
 } from '../wailsjs/go/main/Account'
-
 import {
   TextField,
   Button,
@@ -122,13 +121,22 @@ const AboutDialog = styled(Dialog)(({ theme }) => ({
 
 function App() {
   const [isLoading, setIsLoading] = useState(false)
-  const [open, setOpen] = useState(false)
-  const handleClose = (event?: SyntheticEvent | Event, reason?: string) => {
+  const [openError, setOpenError] = useState(false)
+  const [openInfo, setOpenInfo] = useState(false)
+
+  const handleCloseError = (event?: SyntheticEvent | Event, reason?: string) => {
     if (reason === 'clickaway') {
       return
     }
 
-    setOpen(false)
+    setOpenError(false)
+  }
+  const handleCloseInfo = (event?: SyntheticEvent | Event, reason?: string) => {
+    if (reason === 'clickaway') {
+      return
+    }
+
+    setOpenInfo(false)
   }
 
   const [showAbout, setShowAbout] = useState<boolean>(false)
@@ -171,14 +179,14 @@ function App() {
   const [username, setName] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState<boolean>(false)
-  const [message, setMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('') // error message
+  const [infoMessage, setInfoMessage] = useState('') // info messages
 
   async function LoadStoredAccounts() {
     let storedAccounts = localStorage.getItem('accounts')
     if (storedAccounts !== null) {
       setAccounts(JSON.parse(storedAccounts))
     }
-    //console.log('accounts loaded', storedAccounts)
   }
 
   useEffect(() => {
@@ -239,16 +247,7 @@ function App() {
           if (acc.Username === '' || acc.Password === '') {
             EventsEmit('disableMenus')
           } else {
-            let p = await doLogin(acc.Username, acc.Password)
-
-            // setName(acc.Username)
-            // setPassword(acc.Password)
-
-            // await Login(acc.Username, acc.Password)
-            // let p = await GetPodsList()
-
-            // setPods(p)
-            // setShowLogin(false)
+            await doLogin(acc.Username, acc.Password)
 
             let _mountPoint = await GetMountPoint()
             setMountPoint(_mountPoint)
@@ -258,7 +257,7 @@ function App() {
               let mountedPods = await GetMountedPods()
               if (mountedPods != null) {
                 mountedPods.map(async (pod) => {
-                  await Mount(pod, _mountPoint, false)
+                  await Mount(pod, _mountPoint, batch === "")
                   let pods = await GetCashedPods()
                   setPods(pods)
                 })
@@ -303,13 +302,20 @@ function App() {
     // TDOD update pod info
     return account
   }
+  const removeAccount = async (account: AccountInfo) => {
+    let newAccounts = accounts.filter((obj) => {
+      return obj.userInfo.username !== account.userInfo.username
+    })
+    setAccounts(newAccounts)
+    localStorage.setItem('accounts', JSON.stringify(newAccounts))
+  }
 
   const mount = async (e: any) => {
     setIsLoading(true)
     if (e.target.checked) {
       // TODO need to check how mount point can be passed for Windows and linux
       try {
-        await Mount(e.target.value, mountPoint, false)
+        await Mount(e.target.value, mountPoint, batch === "")
         EventsEmit('Mount')
       } catch (e: any) {
         showError(e)
@@ -333,6 +339,7 @@ function App() {
   const [batch, setBatch] = useState('')
   const [rpc, setRPC] = useState('https://xdai.dev.fairdatasociety.org')
   const [network, setNetwork] = useState('testnet')
+  const [preferencesUpdated, setPreferencesUpdated] = useState(false)
   const updateProxy = (e: any) => {
     setProxyValue(e.target.value)
     if (e.target.value === 'no') {
@@ -340,16 +347,37 @@ function App() {
     } else {
       setProxy(true)
     }
+
+    setPreferencesUpdated(true)
   }
 
-  const updateBee = (e: any) => setBee(e.target.value)
-  const updateBatch = (e: any) => setBatch(e.target.value)
-  const updateRPC = (e: any) => setRPC(e.target.value)
-  const updateNetwork = (e: any) => setNetwork(e.target.value)
-  const updateNewPodName = (e: any) => setNewPodName(e.target.value)
+  const updateBee = (e: any) => {
+    setBee(e.target.value)
+    setPreferencesUpdated(true)
+  }
+  const updateBatch = (e: any) => {
+    setBatch(e.target.value)
+    setPreferencesUpdated(true)
+  }
+  const updateRPC = (e: any) => {
+    setRPC(e.target.value)
+    setPreferencesUpdated(true)
+  }
+  const updateNetwork = (e: any) => {
+    setNetwork(e.target.value)
+    setPreferencesUpdated(true)
+  }
+  const updateNewPodName = (e: any) => {
+    setNewPodName(e.target.value)
+    setPreferencesUpdated(true)
+  }
 
   async function closeSettings() {
     setShowConfig(false)
+    if (preferencesUpdated) {
+      showInfoMessage('Preferences were updated, changes not saved.')
+      setPreferencesUpdated(false)
+    }
   }
 
   async function initFairOs() {
@@ -366,8 +394,25 @@ function App() {
     }
     try {
       await SetupConfig(bee, batch, network, rpc, mountPoint, isProxy)
+      // TODO show this some how
+      // if (batch === "") {
+      //   setInfoMessage('Providing No BatchID will cause mounts to be read-only')
+      // }
       await Start(cfg)
       setShowConfig(false)
+
+      if (preferencesUpdated) {
+        setPreferencesUpdated(false)
+        try {
+          setShowAccounts(false)
+          setShowLogin(true)
+          setShowPods(false)
+          await Logout()
+          showInfoMessage('Preferences changed. Logout.')
+        } catch (e: any) {
+          showInfoMessage('Preferences changed.')
+        }
+      }
     } catch (e: any) {
       showError(e)
     }
@@ -413,6 +458,12 @@ function App() {
     }
     setIsLoading(false)
   }
+  async function handleAccountRemove(account: AccountInfo) {
+    setIsLoading(true)
+    removeAccount(account)
+    setInfoMessage('Account removed.')
+    setIsLoading(false)
+  }
 
   async function doLogin(user: string, pass: string) {
     // TODO: logout existing user and maybe unmount all pods
@@ -453,14 +504,18 @@ function App() {
 
   function showError(error: any) {
     if (typeof error === 'string') {
-      setMessage(error.toUpperCase())
-      if (message === 'USER NOT LOGGED IN') {
+      setErrorMessage(error.toUpperCase())
+      if (error === 'USER NOT LOGGED IN') {
         setShowLogin(true)
       }
     } else if (error instanceof Error) {
-      setMessage(error.message) // works, `e` narrowed to Error
+      setErrorMessage(error.message) // works, `e` narrowed to Error
     }
-    setOpen(true)
+    setOpenError(true)
+  }
+  function showInfoMessage(message: any) {
+    setInfoMessage(message)
+    setOpenInfo(true)
   }
 
   function copyUrlToClipboard(location: string) {
@@ -478,10 +533,20 @@ function App() {
       <ThemeProvider theme={theme}>
         {/* <h1 style={{ color: 'black' }}>Fairdrive</h1> */}
 
+        {/*shows info*/}
+        <Snackbar
+          open={openInfo}
+          onClose={handleCloseInfo}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <Alert onClose={handleCloseInfo} severity="info" sx={{ width: '100%' }}>
+            {infoMessage}
+          </Alert>
+        </Snackbar>
         {/*shows error*/}
-        <Snackbar open={open} onClose={handleClose}>
-          <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
-            {message}
+        <Snackbar open={openError} onClose={handleCloseError}>
+          <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
+            {errorMessage}
           </Alert>
         </Snackbar>
 
@@ -678,20 +743,42 @@ function App() {
             </Tooltip>
 
             {accounts.length === 0 && (
-              <Typography style={{ color: 'gray', margin: '20px' }}>
-                No accounts found
-              </Typography>
+              <>
+                <Typography style={{ color: 'black', margin: '20px' }}>
+                  No accounts found
+                </Typography>
+                <Typography style={{ color: 'gray', margin: '20px' }}>
+                  To add account to this list, click on "Remember me" checkbox
+                  before login. Accounts do not know about your connection preferences.
+                </Typography>
+              </>
             )}
             <List>
               {accounts.map((account) => (
-                <ListItem
-                  key={account.userInfo.username}
-                  onClick={() => handleAccountSwitch(account)}
-                  style={{ cursor: 'pointer' }}
-                  className="account-switch"
-                  disabled={isLoading}
-                >
-                  <Typography>{account.userInfo.username}</Typography>
+                <ListItem key={account.userInfo.username} disabled={isLoading}>
+                  <Tooltip title="Switch account" placement="left">
+                    <Typography
+                      onClick={() => handleAccountSwitch(account)}
+                      style={{ cursor: 'pointer' }}
+                      className="account-switch"
+                    >
+                      {account.userInfo.username}&nbsp;
+                    </Typography>
+                  </Tooltip>
+
+                  <Tooltip title="Remove account" placement="top">
+                    <Typography
+                      onClick={() => handleAccountRemove(account)}
+                      style={{
+                        cursor: 'pointer',
+                        position: 'absolute',
+                        right: '5px',
+                        top: '6px',
+                      }}
+                    >
+                      x
+                    </Typography>
+                  </Tooltip>
                 </ListItem>
               ))}
             </List>
@@ -911,105 +998,142 @@ function App() {
             )
           }
 
-          if (showPods && pods != null) {
-            return (
-              <Container component="main" maxWidth="xs">
-                <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
-                  <h2 style={{ color: 'black', marginBottom: '0px' }}>Pods</h2>
-                </Tooltip>
-                <Tooltip title="Current account name">
-                  <Typography
-                    style={{ color: 'gray' }}
-                    onClick={() => setShowAccounts(true)}
-                  >
-                    {username}
-                  </Typography>
-                </Tooltip>
+          if (showPods) {
+            if (pods != null && pods.length != 0) {
+              return (
+                <Container component="main" maxWidth="xs">
+                  <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
+                    <h2 style={{ color: 'black', marginBottom: '0px' }}>Pods</h2>
+                  </Tooltip>
+                  <Tooltip title="Current account name">
+                    <Typography
+                        style={{ color: 'gray' }}
+                        onClick={() => setShowAccounts(true)}
+                    >
+                      {username}
+                    </Typography>
+                  </Tooltip>
 
-                <Box
-                  sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
-                >
-                  <List>
-                    {pods.map((pod) =>
-                      pod.isMounted ? (
-                        <ListItem
-                          key={pod.podName}
-                          secondaryAction={
-                            <div>
-                              <Tooltip title={pod.mountPoint}>
-                                <IconButton
-                                  onClick={() => copyUrlToClipboard(pod.mountPoint)}
+                  <Box
+                      sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
+                  >
+                    <List>
+                      {pods.map((pod) =>
+                        pod.isMounted ? (
+                          <ListItem
+                            key={pod.podName}
+                            secondaryAction={
+                              <div>
+                                <Tooltip title={pod.mountPoint}>
+                                  <IconButton
+                                      onClick={() => copyUrlToClipboard(pod.mountPoint)}
+                                  >
+                                    <ContentCopyIcon />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Open">
+                                  <IconButton
+                                      onClick={() => EventsEmit('open', pod.mountPoint)}
+                                  >
+                                    <Folder />
+                                  </IconButton>
+                                </Tooltip>
+                              </div>
+                            }
+                            disablePadding
+                          >
+                            <ListItemButton>
+                              <ListItemIcon>
+                                <Tooltip
+                                    title={
+                                      pod.isMounted
+                                          ? 'Unmount this pod'
+                                          : 'Mount this pod'
+                                    }
                                 >
-                                  <ContentCopyIcon />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Open">
-                                <IconButton
-                                  onClick={() => EventsEmit('open', pod.mountPoint)}
+                                  <Checkbox
+                                      onChange={mount}
+                                      value={pod.podName}
+                                      color="primary"
+                                      disabled={isLoading}
+                                      checked={pod.isMounted}
+                                  />
+                                </Tooltip>
+                              </ListItemIcon>
+                              <ListItemText
+                                  primary={pod.podName}
+                                  style={{ color: 'black' }}
+                              />
+                            </ListItemButton>
+                          </ListItem>
+                        ) : (
+                          <ListItem key={pod.podName} disablePadding>
+                            <ListItemButton>
+                              <ListItemIcon>
+                                <Tooltip
+                                    title={
+                                      pod.isMounted
+                                          ? 'Unmount this pod'
+                                          : 'Mount this pod'
+                                    }
                                 >
-                                  <Folder />
-                                </IconButton>
-                              </Tooltip>
-                            </div>
-                          }
-                          disablePadding
-                        >
-                          <ListItemButton>
-                            <ListItemIcon>
-                              <Tooltip
-                                title={
-                                  pod.isMounted
-                                    ? 'Unmount this pod'
-                                    : 'Mount this pod'
-                                }
-                              >
-                                <Checkbox
-                                  onChange={mount}
-                                  value={pod.podName}
-                                  color="primary"
-                                  disabled={isLoading}
-                                  checked={pod.isMounted}
-                                />
-                              </Tooltip>
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={pod.podName}
-                              style={{ color: 'black' }}
-                            />
-                          </ListItemButton>
-                        </ListItem>
-                      ) : (
-                        <ListItem key={pod.podName} disablePadding>
-                          <ListItemButton>
-                            <ListItemIcon>
-                              <Tooltip
-                                title={
-                                  pod.isMounted
-                                    ? 'Unmount this pod'
-                                    : 'Mount this pod'
-                                }
-                              >
-                                <Checkbox
-                                  onChange={mount}
-                                  value={pod.podName}
-                                  color="primary"
-                                  disabled={isLoading}
-                                  checked={pod.isMounted}
-                                />
-                              </Tooltip>
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={pod.podName}
-                              style={{ color: 'black' }}
-                            />
-                          </ListItemButton>
-                        </ListItem>
-                      ),
-                    )}
-                  </List>
-                </Box>
-              </Container>
-            )
+                                  <Checkbox
+                                      onChange={mount}
+                                      value={pod.podName}
+                                      color="primary"
+                                      disabled={isLoading}
+                                      checked={pod.isMounted}
+                                  />
+                                </Tooltip>
+                              </ListItemIcon>
+                              <ListItemText
+                                  primary={pod.podName}
+                                  style={{ color: 'black' }}
+                              />
+                            </ListItemButton>
+                          </ListItem>
+                        ),
+                      )}
+                    </List>
+                  </Box>
+                </Container>
+              )
+            } else {
+              return (
+                <Container component="main" maxWidth="xs">
+                  <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
+                    <h2 style={{ color: 'black', marginBottom: '0px' }}>Pods</h2>
+                  </Tooltip>
+                  <Tooltip title="Current account name">
+                    <Typography
+                        style={{ color: 'gray' }}
+                        onClick={() => setShowAccounts(true)}
+                    >
+                      {username}
+                    </Typography>
+                  </Tooltip>
+
+                  <Box
+                    sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
+                  >
+                    <br/>
+                    <Typography gutterBottom align="center" style={{ color: 'black' }}>
+                      Still do not have pods?
+                    </Typography>
+
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      sx={{ mt: 3, mb: 2 }}
+                      onClick={() => setPodNew(true)}
+                      disabled={isLoading}
+                    >
+                      Create Pod
+                    </Button>
+                  </Box>
+                </Container>
+              )
+            }
           }
         })()}
 

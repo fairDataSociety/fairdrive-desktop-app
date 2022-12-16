@@ -9,10 +9,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/datafund/fdfs/pkg/api"
-	dfuse "github.com/datafund/fdfs/pkg/fuse"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/api"
+	dfuse "github.com/fairdatasociety/fairdrive-desktop-app/pkg/fuse"
 	"github.com/mitchellh/go-homedir"
 	"github.com/winfsp/cgofuse/fuse"
 )
@@ -88,7 +88,8 @@ func (h *Handler) Logout() error {
 	return h.api.LogoutUser(h.sessionID)
 }
 
-func (h *Handler) Mount(pod, location string, createPod bool) error {
+func (h *Handler) Mount(pod, location string, readOnly bool) error {
+	createPod := false
 	if h.api == nil {
 		h.logger.Errorf("mount: fairos not initialised")
 		return ErrFairOsNotInitialised
@@ -126,9 +127,13 @@ func (h *Handler) Mount(pod, location string, createPod bool) error {
 
 	sig := make(chan int)
 	host := fuse.NewFileSystemHost(dfsFuse)
+	opts := mountOptions(pod)
+	if readOnly {
+		opts = append(opts, "-o", "ro")
+	}
 	go func() {
 		host.SetCapReaddirPlus(true)
-		host.Mount(mountPoint, mountOptions(pod))
+		host.Mount(mountPoint, opts)
 		close(sig)
 	}()
 	select {

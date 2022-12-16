@@ -3,6 +3,8 @@
 Fairdrive Desktop App is a FUSE client for fairOS-dfs. It lets you mount your
 pod on your own user space and interact with your data. 
 
+> **_IMPORTANT:_**  FDA is under heavy development and in beta stage. Some abnormal behaviour, data loss can be observed.
+
 ## How do I install FDA?
 
 > **_IMPORTANT:_**  To use FDA on your system you need to install [fuse](https://www.kernel.org/doc/html/latest/filesystems/fuse.html) first.
@@ -29,13 +31,13 @@ install [winfsp](https://winfsp.dev/rel/)
 
 Download FDA for your operating system
 
-[MacOS (amd64)](https://github.com/datafund/fairos-fuse/releases/download/v0.1.0-rc5/fairdrive_darwin_amd64.dmg)
+[MacOS (amd64)](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc6/fairdrive_darwin_amd64.dmg)
 
-[MacOS (arm64)](https://github.com/datafund/fairos-fuse/releases/download/v0.1.0-rc5/fairdrive_darwin_arm64.dmg)
+[MacOS (arm64)](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc6/fairdrive_darwin_arm64.dmg)
 
-[Linux](https://github.com/datafund/fairos-fuse/releases/download/v0.1.0-rc5/fairdrive_linux)
+[Linux](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc6/fairdrive_linux)
 
-[Windows](https://github.com/datafund/fairos-fuse/releases/download/v0.1.0-rc5/fairdrive_windows.exe)
+[Windows](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc6/fairdrive_windows.exe)
 
 # How do I configure FDA to connect to a bee node?
 
@@ -75,6 +77,14 @@ Download FDA for your operating system
 
 ![mount](https://user-images.githubusercontent.com/15252513/206395147-e9961710-0aa7-49b7-8a9b-a864566c9e83.gif)
 
+- If you have not saved your bee preferences, Go to Files -> Settings and save
+- Check "Remember Me" option before Login to save your login credentials. (You can also switch between accounts later if you check this option)
+- Login
+- After you login you should see all you pods, if you do not have one hit "ctrl/cmd + N" to create a new pod
+- Click on the checkbox on the left of your pod name. The pod should mount in your user space
+- Click on the folder icon on the right side of the pod name to open it in your file manager
+- CONGRATULATIONS !! you have successfully mounted your fairdrive pod in your user space
+
 #### Which is better, local light node, a full node on raspberry, or gateway?
 
 - Using your own bee is always better for performance. A light node is good enough for using FDA, but a full node will perform better.
@@ -84,7 +94,7 @@ Download FDA for your operating system
 - If you are using the same bee node for accessing your data, then there is no need to wait for sync. 
 Once you create/move/update/delete data from your mount it will reflect everywhere.
 
-[Bugs and issues](https://github.com/datafund/fairos-fuse/issues)
+[Bugs and issues](https://github.com/fairDataSociety/fairdrive-desktop-app/issues/issues)
 
 [Fair Data Society Discord](https://discord.gg/7qFEtJDghM)
 

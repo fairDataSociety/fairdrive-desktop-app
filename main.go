@@ -7,8 +7,8 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/datafund/fdfs/pkg/handler"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/handler"
 	"github.com/wailsapp/wails/v2/pkg/application"
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
@@ -80,18 +80,25 @@ func main() {
 	//auto.Type = menu.CheckboxType
 	helpMenu := appMenu.AddSubmenu("Help")
 	helpMenu.AddText("Report a problem", nil, func(_ *menu.CallbackData) {
-		wRuntime.BrowserOpenURL(startContext, "https://github.com/datafund/fairos-fuse/issues")
+		wRuntime.BrowserOpenURL(startContext, "https://github.com/fairDataSociety/fairdrive-desktop-app/issues")
 	})
 	helpMenu.AddText("FDA Help", nil, func(_ *menu.CallbackData) {
-		wRuntime.BrowserOpenURL(startContext, "https://github.datafund.io/fairos-fuse/")
+		wRuntime.BrowserOpenURL(startContext, "https://fairdatasociety.github.io/fairdrive-desktop-app/")
 	})
 
+	// This is a quick fix for https://github.com/fairDataSociety/fairdrive-desktop-app/issues/91
+	// This is happening on FDA only, tried with wails new app on linux, ran without an issue
+	// TODO find the reason for this
+	disableResize := true
+	if runtime.GOOS == "linux" {
+		disableResize = false
+	}
 	// Create application with options
 	app := application.NewWithOptions(&options.App{
 		Title:         "Fairdrive",
 		Width:         375,
 		Height:        667,
-		DisableResize: true,
+		DisableResize: disableResize,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},

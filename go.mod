@@ -1,4 +1,4 @@
-module github.com/datafund/fdfs
+module github.com/fairdatasociety/fairdrive-desktop-app
 
 go 1.18
 

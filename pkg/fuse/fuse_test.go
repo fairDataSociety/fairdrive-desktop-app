@@ -21,13 +21,13 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/datafund/fdfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
+	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/api"
 	"github.com/plexsysio/taskmanager"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -300,7 +300,7 @@ func TestMultiDirWithFiles(t *testing.T) {
 	})
 
 	// TODO check why these take forever to run on windows
-	// https://github.com/datafund/fairos-fuse/issues/35
+	// https://github.com/fairDataSociety/fairdrive-desktop-app/issues/35
 	if runtime.GOOS != "windows" {
 		t.Run("fstest", func(t *testing.T) {
 			pathsToFind := []string{
