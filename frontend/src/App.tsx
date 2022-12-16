@@ -187,7 +187,6 @@ function App() {
     if (storedAccounts !== null) {
       setAccounts(JSON.parse(storedAccounts))
     }
-    //console.log('accounts loaded', storedAccounts)
   }
 
   useEffect(() => {
@@ -248,16 +247,7 @@ function App() {
           if (acc.Username === '' || acc.Password === '') {
             EventsEmit('disableMenus')
           } else {
-            let p = await doLogin(acc.Username, acc.Password)
-
-            // setName(acc.Username)
-            // setPassword(acc.Password)
-
-            // await Login(acc.Username, acc.Password)
-            // let p = await GetPodsList()
-
-            // setPods(p)
-            // setShowLogin(false)
+            await doLogin(acc.Username, acc.Password)
 
             let _mountPoint = await GetMountPoint()
             setMountPoint(_mountPoint)
@@ -267,7 +257,7 @@ function App() {
               let mountedPods = await GetMountedPods()
               if (mountedPods != null) {
                 mountedPods.map(async (pod) => {
-                  await Mount(pod, _mountPoint, false)
+                  await Mount(pod, _mountPoint, batch === "")
                   let pods = await GetCashedPods()
                   setPods(pods)
                 })
@@ -325,7 +315,7 @@ function App() {
     if (e.target.checked) {
       // TODO need to check how mount point can be passed for Windows and linux
       try {
-        await Mount(e.target.value, mountPoint, false)
+        await Mount(e.target.value, mountPoint, batch === "")
         EventsEmit('Mount')
       } catch (e: any) {
         showError(e)
@@ -404,6 +394,10 @@ function App() {
     }
     try {
       await SetupConfig(bee, batch, network, rpc, mountPoint, isProxy)
+      // TODO show this some how
+      // if (batch === "") {
+      //   setInfoMessage('Providing No BatchID will cause mounts to be read-only')
+      // }
       await Start(cfg)
       setShowConfig(false)
 
