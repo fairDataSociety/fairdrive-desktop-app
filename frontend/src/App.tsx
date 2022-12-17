@@ -1351,7 +1351,7 @@ function App() {
                       <>
                         <br />
                         <Tooltip
-                          title="Light account exists on local machine only. You can upgrade it to Portable FDP account using mnemonic"
+                          title="Light account exists on local machine only. You can upgrade it to Portable FDP account using mnemonic later. To Create it just enter username/password"
                           placement="bottom"
                         >
                           <Link

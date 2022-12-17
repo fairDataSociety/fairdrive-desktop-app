@@ -62,7 +62,7 @@ func main() {
 	if runtime.GOOS == "darwin" {
 		appMenu.Append(menu.EditMenu()) // on macos platform, we should append EditMenu to enable Cmd+C,Cmd+V,Cmd+Z... shortcut
 	}
-	fileMenu.AddText("Details", keys.CmdOrCtrl("i"), func(_ *menu.CallbackData) {
+	fileMenu.AddText("Account Details", keys.CmdOrCtrl("i"), func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "accountDetails")
 	})	
 	fileMenu.AddText("Logout", keys.Combo("W", keys.ShiftKey, keys.CmdOrCtrlKey), func(_ *menu.CallbackData) {
@@ -141,11 +141,12 @@ func main() {
 					if item.Label == "Logout" {
 						item.Disabled = true
 						//break
+					}
 					
-					if item.Label == "Details" {
+					if item.Label == "Account Details" {
 						item.Disabled = true
 						//break
-					}}
+					}
 				}
 				wRuntime.MenuUpdateApplicationMenu(startContext)
 			})
@@ -161,7 +162,7 @@ func main() {
 						item.Disabled = false
 						//break
 					}
-					if item.Label == "Details" {
+					if item.Label == "Account Details" {
 						item.Disabled = false
 						//break
 					}
