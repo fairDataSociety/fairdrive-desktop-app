@@ -1419,7 +1419,7 @@ function App() {
                       </>
                       <>
                         <br />
-                        <Tooltip title="Portable accounts can be used in web browsers, FairOS and in any app supporting FairDataProtocol with all the goodies provided by FDP.">
+                        <Tooltip title="Portable accounts can be used in web browsers, FairOS and in any app supporting FairDataProtocol with all the goodies provided by FDP. They require a balance.">
                           <Typography style={{ color: 'black' }}>
                             Need Advanced features ?
                           </Typography>
