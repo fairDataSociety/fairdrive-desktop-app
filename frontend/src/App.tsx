@@ -15,6 +15,7 @@ import {
   Logout,
   CreatePod,
   GetCashedPods,
+  Load,
 } from '../wailsjs/go/handler/Handler'
 import {
   SetupConfig,
@@ -178,6 +179,7 @@ function App() {
 
   const [username, setName] = useState('')
   const [password, setPassword] = useState('')
+  const [mnemonic, setMnemonic] = useState('')
   const [remember, setRemember] = useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState('') // error message
   const [infoMessage, setInfoMessage] = useState('') // info messages
@@ -472,7 +474,12 @@ function App() {
     } catch (e: any) {
       console.log(e)
     }
-    await Login(user, pass)
+    /*
+    TODO change logic for load user
+     */
+    let m = await Load(user, pass, mnemonic)
+    setMnemonic(m)
+    console.log(m)
     let p = await GetPodsList()
     setShowLogin(false)
     setPods(p)

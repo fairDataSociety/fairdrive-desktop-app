@@ -74,6 +74,19 @@ func (h *Handler) Login(username, password string) error {
 	return err
 }
 
+func (h *Handler) Load(username, password, mnemonic string) (string, error) {
+	if h.api == nil {
+		h.logger.Errorf("login: fairos not initialised")
+		return "", ErrFairOsNotInitialised
+	}
+	mnemonic, sessionID, err := h.api.Load(username, password, mnemonic)
+	if err != nil {
+		return "", err
+	}
+	h.sessionID = sessionID
+	return mnemonic, nil
+}
+
 func (h *Handler) Logout() error {
 	if h.api == nil {
 		h.logger.Errorf("logout: fairos not initialised")
