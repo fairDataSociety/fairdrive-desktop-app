@@ -90,3 +90,65 @@
    filter: grayscale(100%) invert(30%) saturate(50%) hue-rotate(90deg);
    cursor: pointer;
 }
+
+
+.btn {
+}
+
+.btn:hover {
+    transform: skewX( -16deg ) translateX( 0px );
+    transition: 1s;
+} 
+
+p:hover, MuiFormControlLabel-label:hover, span:hover {
+    transform: skewX( -7deg ) translateX( 0px );
+    transition: 1s;
+} 
+
+/* .shrinkable {
+    transform: scale( 10% ) translateX( 0px );
+    transition: 1s;
+    opacity: 1;
+    transition: opacity 1.0s linear;
+} */
+.shrinkable {
+    visibility: hidden;
+}
+.shrinkable:disabled {
+    transform: scale( 10% ) translateX( 0px );
+    transition: 1s;
+}
+
+@keyframes fadeOut {
+    0% {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    50% {
+        visibility: visible;
+        opacity: 0.5;
+    }
+
+    100% {
+        visibility: hidden;
+        opacity: 0;
+    }
+}
+
+.mnemonic {
+    //color: 'transparent';
+    text-Shadow: '0 0 28px #000'
+}
+.mnemonic:hover {
+    //color: 'black'; 
+    text-Shadow: '0 0 1px #000'
+}
+
+/* .Mui-disabled {
+    transform: scale( 10% ) translateX( 0px );
+    transition: 1s;
+    transition: opacity 1.0s linear;
+}
+*/
+
