@@ -508,12 +508,14 @@ function App() {
     */
     let isPortableAccount = mnem === '' || mnem === undefined
     if (isPortableAccount) {
-      console.log('This is Portable Account', mnem)
+      console.log('Could be Portable Account', mnem)
       mnem = '' // TODO fix should not be undefined, causes error and user can not be logged out
       try {
         // try to login with Portable account, if it fails, login with portable
         await Login(user, pass)
         let p = await GetPodsList()
+        setPrivateKey('')
+        setMnemonic('')
         setShowLogin(false)
         setPods(p)
         setShowPods(true)
@@ -528,6 +530,7 @@ function App() {
     const existingAccount = accounts.find((obj) => {
       return obj.userInfo.username === user
     })
+    // if mnemonic is present then its stored lite account
     if (
       existingAccount !== undefined &&
       existingAccount.userInfo.mnemonic !== undefined &&
@@ -537,9 +540,13 @@ function App() {
     }
 
     let m = await Load(user, pass, mnem)
-    await setMnemonic(m.mnemonic)
-    console.log('set mnemonic:', mnemonic)
-    console.log('got m:', m)
+    mnem = m.mnemonic
+    setMnemonic(m.mnemonic)
+    setPrivateKey(m.privateKey)
+
+    // console.log('set mnemonic:', mnemonic)
+    // console.log('got m:', m)
+    // console.log('got mnem:', mnem)
 
     let p = await GetPodsList()
     setShowLogin(false)
@@ -1033,14 +1040,31 @@ function App() {
                   <strong>{password}</strong>
                 </span>
                 <br />
-                <Typography style={{ color: 'black' }}>Mnemonic</Typography>
-                <span style={{ color: 'transparent', textShadow: '0 0 15px #000' }}>
-                  <strong>{mnemonic}</strong>
-                </span>
-                <Typography style={{ color: 'black' }}>Private Key</Typography>
-                <span style={{ color: 'transparent', textShadow: '0 0 15px #000' }}>
-                  <strong>TODO {privateKey}</strong>
-                </span>
+                {mnemonic != '' ? (
+                  <>
+                    <Typography style={{ color: 'black' }}>
+                      This is Light account
+                    </Typography>
+                    <br />
+                    <Typography style={{ color: 'black' }}>Mnemonic</Typography>
+                    <span
+                      style={{ color: 'transparent', textShadow: '0 0 15px #000' }}
+                    >
+                      <strong>{mnemonic}</strong>
+                    </span>
+
+                    <Typography style={{ color: 'black' }}>Private Key</Typography>
+                    <span
+                      style={{ color: 'transparent', textShadow: '0 0 15px #000' }}
+                    >
+                      <strong style={{ fontSize: '8px' }}>{privateKey}</strong>
+                    </span>
+                  </>
+                ) : (
+                  <Typography style={{ color: 'black' }}>
+                    This is Portable account
+                  </Typography>
+                )}
                 <br />
               </>
             )}
@@ -1055,7 +1079,7 @@ function App() {
                     Close
                   </Button>
                 </Tooltip>
-                <Tooltip title="Remember this account">
+                {/* <Tooltip title="Remember this account">
                   <Button
                     fullWidth
                     variant="contained"
@@ -1063,7 +1087,7 @@ function App() {
                   >
                     Remember
                   </Button>
-                </Tooltip>
+                </Tooltip> */}
               </Stack>
             </FormGroup>
           </Box>
@@ -1094,7 +1118,15 @@ function App() {
                 title="Your previously logged accounts. Click on account name to login."
                 placement="top"
               >
-                <DialogTitle>Accounts</DialogTitle>
+                <div
+                  style={{
+                    color: 'black',
+                    fontWeight: 'bolder',
+                    margin: '5px',
+                  }}
+                >
+                  Accounts
+                </div>
               </Tooltip>
 
               {accounts.length === 0 && (
@@ -1105,35 +1137,37 @@ function App() {
                   <Typography style={{ color: 'gray', margin: '20px' }}>
                     To add account to this list, click on "Remember me" checkbox
                     before login. Accounts do not know about your connection
-                    preferences.
+                    preferences. Lite accounts are added automatically.
                   </Typography>
                 </>
               )}
               <List>
                 {accounts.map((account) => (
                   <ListItem key={account.userInfo.username} disabled={isLoading}>
-                    <Typography
-                      onClick={() => handleAccountSwitch(account)}
-                      style={{ cursor: 'pointer' }}
-                      className="account-switch"
-                    >
-                      {account.userInfo.username}
-
-                      <span
-                        style={{
-                          fontSize: '8px',
-                          position: 'absolute',
-                          left: '16px',
-                          top: '1.5rem',
-                        }}
+                    <Tooltip title="Click to switch" placement="left">
+                      <Typography
+                        onClick={() => handleAccountSwitch(account)}
+                        style={{ cursor: 'pointer' }}
+                        className="account-switch"
                       >
-                        {account.userInfo.mnemonic !== undefined ||
-                        account.userInfo.mnemonic === ''
-                          ? 'lite'
-                          : 'portable'}
-                      </span>
-                      {console.log(account)}
-                    </Typography>
+                        {account.userInfo.username}&nbsp;&nbsp;&nbsp;&nbsp;
+                        {/* {account.userInfo.mnemonic} */}
+                      </Typography>
+                    </Tooltip>
+                    <span
+                      style={{
+                        fontSize: '8px',
+                        position: 'absolute',
+                        left: '16px',
+                        top: '1.6rem',
+                      }}
+                    >
+                      {account.userInfo.mnemonic !== undefined ||
+                      account.userInfo.mnemonic === ''
+                        ? 'lite'
+                        : 'portable'}
+                    </span>
+
                     <Tooltip title="Remove account" placement="top">
                       <Typography
                         onClick={() => handleAccountRemove(account)}
@@ -1154,7 +1188,14 @@ function App() {
               <DialogActions
                 style={{ justifyContent: 'space-between', alignItems: 'center' }}
               >
-                <Button onClick={() => setShowAccounts(false)} disabled={isLoading}>
+                <Button
+                  onClick={() => setShowAccounts(false)}
+                  disabled={isLoading}
+                  variant="contained"
+                  style={{
+                    width: '100%',
+                  }}
+                >
                   Close
                 </Button>
               </DialogActions>
@@ -1275,10 +1316,18 @@ function App() {
                   />
                 </DialogContent>
                 <DialogActions>
-                  <Button onClick={handlePodNewClose} disabled={isLoading}>
+                  <Button
+                    onClick={handlePodNewClose}
+                    disabled={isLoading}
+                    variant="contained"
+                  >
                     Close
                   </Button>
-                  <Button onClick={handlePodNew} disabled={isLoading}>
+                  <Button
+                    onClick={handlePodNew}
+                    disabled={isLoading}
+                    variant="contained"
+                  >
                     Create
                   </Button>
                 </DialogActions>
@@ -1354,7 +1403,7 @@ function App() {
                       </Tooltip>
                       <>
                         <Tooltip
-                          title="Light account exists on local machine only. You can upgrade it to Portable FDS account using mnemonic later. To create it just enter username/password and new account will be auto-magically created. When logged in you can see information in File -> Account details."
+                          title="Light account exists on local machine only. You can upgrade it to Portable FDS account using mnemonic later. Just enter username/password and new account will be auto-magically created. When logged in see information about it in 'File -> Account details.' "
                           placement="bottom"
                         >
                           <Typography
@@ -1413,13 +1462,14 @@ function App() {
                   </Tooltip>
                   <Tooltip
                     title={
-                      'This account is ' +
+                      'This is ' +
                       (mnemonic !== '' || mnemonic !== undefined
                         ? 'Lite'
-                        : 'Portable')
+                        : 'Portable') +
+                      ' account'
                     }
                   >
-                    <Typography style={{ color: 'gray', fontSize: '6px' }}>
+                    <Typography style={{ color: 'gray', fontSize: '8px' }}>
                       {mnemonic !== '' || mnemonic !== undefined
                         ? 'lite'
                         : 'portable'}

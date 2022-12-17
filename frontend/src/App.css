@@ -101,16 +101,11 @@
 } 
 
 p:hover, MuiFormControlLabel-label:hover, span:hover {
-    transform: skewX( -7deg ) translateX( 0px );
-    transition: 1s;
+    transform: skewX( -10deg ) translateX( 0px ) perspective(151px) scale(103%);
+    transition: 8s cubic-bezier(0, 0.56, 0.46, 1);
+    font-weight: 500;
 } 
 
-/* .shrinkable {
-    transform: scale( 10% ) translateX( 0px );
-    transition: 1s;
-    opacity: 1;
-    transition: opacity 1.0s linear;
-} */
 .shrinkable {
     visibility: hidden;
 }
@@ -137,11 +132,9 @@ p:hover, MuiFormControlLabel-label:hover, span:hover {
 }
 
 .mnemonic {
-    //color: 'transparent';
     text-Shadow: '0 0 28px #000'
 }
 .mnemonic:hover {
-    //color: 'black'; 
     text-Shadow: '0 0 1px #000'
 }
 
@@ -152,3 +145,31 @@ p:hover, MuiFormControlLabel-label:hover, span:hover {
 }
 */
 
+
+
+/* .btn {
+
+
+    "&:hover" {
+        i {
+            font-weight: 700;
+        }
+    }
+
+    .center {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    i {
+        font-weight: 100;
+        @for $i from 1 through 18 {
+            &:nth-child(#{$i}) {
+                transition: font-weight 0.2s cubic-bezier(0, 0.56, 0.46, 1) #{math.div($i, 50)}s;
+            }
+        }
+    }
+} */
