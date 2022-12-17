@@ -518,7 +518,7 @@ function App() {
         setPods(p)
         setShowPods(true)
         EventsEmit('enableMenus')
-        return { p, m: '' }
+        return { p, m: new handler.LiteUser() }
       } catch (e) {
         showInfoMessage('Logging into Light account')
       }
@@ -537,9 +537,10 @@ function App() {
     }
 
     let m = await Load(user, pass, mnem)
-    await setMnemonic(m)
+    await setMnemonic(m.mnemonic)
     console.log('set mnemonic:', mnemonic)
     console.log('got m:', m)
+
     let p = await GetPodsList()
     setShowLogin(false)
     setPods(p)
@@ -560,7 +561,7 @@ function App() {
       console.log('got login', p, m)
       if (remember) {
         await RememberPassword(username, password)
-        addAccount(username, password, m, p) // add only if remember is checked and login is successful
+        addAccount(username, password, m.mnemonic, p) // add only if remember is checked and login is successful
       } else {
         await ForgetPassword()
       }

@@ -12,7 +12,7 @@ export function GetCashedPods():Promise<Array<handler.PodMountedInfo>>;
 
 export function GetPodsList():Promise<Array<handler.PodMountedInfo>>;
 
-export function Load(arg1:string,arg2:string,arg3:string):Promise<string>;
+export function Load(arg1:string,arg2:string,arg3:string):Promise<handler.LiteUser>;
 
 export function Login(arg1:string,arg2:string):Promise<Error>;
 
