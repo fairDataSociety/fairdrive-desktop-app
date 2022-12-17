@@ -15,6 +15,7 @@ import {
   Logout,
   CreatePod,
   GetCashedPods,
+  Load,
 } from '../wailsjs/go/handler/Handler'
 import {
   SetupConfig,
@@ -63,6 +64,8 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Switch,
+  Slide,
 } from '@mui/material'
 import MuiAlert from '@mui/material/Alert'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
@@ -76,6 +79,7 @@ import PodMountedInfo = handler.PodMountedInfo
 interface UserInfo {
   username: string | any
   password: string | any
+  mnemonic: string | any
 }
 
 interface AccountInfo {
@@ -83,20 +87,25 @@ interface AccountInfo {
   pods: PodMountedInfo[] | any
 }
 
-function createUserInfo(username: string, password: string): UserInfo {
-  return { username, password }
+function createUserInfo(
+  username: string,
+  password: string,
+  mnemonic: string,
+): UserInfo {
+  return { username, password, mnemonic }
 }
 
-function addAccount(userInfo: UserInfo, pods: PodMountedInfo[]): AccountInfo {
-  return { userInfo, pods }
-}
+// function addAccount(userInfo: UserInfo, pods: PodMountedInfo[]): AccountInfo {
+//   return { userInfo, pods }
+// }
 
 function createAccountInfo(
   username: string,
   password: string,
+  mnemonic: string,
   pods: PodMountedInfo[],
 ): AccountInfo {
-  return { userInfo: createUserInfo(username, password), pods }
+  return { userInfo: createUserInfo(username, password, mnemonic), pods }
 }
 
 const theme = createTheme({
@@ -171,6 +180,7 @@ function App() {
   const [buildTime, setTime] = useState('')
 
   const [showConfig, setShowConfig] = useState<boolean>(false)
+  const [showAccountDetails, setShowAccountDetails] = useState<boolean>(false)
   const [showLogin, setShowLogin] = useState<boolean>(true)
   const [showPods, setShowPods] = useState<boolean>(true)
 
@@ -178,6 +188,9 @@ function App() {
 
   const [username, setName] = useState('')
   const [password, setPassword] = useState('')
+  const [mnemonic, setMnemonic] = useState('')
+  const [privateKey, setPrivateKey] = useState('')
+
   const [remember, setRemember] = useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState('') // error message
   const [infoMessage, setInfoMessage] = useState('') // info messages
@@ -194,6 +207,9 @@ function App() {
     EventsOn('preferences', () => {
       setShowConfig(true)
     })
+    EventsOn('accountDetails', () => {
+      setShowAccountDetails(true)
+    })
     EventsOn('showAccounts', () => {
       setShowAccounts(true)
     })
@@ -209,6 +225,7 @@ function App() {
     EventsOn('logout', async () => {
       setIsLoading(true)
       try {
+        setMnemonic('') // need to clean mnemonic
         await Logout()
         EventsEmit('disableMenus')
         setShowLogin(true)
@@ -242,12 +259,12 @@ function App() {
         }
         setIsLoading(true)
         try {
-          await Start(c)
+          await Start(c) // TODO: remember me will not work for lite accounts
           let acc = await Get()
           if (acc.Username === '' || acc.Password === '') {
             EventsEmit('disableMenus')
           } else {
-            await doLogin(acc.Username, acc.Password)
+            await doLogin(acc.Username, acc.Password, '') // TODO remember me will not work for Lite Accounts as there is no mnemonic info available
 
             let _mountPoint = await GetMountPoint()
             setMountPoint(_mountPoint)
@@ -257,7 +274,7 @@ function App() {
               let mountedPods = await GetMountedPods()
               if (mountedPods != null) {
                 mountedPods.map(async (pod) => {
-                  await Mount(pod, _mountPoint, batch === "")
+                  await Mount(pod, _mountPoint, batch === '')
                   let pods = await GetCashedPods()
                   setPods(pods)
                 })
@@ -286,6 +303,7 @@ function App() {
   const addAccount = async (
     username: string,
     password: string,
+    mnemonic: string,
     pods: handler.PodMountedInfo[],
   ) => {
     const account = accounts.find((obj) => {
@@ -293,10 +311,11 @@ function App() {
     })
 
     if (account === undefined) {
-      let newAccountInfo = createAccountInfo(username, password, pods)
+      let newAccountInfo = createAccountInfo(username, password, mnemonic, pods)
       let newAccounts = [...accounts, newAccountInfo]
       setAccounts(newAccounts)
       localStorage.setItem('accounts', JSON.stringify(newAccounts))
+      showInfoMessage('Account added to account list')
       return newAccountInfo
     }
     // TDOD update pod info
@@ -315,7 +334,7 @@ function App() {
     if (e.target.checked) {
       // TODO need to check how mount point can be passed for Windows and linux
       try {
-        await Mount(e.target.value, mountPoint, batch === "")
+        await Mount(e.target.value, mountPoint, batch === '')
         EventsEmit('Mount')
       } catch (e: any) {
         showError(e)
@@ -333,13 +352,18 @@ function App() {
     setIsLoading(false)
   }
   const [mountPoint, setMountPoint] = useState('')
+
+  const [toggleConfigAdvanced, setToggleConfigAdvanced] = useState<boolean>(false)
+  const [switchLocalGateway, setSwitchLocalGateway] = useState<boolean>(false)
+
   const [isProxy, setProxy] = useState<boolean>(false)
   const [proxyValue, setProxyValue] = useState('no')
-  const [bee, setBee] = useState('https://bee-1.dev.fairdatasociety.org')
+  const [bee, setBee] = useState('http://localhost:1635') // should be localhost as default, as per swarm web3 PC, previously https://bee-1.dev.fairdatasociety.org // TODO check in go code
   const [batch, setBatch] = useState('')
   const [rpc, setRPC] = useState('https://xdai.dev.fairdatasociety.org')
   const [network, setNetwork] = useState('testnet')
   const [preferencesUpdated, setPreferencesUpdated] = useState(false)
+
   const updateProxy = (e: any) => {
     setProxyValue(e.target.value)
     if (e.target.value === 'no') {
@@ -443,6 +467,8 @@ function App() {
     BrowserOpenURL('https://datafund.io/')
   }
 
+  async function openCreateLightAccount() {}
+
   async function handleAccountSwitch(account: AccountInfo) {
     setIsLoading(true)
     try {
@@ -450,7 +476,12 @@ function App() {
       setShowPods(false)
       setName(account.userInfo.username)
       setPassword(account.userInfo.password)
-      doLogin(account.userInfo.username, account.userInfo.password)
+      setMnemonic(account.userInfo.mnemonic)
+      doLogin(
+        account.userInfo.username,
+        account.userInfo.password,
+        account.userInfo.mnemonic,
+      )
       setShowAccounts(false)
     } catch (e: any) {
       showError(e)
@@ -465,30 +496,79 @@ function App() {
     setIsLoading(false)
   }
 
-  async function doLogin(user: string, pass: string) {
+  async function doLogin(user: string, pass: string, mnem: string) {
     // TODO: logout existing user and maybe unmount all pods
     try {
       await Logout()
     } catch (e: any) {
       console.log(e)
     }
-    await Login(user, pass)
+    /*
+    TODO change logic for load user
+    */
+    let isPortableAccount = mnem === '' || mnem === undefined
+    if (isPortableAccount) {
+      console.log('Could be Portable Account', mnem)
+      mnem = '' // TODO fix should not be undefined, causes error and user can not be logged out
+      try {
+        // try to login with Portable account, if it fails, login with portable
+        await Login(user, pass)
+        let p = await GetPodsList()
+        setPrivateKey('')
+        setMnemonic('')
+        setShowLogin(false)
+        setPods(p)
+        setShowPods(true)
+        EventsEmit('enableMenus')
+        return { p, m: new handler.LiteUser() }
+      } catch (e) {
+        showInfoMessage('Logging into Light account')
+      }
+    } else {
+    }
+
+    const existingAccount = accounts.find((obj) => {
+      return obj.userInfo.username === user
+    })
+    // if mnemonic is present then its stored lite account
+    if (
+      existingAccount !== undefined &&
+      existingAccount.userInfo.mnemonic !== undefined &&
+      existingAccount.userInfo.mnemonic !== ''
+    ) {
+      mnem = existingAccount.userInfo.mnemonic
+    }
+
+    let m = await Load(user, pass, mnem)
+    mnem = m.mnemonic
+    setMnemonic(m.mnemonic)
+    setPrivateKey(m.privateKey)
+
+    // console.log('set mnemonic:', mnemonic)
+    // console.log('got m:', m)
+    // console.log('got mnem:', mnem)
+
     let p = await GetPodsList()
     setShowLogin(false)
     setPods(p)
     setShowPods(true)
     EventsEmit('enableMenus')
-    return p
+    showInfoMessage('Lite account logged in. See Details for account info.')
+    addAccount(user, pass, mnem, pods)
+
+    return { p, m }
   }
 
   async function login() {
     setIsLoading(true)
     try {
-      let p = await doLogin(username, password)
+      console.log('login', username, password, mnemonic)
+      let { p, m } = await doLogin(username, password, mnemonic)
 
+      console.log('got login', p, m)
       if (remember) {
         await RememberPassword(username, password)
-        addAccount(username, password, p) // add only if remember is checked and login is successful
+        addAccount(username, password, m.mnemonic, p) // add only if remember is checked and login is successful
       } else {
         await ForgetPassword()
       }
@@ -561,155 +641,453 @@ function App() {
         >
           <Box
             sx={{
-              margin: 1,
+              margin: 0,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               boxShadow: 24,
               bgcolor: 'white',
-              p: 4,
+              p: 2,
             }}
           >
-            <FormGroup>
-              <Tooltip
-                title="Usually bee nodes and gateways are not behind proxy. Please check before connecting via proxy."
-                placement="top"
+            {/* Preferences switch */}
+            <div style={{ marginTop: '-5px' }}>
+              <div
+                style={{ color: 'black', fontWeight: 'bolder', marginBottom: '5px' }}
               >
-                <FormLabel id="demo-controlled-radio-buttons-group">
-                  Is bee node running behind proxy?
-                </FormLabel>
-              </Tooltip>
-              <RadioGroup
-                aria-labelledby="demo-controlled-radio-buttons-group"
-                name="controlled-radio-buttons-group"
-                onChange={updateProxy}
-                value={proxyValue}
+                Preferences
+              </div>
+              <span
+                style={{
+                  color: toggleConfigAdvanced ? 'gray' : 'black',
+                  fontWeight: toggleConfigAdvanced ? 'normal' : 'bold',
+                }}
               >
-                <Grid container>
-                  <Grid item>
-                    <Tooltip title="Select if you directly access Bee">
-                      <FormControlLabel
-                        value={'no'}
-                        control={<Radio />}
-                        label="No"
-                        style={{ color: 'black' }}
-                      />
-                    </Tooltip>
-                  </Grid>
+                Simple
+              </span>
+              <Switch
+                checked={toggleConfigAdvanced}
+                onChange={() => setToggleConfigAdvanced(!toggleConfigAdvanced)}
+              />
+              <span
+                style={{
+                  color: toggleConfigAdvanced ? 'black' : 'gray',
+                  fontWeight: toggleConfigAdvanced ? 'bold' : 'normal',
+                }}
+              >
+                Advanced
+              </span>
+            </div>
 
-                  <Grid item>
-                    <Tooltip title="Select if your bee is behind proxy (gateways are not proxies)">
-                      <FormControlLabel
-                        value={'yes'}
-                        control={<Radio />}
-                        label="Yes"
-                        style={{ color: 'black' }}
-                      />
-                    </Tooltip>
-                  </Grid>
-                </Grid>
-              </RadioGroup>
-              <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                <Tooltip title="Bee API endpoint, recommended http://localhost:1635">
-                  <TextField
-                    margin="normal"
-                    value={bee}
-                    required
-                    fullWidth
-                    id="bee"
-                    label="Bee"
-                    onChange={updateBee}
-                    autoComplete="off"
-                  />
-                </Tooltip>
-              </Box>
-
-              <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                <Tooltip title="BatchID to use for uploads, leave empty if you are using gateway.">
-                  <TextField
-                    margin="normal"
-                    value={batch}
-                    required
-                    fullWidth
-                    id="batch"
-                    label="BatchID"
-                    onChange={updateBatch}
-                    autoComplete="off"
-                  />
-                </Tooltip>
-              </Box>
-
-              <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                <Tooltip title="RPC Endpoint for ENS based authentication">
-                  <TextField
-                    margin="normal"
-                    value={rpc}
-                    required
-                    fullWidth
-                    id="rpc"
-                    label="RPC"
-                    onChange={updateRPC}
-                    autoComplete="off"
-                  />
-                </Tooltip>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+            {/* Advanced configuration */}
+            {toggleConfigAdvanced === true && (
+              <FormGroup>
                 <Tooltip
-                  title="Specify Network type for ENS based authentication"
-                  placement="top"
+                  title="Usually bee nodes and gateways are not behind proxy. Please check before connecting via proxy."
+                  placement="bottom"
                 >
-                  <Select
-                    required
-                    fullWidth
-                    id="network"
-                    label="Network"
-                    onChange={updateNetwork}
-                    displayEmpty={true}
-                    value={network}
-                    style={{ color: 'black' }}
-                  >
-                    <MenuItem value={'testnet'}>Testnet</MenuItem>
-                    <MenuItem value={'play'}>FDP play</MenuItem>
-                  </Select>
+                  <FormLabel id="demo-controlled-radio-buttons-group">
+                    Is Bee running behind proxy?
+                  </FormLabel>
                 </Tooltip>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                <Tooltip title="Location of the Fairdrive folder, a mounting point">
-                  <TextField
-                    margin="normal"
-                    value={mountPoint}
-                    disabled={true}
-                    required
-                    fullWidth
-                    id="mountPoint"
-                    label="Mount Location"
-                    autoComplete="off"
-                  />
+                <RadioGroup
+                  aria-labelledby="demo-controlled-radio-buttons-group"
+                  name="controlled-radio-buttons-group"
+                  onChange={updateProxy}
+                  value={proxyValue}
+                >
+                  <Grid container>
+                    <Grid item>
+                      <Tooltip title="Select if you directly access Bee">
+                        <FormControlLabel
+                          value={'no'}
+                          control={<Radio />}
+                          label="No"
+                          style={{ color: 'black' }}
+                        />
+                      </Tooltip>
+                    </Grid>
+
+                    <Grid item>
+                      <Tooltip title="Select if your bee is behind proxy (gateways are not proxies)">
+                        <FormControlLabel
+                          value={'yes'}
+                          control={<Radio />}
+                          label="Yes"
+                          style={{ color: 'black' }}
+                        />
+                      </Tooltip>
+                    </Grid>
+                  </Grid>
+                </RadioGroup>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <Tooltip title="Bee API endpoint, recommended http://localhost:1635">
+                    <TextField
+                      margin="normal"
+                      value={bee}
+                      required
+                      fullWidth
+                      id="bee"
+                      label="Bee"
+                      onChange={updateBee}
+                      autoComplete="off"
+                    />
+                  </Tooltip>
+                </Box>
+
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <Tooltip title="BatchID to use for uploads, leave empty if you are using gateway.">
+                    <TextField
+                      margin="normal"
+                      value={batch}
+                      required
+                      fullWidth
+                      id="batch"
+                      label="BatchID"
+                      onChange={updateBatch}
+                      autoComplete="off"
+                    />
+                  </Tooltip>
+                </Box>
+
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <Tooltip title="RPC Endpoint for ENS based authentication">
+                    <TextField
+                      margin="normal"
+                      value={rpc}
+                      required
+                      fullWidth
+                      id="rpc"
+                      label="RPC"
+                      onChange={updateRPC}
+                      autoComplete="off"
+                    />
+                  </Tooltip>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <Tooltip
+                    title="Specify Network type for ENS based authentication"
+                    placement="top"
+                  >
+                    <Select
+                      required
+                      fullWidth
+                      id="network"
+                      label="Network"
+                      onChange={updateNetwork}
+                      displayEmpty={true}
+                      value={network}
+                      style={{ color: 'black' }}
+                    >
+                      <MenuItem value={'testnet'}>Testnet</MenuItem>
+                      <MenuItem value={'play'}>FDP play</MenuItem>
+                    </Select>
+                  </Tooltip>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <Tooltip title="Location of the Fairdrive folder, a mounting point">
+                    <TextField
+                      margin="normal"
+                      value={mountPoint}
+                      disabled={true}
+                      required
+                      fullWidth
+                      id="mountPoint"
+                      label="Mount Location"
+                      autoComplete="off"
+                    />
+                  </Tooltip>
+
+                  <Tooltip title="Select mounting point location">
+                    <IconButton onClick={showMountPointSelector}>
+                      <Folder />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+                <Stack mt={3} mb={3} spacing={2} direction="row">
+                  <Tooltip title="Closes this dialog without saving">
+                    <Button fullWidth variant="contained" onClick={closeSettings}>
+                      Close
+                    </Button>
+                  </Tooltip>
+                  <Tooltip title="Save settings and connect">
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      sx={{ mt: 3, mb: 2 }}
+                      onClick={initFairOs}
+                      disabled={isLoading}
+                    >
+                      Start
+                    </Button>
+                  </Tooltip>
+                </Stack>
+              </FormGroup>
+            )}
+            {/* Simple configuration */}
+            {toggleConfigAdvanced === false && (
+              <FormGroup>
+                <Tooltip
+                  title="Toggle between bee location or gateway bee."
+                  placement="bottom"
+                >
+                  <>
+                    <span style={{ color: 'black', marginTop: '8px' }}>
+                      Bee location
+                    </span>
+                    <div>
+                      <span
+                        style={{
+                          color: switchLocalGateway ? 'gray' : 'black',
+                          fontWeight: switchLocalGateway ? 'normal' : 'bold',
+                        }}
+                      >
+                        localhost
+                      </span>
+                      <Switch
+                        checked={switchLocalGateway}
+                        onChange={() => {
+                          updateBee({
+                            target: {
+                              value: switchLocalGateway
+                                ? 'http://localhost:1635'
+                                : 'https://bee-1.fairdatasociety.org',
+                            },
+                          })
+                          updateRPC({
+                            target: {
+                              value: switchLocalGateway
+                                ? 'https://xdai.dev.fairdatasociety.org' // NOT SURE WHAT TO PUT HERE
+                                : 'https://xdai.dev.fairdatasociety.org',
+                            },
+                          })
+                          updateBatch({
+                            target: {
+                              value: switchLocalGateway ? batch : '',
+                            },
+                          })
+                          setSwitchLocalGateway(!switchLocalGateway)
+                        }}
+                      />
+                      <span
+                        style={{
+                          color: switchLocalGateway ? 'black' : 'gray',
+                          fontWeight: switchLocalGateway ? 'bold' : 'normal',
+                        }}
+                      >
+                        gateway
+                      </span>
+                    </div>
+                  </>
                 </Tooltip>
 
-                <Tooltip title="Select mounting point location">
-                  <IconButton onClick={showMountPointSelector}>
-                    <Folder />
-                  </IconButton>
-                </Tooltip>
-              </Box>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <Tooltip title="Bee API endpoint, recommended http://localhost:1635">
+                    <TextField
+                      margin="normal"
+                      value={bee}
+                      required
+                      fullWidth
+                      id="bee"
+                      label="Bee"
+                      onChange={updateBee}
+                      autoComplete="off"
+                    />
+                  </Tooltip>
+                </Box>
+                <Box
+                  sx={{ display: 'flex', alignItems: 'flex-end' }}
+                  className={switchLocalGateway ? 'shrinkable' : ''}
+                >
+                  <Tooltip title="BatchID to use for uploads, leave empty if you are using gateway.">
+                    <TextField
+                      margin="normal"
+                      value={batch}
+                      required
+                      fullWidth
+                      id="batch"
+                      label="BatchID"
+                      onChange={updateBatch}
+                      autoComplete="off"
+                      disabled={switchLocalGateway}
+                    />
+                  </Tooltip>
+                </Box>
+
+                <Box
+                  sx={{ display: 'flex', alignItems: 'flex-end' }}
+                  className={!toggleConfigAdvanced ? 'shrinkable' : ''}
+                >
+                  <Tooltip title="RPC Endpoint for ENS based authentication">
+                    <TextField
+                      margin="normal"
+                      value={rpc}
+                      required
+                      fullWidth
+                      id="rpc"
+                      label="RPC"
+                      onChange={updateRPC}
+                      autoComplete="off"
+                      disabled={!toggleConfigAdvanced}
+                    />
+                  </Tooltip>
+                </Box>
+                <Box
+                  sx={{ display: 'flex', alignItems: 'flex-end' }}
+                  className={!toggleConfigAdvanced ? 'shrinkable' : ''}
+                >
+                  <Tooltip
+                    title="Specify Network type for ENS based authentication"
+                    placement="top"
+                  >
+                    <Select
+                      required
+                      fullWidth
+                      id="network"
+                      label="Network"
+                      onChange={updateNetwork}
+                      displayEmpty={true}
+                      value={network}
+                      style={{ color: 'black' }}
+                      disabled={!toggleConfigAdvanced}
+                    >
+                      <MenuItem value={'testnet'}>Testnet</MenuItem>
+                      <MenuItem value={'play'}>FDP play</MenuItem>
+                    </Select>
+                  </Tooltip>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <Tooltip title="Location of the Fairdrive folder, a mounting point">
+                    <TextField
+                      margin="normal"
+                      value={mountPoint}
+                      disabled={true}
+                      required
+                      fullWidth
+                      id="mountPoint"
+                      label="Mount Location"
+                      autoComplete="off"
+                    />
+                  </Tooltip>
+
+                  <Tooltip title="Select mounting point location">
+                    <IconButton onClick={showMountPointSelector}>
+                      <Folder />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+                <Stack mt={3} mb={3} spacing={2} direction="row">
+                  <Tooltip title="Closes this dialog without saving">
+                    <Button fullWidth variant="contained" onClick={closeSettings}>
+                      Close
+                    </Button>
+                  </Tooltip>
+                  <Tooltip title="Save settings and connect">
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      sx={{ mt: 3, mb: 2 }}
+                      onClick={initFairOs}
+                      disabled={isLoading}
+                    >
+                      Start
+                    </Button>
+                  </Tooltip>
+                </Stack>
+              </FormGroup>
+            )}
+          </Box>
+        </Modal>
+
+        {/* Account details*/}
+        <Modal
+          open={showAccountDetails}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
+        >
+          <Box
+            sx={{
+              margin: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              boxShadow: 24,
+              bgcolor: 'white',
+              p: 2,
+            }}
+          >
+            <div
+              style={{
+                marginTop: '-5px',
+                color: 'black',
+                fontWeight: 'bolder',
+                marginBottom: '15px',
+              }}
+            >
+              Account Details
+            </div>
+            {username === '' ? (
+              <Tooltip title="Seems like there is no account information">
+                <Typography style={{ color: 'black' }}>No account info</Typography>
+              </Tooltip>
+            ) : (
+              <>
+                <Typography style={{ color: 'black' }}>
+                  <strong>{username}</strong>
+                </Typography>
+                <Typography style={{ color: 'black' }}>Password</Typography>
+                <span style={{ color: 'transparent', textShadow: '0 0 15px #000' }}>
+                  <strong>{password}</strong>
+                </span>
+                <br />
+                {mnemonic != '' ? (
+                  <>
+                    <Typography style={{ color: 'black' }}>
+                      This is Light account
+                    </Typography>
+                    <br />
+                    <Typography style={{ color: 'black' }}>Mnemonic</Typography>
+                    <span
+                      style={{ color: 'transparent', textShadow: '0 0 15px #000' }}
+                    >
+                      <strong>{mnemonic}</strong>
+                    </span>
+
+                    <Typography style={{ color: 'black' }}>Private Key</Typography>
+                    <span
+                      style={{ color: 'transparent', textShadow: '0 0 15px #000' }}
+                    >
+                      <strong style={{ fontSize: '8px' }}>{privateKey}</strong>
+                    </span>
+                  </>
+                ) : (
+                  <Typography style={{ color: 'black' }}>
+                    This is Portable account
+                  </Typography>
+                )}
+                <br />
+              </>
+            )}
+            <FormGroup>
               <Stack mt={3} mb={3} spacing={2} direction="row">
-                <Tooltip title="Closes this dialog without saving">
-                  <Button fullWidth variant="contained" onClick={closeSettings}>
-                    Close
-                  </Button>
-                </Tooltip>
-                <Tooltip title="Save settings and connect">
+                <Tooltip title="Closes this dialog">
                   <Button
                     fullWidth
                     variant="contained"
-                    sx={{ mt: 3, mb: 2 }}
-                    onClick={initFairOs}
-                    disabled={isLoading}
+                    onClick={() => setShowAccountDetails(false)}
                   >
-                    Start
+                    Close
                   </Button>
                 </Tooltip>
+                {/* <Tooltip title="Remember this account">
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={() => addAccount(username, password, mnemonic, pods)}
+                  >
+                    Remember
+                  </Button>
+                </Tooltip> */}
               </Stack>
             </FormGroup>
           </Box>
@@ -734,63 +1112,101 @@ function App() {
         </div>
 
         {showAccounts && (
-          <Dialog open={showAccounts}>
-            <Tooltip
-              title="Your previously logged accounts. Click on account name to login."
-              placement="top"
-            >
-              <DialogTitle>Accounts</DialogTitle>
-            </Tooltip>
+          <Box>
+            <Dialog open={showAccounts}>
+              <Tooltip
+                title="Your previously logged accounts. Click on account name to login."
+                placement="top"
+              >
+                <div
+                  style={{
+                    color: 'black',
+                    fontWeight: 'bolder',
+                    margin: '5px',
+                  }}
+                >
+                  Accounts
+                </div>
+              </Tooltip>
 
-            {accounts.length === 0 && (
-              <>
-                <Typography style={{ color: 'black', margin: '20px' }}>
-                  No accounts found
-                </Typography>
-                <Typography style={{ color: 'gray', margin: '20px' }}>
-                  To add account to this list, click on "Remember me" checkbox
-                  before login. Accounts do not know about your connection preferences.
-                </Typography>
-              </>
-            )}
-            <List>
-              {accounts.map((account) => (
-                <ListItem key={account.userInfo.username} disabled={isLoading}>
-                  <Tooltip title="Switch account" placement="left">
-                    <Typography
-                      onClick={() => handleAccountSwitch(account)}
-                      style={{ cursor: 'pointer' }}
-                      className="account-switch"
-                    >
-                      {account.userInfo.username}&nbsp;
-                    </Typography>
-                  </Tooltip>
-
-                  <Tooltip title="Remove account" placement="top">
-                    <Typography
-                      onClick={() => handleAccountRemove(account)}
+              {accounts.length === 0 && (
+                <>
+                  <Typography style={{ color: 'black', margin: '20px' }}>
+                    No accounts found
+                  </Typography>
+                  <Typography style={{ color: 'gray', margin: '20px' }}>
+                    To add account to this list, click on "Remember me" checkbox
+                    before login. Accounts do not know about your connection
+                    preferences. Lite accounts are added automatically.
+                  </Typography>
+                </>
+              )}
+              <List>
+                {accounts.map((account) => (
+                  <ListItem key={account.userInfo.username} disabled={isLoading}>
+                    <Tooltip title="Click to switch" placement="left">
+                      <Typography
+                        onClick={() => handleAccountSwitch(account)}
+                        style={{ cursor: 'pointer' }}
+                        className="account-switch"
+                      >
+                        {account.userInfo.username}&nbsp;&nbsp;&nbsp;&nbsp;
+                        {/* {account.userInfo.mnemonic} */}
+                      </Typography>
+                    </Tooltip>
+                    <span
                       style={{
-                        cursor: 'pointer',
+                        fontSize: '8px',
                         position: 'absolute',
-                        right: '5px',
-                        top: '6px',
+                        left: '16px',
+                        top: '1.6rem',
                       }}
                     >
-                      x
-                    </Typography>
-                  </Tooltip>
-                </ListItem>
-              ))}
-            </List>
-            {/* <ListItem key = {account.userInfo.username} onClick={() => handleAccountSwitch(account)}> */}
-            <DialogActions
-              style={{ justifyContent: 'space-between', alignItems: 'center' }}
-            >
-              <Button onClick={() => setShowAccounts(false)} disabled={isLoading}>
-                Close
-              </Button>
-            </DialogActions>
-          </Dialog>
+                      {account.userInfo.mnemonic !== undefined ||
+                      account.userInfo.mnemonic === ''
+                        ? 'lite'
+                        : 'portable'}
+                    </span>
+
+                    <Tooltip title="Remove account" placement="top">
+                      <Typography
+                        onClick={() => handleAccountRemove(account)}
+                        style={{
+                          cursor: 'pointer',
+                          position: 'absolute',
+                          right: '5px',
+                          top: '6px',
+                        }}
+                      >
+                        x
+                      </Typography>
+                    </Tooltip>
+                  </ListItem>
+                ))}
+              </List>
+              {/* <ListItem key = {account.userInfo.username} onClick={() => handleAccountSwitch(account)}> */}
+              <DialogActions
+                style={{ justifyContent: 'space-between', alignItems: 'center' }}
+              >
+                <Button
+                  onClick={() => setShowAccounts(false)}
+                  disabled={isLoading}
+                  variant="contained"
+                  style={{
+                    width: '100%',
+                  }}
+                >
+                  Close
+                </Button>
+              </DialogActions>
+            </Dialog>
+            {/* <Slide
+              direction="up"
+              in={showAccounts}
+              mountOnEnter
+              unmountOnExit
+            ></Slide> */}
+          </Box>
         )}
 
         {/*about dialog*/}
@@ -834,7 +1250,6 @@ function App() {
                       Source
                     </Link>
                   </Typography>
-
                   <Typography
                     align="center"
                     sx={{ fontWeight: 'light', fontSize: '0.7rem' }}
@@ -901,10 +1316,18 @@ function App() {
                   />
                 </DialogContent>
                 <DialogActions>
-                  <Button onClick={handlePodNewClose} disabled={isLoading}>
+                  <Button
+                    onClick={handlePodNewClose}
+                    disabled={isLoading}
+                    variant="contained"
+                  >
                     Close
                   </Button>
-                  <Button onClick={handlePodNew} disabled={isLoading}>
+                  <Button
+                    onClick={handlePodNew}
+                    disabled={isLoading}
+                    variant="contained"
+                  >
                     Create
                   </Button>
                 </DialogActions>
@@ -943,7 +1366,6 @@ function App() {
                         autoComplete="off"
                         autoFocus
                       />
-
                       <TextField
                         margin="normal"
                         required
@@ -968,28 +1390,53 @@ function App() {
                         }
                         style={{ color: 'black' }}
                       />
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        sx={{ mt: 3, mb: 2 }}
-                        onClick={login}
-                        disabled={isLoading}
-                      >
-                        Login
-                      </Button>
+                      <Tooltip title="This app supports Light and Portable FDS accounts. Enter your credentials and login">
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          sx={{ mt: 3, mb: 2 }}
+                          onClick={login}
+                          disabled={isLoading}
+                        >
+                          Login
+                        </Button>
+                      </Tooltip>
+                      <>
+                        <Tooltip
+                          title="Light account exists on local machine only. You can upgrade it to Portable FDS account using mnemonic later. Just enter username/password and new account will be auto-magically created. When logged in see information about it in 'File -> Account details.' "
+                          placement="bottom"
+                        >
+                          <Typography
+                            // href="#"
+                            // variant="body2"
+                            // onClick={openCreateLightAccount}
+                            align="center"
+                            style={{ color: 'black' }}
+                          >
+                            What is Light account
+                          </Typography>
+                        </Tooltip>
+                      </>
                       <>
                         <br />
-                        <Typography style={{ color: 'black' }}>
-                          Don't have an account?
-                        </Typography>
-                        <Link
-                          href="#"
-                          variant="body2"
-                          onClick={openSignUp}
-                          align="center"
+                        <Tooltip title="Portable accounts can be used in web browsers, FairOS and in any app supporting FairDataProtocol with all the goodies provided by FDP. They require a balance.">
+                          <Typography style={{ color: 'black' }}>
+                            Need Advanced features ?
+                          </Typography>
+                        </Tooltip>
+                        <Tooltip
+                          title="Sign up for Portable FDS account."
+                          placement="bottom"
                         >
-                          Sign Up
-                        </Link>
+                          <Link
+                            href="#"
+                            variant="body2"
+                            onClick={openSignUp}
+                            align="center"
+                          >
+                            Sign Up
+                          </Link>
+                        </Tooltip>
                       </>
                     </FormGroup>
                   </Box>
@@ -1005,17 +1452,36 @@ function App() {
                   <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
                     <h2 style={{ color: 'black', marginBottom: '0px' }}>Pods</h2>
                   </Tooltip>
-                  <Tooltip title="Current account name">
+                  <Tooltip title="Currently logged in with account name">
                     <Typography
-                        style={{ color: 'gray' }}
-                        onClick={() => setShowAccounts(true)}
+                      style={{ color: 'gray' }}
+                      onClick={() => setShowAccounts(true)}
                     >
                       {username}
                     </Typography>
                   </Tooltip>
+                  <Tooltip
+                    title={
+                      'This is ' +
+                      (mnemonic !== '' || mnemonic !== undefined
+                        ? 'Lite'
+                        : 'Portable') +
+                      ' account'
+                    }
+                  >
+                    <Typography style={{ color: 'gray', fontSize: '8px' }}>
+                      {mnemonic !== '' || mnemonic !== undefined
+                        ? 'lite'
+                        : 'portable'}
+                    </Typography>
+                  </Tooltip>
 
                   <Box
-                      sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
+                    sx={{
+                      width: '100%',
+                      maxWidth: 360,
+                      bgcolor: 'background.paper',
+                    }}
                   >
                     <List>
                       {pods.map((pod) =>
@@ -1026,14 +1492,18 @@ function App() {
                               <div>
                                 <Tooltip title={pod.mountPoint}>
                                   <IconButton
-                                      onClick={() => copyUrlToClipboard(pod.mountPoint)}
+                                    onClick={() =>
+                                      copyUrlToClipboard(pod.mountPoint)
+                                    }
                                   >
                                     <ContentCopyIcon />
                                   </IconButton>
                                 </Tooltip>
                                 <Tooltip title="Open">
                                   <IconButton
-                                      onClick={() => EventsEmit('open', pod.mountPoint)}
+                                    onClick={() =>
+                                      EventsEmit('open', pod.mountPoint)
+                                    }
                                   >
                                     <Folder />
                                   </IconButton>
@@ -1045,24 +1515,24 @@ function App() {
                             <ListItemButton>
                               <ListItemIcon>
                                 <Tooltip
-                                    title={
-                                      pod.isMounted
-                                          ? 'Unmount this pod'
-                                          : 'Mount this pod'
-                                    }
+                                  title={
+                                    pod.isMounted
+                                      ? 'Unmount this pod'
+                                      : 'Mount this pod'
+                                  }
                                 >
                                   <Checkbox
-                                      onChange={mount}
-                                      value={pod.podName}
-                                      color="primary"
-                                      disabled={isLoading}
-                                      checked={pod.isMounted}
+                                    onChange={mount}
+                                    value={pod.podName}
+                                    color="primary"
+                                    disabled={isLoading}
+                                    checked={pod.isMounted}
                                   />
                                 </Tooltip>
                               </ListItemIcon>
                               <ListItemText
-                                  primary={pod.podName}
-                                  style={{ color: 'black' }}
+                                primary={pod.podName}
+                                style={{ color: 'black' }}
                               />
                             </ListItemButton>
                           </ListItem>
@@ -1071,24 +1541,24 @@ function App() {
                             <ListItemButton>
                               <ListItemIcon>
                                 <Tooltip
-                                    title={
-                                      pod.isMounted
-                                          ? 'Unmount this pod'
-                                          : 'Mount this pod'
-                                    }
+                                  title={
+                                    pod.isMounted
+                                      ? 'Unmount this pod'
+                                      : 'Mount this pod'
+                                  }
                                 >
                                   <Checkbox
-                                      onChange={mount}
-                                      value={pod.podName}
-                                      color="primary"
-                                      disabled={isLoading}
-                                      checked={pod.isMounted}
+                                    onChange={mount}
+                                    value={pod.podName}
+                                    color="primary"
+                                    disabled={isLoading}
+                                    checked={pod.isMounted}
                                   />
                                 </Tooltip>
                               </ListItemIcon>
                               <ListItemText
-                                  primary={pod.podName}
-                                  style={{ color: 'black' }}
+                                primary={pod.podName}
+                                style={{ color: 'black' }}
                               />
                             </ListItemButton>
                           </ListItem>
@@ -1106,18 +1576,26 @@ function App() {
                   </Tooltip>
                   <Tooltip title="Current account name">
                     <Typography
-                        style={{ color: 'gray' }}
-                        onClick={() => setShowAccounts(true)}
+                      style={{ color: 'gray' }}
+                      onClick={() => setShowAccounts(true)}
                     >
                       {username}
                     </Typography>
                   </Tooltip>
 
                   <Box
-                    sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
+                    sx={{
+                      width: '100%',
+                      maxWidth: 360,
+                      bgcolor: 'background.paper',
+                    }}
                   >
-                    <br/>
-                    <Typography gutterBottom align="center" style={{ color: 'black' }}>
+                    <br />
+                    <Typography
+                      gutterBottom
+                      align="center"
+                      style={{ color: 'black' }}
+                    >
                       Still do not have pods?
                     </Typography>
 

@@ -90,3 +90,86 @@
    filter: grayscale(100%) invert(30%) saturate(50%) hue-rotate(90deg);
    cursor: pointer;
 }
+
+
+.btn {
+}
+
+.btn:hover {
+    transform: skewX( -16deg ) translateX( 0px );
+    transition: 1s;
+} 
+
+p:hover, MuiFormControlLabel-label:hover, span:hover {
+    transform: skewX( -10deg ) translateX( 0px ) perspective(151px) scale(103%);
+    transition: 8s cubic-bezier(0, 0.56, 0.46, 1);
+    font-weight: 500;
+} 
+
+.shrinkable {
+    visibility: hidden;
+}
+.shrinkable:disabled {
+    transform: scale( 10% ) translateX( 0px );
+    transition: 1s;
+}
+
+@keyframes fadeOut {
+    0% {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    50% {
+        visibility: visible;
+        opacity: 0.5;
+    }
+
+    100% {
+        visibility: hidden;
+        opacity: 0;
+    }
+}
+
+.mnemonic {
+    text-Shadow: '0 0 28px #000'
+}
+.mnemonic:hover {
+    text-Shadow: '0 0 1px #000'
+}
+
+/* .Mui-disabled {
+    transform: scale( 10% ) translateX( 0px );
+    transition: 1s;
+    transition: opacity 1.0s linear;
+}
+*/
+
+
+
+/* .btn {
+
+
+    "&:hover" {
+        i {
+            font-weight: 700;
+        }
+    }
+
+    .center {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    i {
+        font-weight: 100;
+        @for $i from 1 through 18 {
+            &:nth-child(#{$i}) {
+                transition: font-weight 0.2s cubic-bezier(0, 0.56, 0.46, 1) #{math.div($i, 50)}s;
+            }
+        }
+    }
+} */

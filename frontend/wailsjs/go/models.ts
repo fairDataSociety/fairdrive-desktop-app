@@ -25,6 +25,20 @@ export namespace api {
 
 export namespace handler {
 	
+	export class LiteUser {
+	    mnemonic: string;
+	    privateKey: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new LiteUser(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.mnemonic = source["mnemonic"];
+	        this.privateKey = source["privateKey"];
+	    }
+	}
 	export class PodMountedInfo {
 	    podName: string;
 	    isMounted: boolean;

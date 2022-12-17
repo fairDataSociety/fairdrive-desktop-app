@@ -18,6 +18,10 @@ export function GetPodsList() {
   return window['go']['handler']['Handler']['GetPodsList']();
 }
 
+export function Load(arg1, arg2, arg3) {
+  return window['go']['handler']['Handler']['Load'](arg1, arg2, arg3);
+}
+
 export function Login(arg1, arg2) {
   return window['go']['handler']['Handler']['Login'](arg1, arg2);
 }

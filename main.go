@@ -57,13 +57,19 @@ func main() {
 	fileMenu.AddText("Preferences", prefShortcut, func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "preferences")
 	})
+
 	fileMenu.AddSeparator()
 	if runtime.GOOS == "darwin" {
 		appMenu.Append(menu.EditMenu()) // on macos platform, we should append EditMenu to enable Cmd+C,Cmd+V,Cmd+Z... shortcut
 	}
+	fileMenu.AddText("Account Details", keys.CmdOrCtrl("i"), func(_ *menu.CallbackData) {
+		wRuntime.EventsEmit(startContext, "accountDetails")
+	})	
 	fileMenu.AddText("Logout", keys.Combo("W", keys.ShiftKey, keys.CmdOrCtrlKey), func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "logout")
 	})
+	fileMenu.AddSeparator()
+	
 
 	podMenu := appMenu.AddSubmenu("Pod")
 	podMenu.AddText("New", keys.CmdOrCtrl("n"), func(_ *menu.CallbackData) {
@@ -134,7 +140,12 @@ func main() {
 				for _, item := range fileMenu.Items {
 					if item.Label == "Logout" {
 						item.Disabled = true
-						break
+						//break
+					}
+					
+					if item.Label == "Account Details" {
+						item.Disabled = true
+						//break
 					}
 				}
 				wRuntime.MenuUpdateApplicationMenu(startContext)
@@ -149,7 +160,11 @@ func main() {
 				for _, item := range fileMenu.Items {
 					if item.Label == "Logout" {
 						item.Disabled = false
-						break
+						//break
+					}
+					if item.Label == "Account Details" {
+						item.Disabled = false
+						//break
 					}
 				}
 				wRuntime.MenuUpdateApplicationMenu(startContext)
