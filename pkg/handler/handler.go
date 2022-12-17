@@ -43,6 +43,11 @@ type PodMountedInfo struct {
 	MountPoint string `json:"mountPoint"`
 }
 
+type LiteUser struct {
+	Mnemonic   string `json:"mnemonic"`
+	PrivateKey string `json:"privateKey"`
+}
+
 func New(logger logging.Logger) (*Handler, error) {
 	return &Handler{
 		activeMounts: map[string]*hostMount{},
@@ -74,17 +79,21 @@ func (h *Handler) Login(username, password string) error {
 	return err
 }
 
-func (h *Handler) Load(username, password, mnemonic string) (string, error) {
+func (h *Handler) Load(username, password, mnemonic string) (*LiteUser, error) {
 	if h.api == nil {
 		h.logger.Errorf("login: fairos not initialised")
-		return "", ErrFairOsNotInitialised
+		return nil, ErrFairOsNotInitialised
 	}
-	mnemonic, sessionID, err := h.api.Load(username, password, mnemonic)
+	mnemonic, privateKey, sessionID, err := h.api.Load(username, password, mnemonic)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	h.sessionID = sessionID
-	return mnemonic, nil
+	u := &LiteUser{
+		Mnemonic:   mnemonic,
+		PrivateKey: privateKey,
+	}
+	return u, nil
 }
 
 func (h *Handler) Logout() error {

@@ -72,13 +72,13 @@ func (d *DfsAPI) Login(username, password string) (string, error) {
 	return ui.GetSessionId(), nil
 }
 
-func (d *DfsAPI) Load(username, password, mnemonic string) (string, string, error) {
-	mnemonic, ui, err := d.API.LoadLiteUser(username, password, mnemonic, "")
+func (d *DfsAPI) Load(username, password, mnemonic string) (string, string, string, error) {
+	mnemonic, privateKey, ui, err := d.API.LoadLiteUser(username, password, mnemonic, "")
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 	d.logger.Debugf("user %s logged in", username)
-	return mnemonic, ui.GetSessionId(), nil
+	return mnemonic, privateKey, ui.GetSessionId(), nil
 }
 
 func (d *DfsAPI) GetPodInfo(ctx context.Context, podname, sessionId string, createPod bool) (*pod.Info, error) {
