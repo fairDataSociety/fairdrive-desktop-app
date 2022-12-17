@@ -1110,32 +1110,28 @@ function App() {
               <List>
                 {accounts.map((account) => (
                   <ListItem key={account.userInfo.username} disabled={isLoading}>
-                    <>
-                      <Typography
-                        onClick={() => handleAccountSwitch(account)}
-                        style={{ cursor: 'pointer' }}
-                        className="account-switch"
-                      >
-                        <Tooltip title="Switch account" placement="left">
-                          <Typography>{account.userInfo.username}</Typography>
-                        </Tooltip>
+                    <Typography
+                      onClick={() => handleAccountSwitch(account)}
+                      style={{ cursor: 'pointer' }}
+                      className="account-switch"
+                    >
+                      {account.userInfo.username}
 
-                        <span
-                          style={{
-                            fontSize: '8px',
-                            position: 'absolute',
-                            left: '16px',
-                            top: '1.5rem',
-                          }}
-                        >
-                          {account.userInfo.mnemonic !== undefined ||
-                          account.userInfo.mnemonic === ''
-                            ? 'lite'
-                            : 'portable'}
-                        </span>
-                        {console.log(account)}
-                      </Typography>
-                    </>
+                      <span
+                        style={{
+                          fontSize: '8px',
+                          position: 'absolute',
+                          left: '16px',
+                          top: '1.5rem',
+                        }}
+                      >
+                        {account.userInfo.mnemonic !== undefined ||
+                        account.userInfo.mnemonic === ''
+                          ? 'lite'
+                          : 'portable'}
+                      </span>
+                      {console.log(account)}
+                    </Typography>
                     <Tooltip title="Remove account" placement="top">
                       <Typography
                         onClick={() => handleAccountRemove(account)}
@@ -1161,9 +1157,12 @@ function App() {
                 </Button>
               </DialogActions>
             </Dialog>
-            <Slide direction="up" in={checked} mountOnEnter unmountOnExit>
-              {icon}
-            </Slide>
+            {/* <Slide
+              direction="up"
+              in={showAccounts}
+              mountOnEnter
+              unmountOnExit
+            ></Slide> */}
           </Box>
         )}
 
