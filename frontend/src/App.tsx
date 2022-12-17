@@ -517,11 +517,10 @@ function App() {
         setShowLogin(false)
         setPods(p)
         setShowPods(true)
-        setMnemonic('')
         EventsEmit('enableMenus')
         return { p, m: '' }
       } catch (e) {
-        showInfoMessage('This is not portable account')
+        showInfoMessage('Logging into Light account')
       }
     } else {
     }
@@ -547,6 +546,8 @@ function App() {
     setShowPods(true)
     EventsEmit('enableMenus')
     showInfoMessage('Lite account logged in. See Details for account info.')
+    addAccount(user, pass, mnem, pods)
+
     return { p, m }
   }
 
@@ -1339,36 +1340,40 @@ function App() {
                         }
                         style={{ color: 'black' }}
                       />
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        sx={{ mt: 3, mb: 2 }}
-                        onClick={login}
-                        disabled={isLoading}
-                      >
-                        Login
-                      </Button>
+                      <Tooltip title="This app supports Light and Portable FDS accounts. Enter your credentials and login">
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          sx={{ mt: 3, mb: 2 }}
+                          onClick={login}
+                          disabled={isLoading}
+                        >
+                          Login
+                        </Button>
+                      </Tooltip>
                       <>
-                        <br />
                         <Tooltip
-                          title="Light account exists on local machine only. You can upgrade it to Portable FDP account using mnemonic later. To Create it just enter username/password"
+                          title="Light account exists on local machine only. You can upgrade it to Portable FDS account using mnemonic later. To create it just enter username/password and new account will be auto-magically created. When logged in you can see information in File -> Account details."
                           placement="bottom"
                         >
-                          <Link
-                            href="#"
-                            variant="body2"
-                            onClick={openCreateLightAccount}
+                          <Typography
+                            // href="#"
+                            // variant="body2"
+                            // onClick={openCreateLightAccount}
                             align="center"
+                            style={{ color: 'black' }}
                           >
-                            Create Light Account
-                          </Link>
+                            What is Light account
+                          </Typography>
                         </Tooltip>
                       </>
                       <>
                         <br />
-                        <Typography style={{ color: 'black' }}>
-                          No FDS account or want to upgrade ?
-                        </Typography>
+                        <Tooltip title="Portable accounts can be used in web browsers, FairOS and in any app supporting FairDataProtocol with all the goodies provided by FDP.">
+                          <Typography style={{ color: 'black' }}>
+                            Need Advanced features ?
+                          </Typography>
+                        </Tooltip>
                         <Tooltip
                           title="Sign up for Portable FDS account."
                           placement="bottom"
@@ -1408,11 +1413,15 @@ function App() {
                   <Tooltip
                     title={
                       'This account is ' +
-                      (mnemonic.length > 1 ? 'lite' : 'portable')
+                      (mnemonic !== '' || mnemonic !== undefined
+                        ? 'Lite'
+                        : 'Portable')
                     }
                   >
                     <Typography style={{ color: 'gray', fontSize: '6px' }}>
-                      {mnemonic.length > 0 ? 'lite' : 'portable'}
+                      {mnemonic !== '' || mnemonic !== undefined
+                        ? 'lite'
+                        : 'portable'}
                     </Typography>
                   </Tooltip>
 
