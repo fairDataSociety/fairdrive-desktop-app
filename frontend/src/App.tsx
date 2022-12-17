@@ -315,6 +315,7 @@ function App() {
       let newAccounts = [...accounts, newAccountInfo]
       setAccounts(newAccounts)
       localStorage.setItem('accounts', JSON.stringify(newAccounts))
+      showInfoMessage('Account added to account list')
       return newAccountInfo
     }
     // TDOD update pod info
@@ -520,7 +521,7 @@ function App() {
         EventsEmit('enableMenus')
         return { p, m: '' }
       } catch (e) {
-        showInfoMessage("Can't login into portable account")
+        showInfoMessage('This is not portable account')
       }
     } else {
     }
@@ -545,6 +546,7 @@ function App() {
     setPods(p)
     setShowPods(true)
     EventsEmit('enableMenus')
+    showInfoMessage('Lite account logged in. See Details for account info.')
     return { p, m }
   }
 
@@ -1051,17 +1053,15 @@ function App() {
                     Close
                   </Button>
                 </Tooltip>
-                {/* <Tooltip title="Save settings and connect">
-              <Button
-                fullWidth
-                variant="contained"
-                sx={{ mt: 3, mb: 2 }}
-                onClick={initFairOs}
-                disabled={isLoading}
-              >
-                Start
-              </Button>
-            </Tooltip> */}
+                <Tooltip title="Remember this account">
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={() => addAccount(username, password, mnemonic, pods)}
+                  >
+                    Remember
+                  </Button>
+                </Tooltip>
               </Stack>
             </FormGroup>
           </Box>
