@@ -358,7 +358,7 @@ function App() {
 
   const [isProxy, setProxy] = useState<boolean>(false)
   const [proxyValue, setProxyValue] = useState('no')
-  const [bee, setBee] = useState('http://localhost:1635') // should be localhost as default, as per swarm web3 PC, previously https://bee-1.dev.fairdatasociety.org // TODO check in go code
+  const [bee, setBee] = useState('http://localhost:1633') // should be localhost as default, as per swarm web3 PC, previously https://bee-1.dev.fairdatasociety.org // TODO check in go code
   const [batch, setBatch] = useState('')
   const [rpc, setRPC] = useState('https://xdai.dev.fairdatasociety.org')
   const [network, setNetwork] = useState('testnet')
@@ -721,7 +721,7 @@ function App() {
                   </Grid>
                 </RadioGroup>
                 <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                  <Tooltip title="Bee API endpoint, recommended http://localhost:1635">
+                  <Tooltip title="Bee API endpoint, recommended http://localhost:1633">
                     <TextField
                       margin="normal"
                       value={bee}
@@ -850,7 +850,7 @@ function App() {
                           updateBee({
                             target: {
                               value: switchLocalGateway
-                                ? 'http://localhost:1635'
+                                ? 'http://localhost:1633'
                                 : 'https://bee-1.fairdatasociety.org',
                             },
                           })
@@ -882,7 +882,7 @@ function App() {
                 </Tooltip>
 
                 <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                  <Tooltip title="Bee API endpoint, recommended http://localhost:1635">
+                  <Tooltip title="Bee API endpoint, recommended http://localhost:1633">
                     <TextField
                       margin="normal"
                       value={bee}
