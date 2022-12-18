@@ -198,7 +198,10 @@ function App() {
   async function LoadStoredAccounts() {
     let storedAccounts = localStorage.getItem('accounts')
     if (storedAccounts !== null) {
-      setAccounts(JSON.parse(storedAccounts))
+      let acs = JSON.parse(storedAccounts)
+      accounts = acs // this is BAD hack
+      setAccounts(acs)
+      //console.log('accounts', acs)
     }
   }
 
@@ -260,10 +263,13 @@ function App() {
         setIsLoading(true)
         try {
           await Start(c) // TODO: remember me will not work for lite accounts
+
           let acc = await Get()
           if (acc.Username === '' || acc.Password === '') {
             EventsEmit('disableMenus')
           } else {
+            //console.log('doLogin remember', acc.Username, acc.Password)
+
             await doLogin(acc.Username, acc.Password, '') // TODO remember me will not work for Lite Accounts as there is no mnemonic info available
 
             let _mountPoint = await GetMountPoint()
@@ -298,7 +304,7 @@ function App() {
   const updatePassword = (e: any) => setPassword(e.target.value)
   const updateRemember = (e: any) => setRemember(e.target.checked)
 
-  const [accounts, setAccounts] = useState<AccountInfo[]>([])
+  let [accounts, setAccounts] = useState<AccountInfo[]>([])
 
   const addAccount = async (
     username: string,
@@ -358,7 +364,7 @@ function App() {
 
   const [isProxy, setProxy] = useState<boolean>(false)
   const [proxyValue, setProxyValue] = useState('no')
-  const [bee, setBee] = useState('http://localhost:1635') // should be localhost as default, as per swarm web3 PC, previously https://bee-1.dev.fairdatasociety.org // TODO check in go code
+  const [bee, setBee] = useState('http://localhost:1633') // should be localhost as default, as per swarm web3 PC, previously https://bee-1.dev.fairdatasociety.org // TODO check in go code
   const [batch, setBatch] = useState('')
   const [rpc, setRPC] = useState('https://xdai.dev.fairdatasociety.org')
   const [network, setNetwork] = useState('testnet')
@@ -508,7 +514,7 @@ function App() {
     */
     let isPortableAccount = mnem === '' || mnem === undefined
     if (isPortableAccount) {
-      console.log('Could be Portable Account', mnem)
+      //console.log('Could be Portable Account', mnem)
       mnem = '' // TODO fix should not be undefined, causes error and user can not be logged out
       try {
         // try to login with Portable account, if it fails, login with portable
@@ -520,6 +526,8 @@ function App() {
         setPods(p)
         setShowPods(true)
         EventsEmit('enableMenus')
+        setOpenError(false) // close error if it was open before
+        //console.log('This is Portable Account', mnem)
         return { p, m: new handler.LiteUser() }
       } catch (e) {
         showInfoMessage('Logging into Light account')
@@ -530,13 +538,15 @@ function App() {
     const existingAccount = accounts.find((obj) => {
       return obj.userInfo.username === user
     })
-    // if mnemonic is present then its stored lite account
+    //console.log('existingAccount', existingAccount)
+    // if mnemonic is present then it could be stored lite account
     if (
       existingAccount !== undefined &&
       existingAccount.userInfo.mnemonic !== undefined &&
       existingAccount.userInfo.mnemonic !== ''
     ) {
       mnem = existingAccount.userInfo.mnemonic
+      //console.log('Account has stored mnemonic', mnem)
     }
 
     let m = await Load(user, pass, mnem)
@@ -555,6 +565,7 @@ function App() {
     EventsEmit('enableMenus')
     showInfoMessage('Lite account logged in. See Details for account info.')
     addAccount(user, pass, mnem, pods)
+    setOpenError(false) // close error if it was open before
 
     return { p, m }
   }
@@ -721,7 +732,7 @@ function App() {
                   </Grid>
                 </RadioGroup>
                 <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                  <Tooltip title="Bee API endpoint, recommended http://localhost:1635">
+                  <Tooltip title="Bee API endpoint, recommended http://localhost:1633">
                     <TextField
                       margin="normal"
                       value={bee}
@@ -850,7 +861,7 @@ function App() {
                           updateBee({
                             target: {
                               value: switchLocalGateway
-                                ? 'http://localhost:1635'
+                                ? 'http://localhost:1633'
                                 : 'https://bee-1.fairdatasociety.org',
                             },
                           })
@@ -882,7 +893,7 @@ function App() {
                 </Tooltip>
 
                 <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                  <Tooltip title="Bee API endpoint, recommended http://localhost:1635">
+                  <Tooltip title="Bee API endpoint, recommended http://localhost:1633">
                     <TextField
                       margin="normal"
                       value={bee}
