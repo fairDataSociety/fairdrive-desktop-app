@@ -16,19 +16,17 @@ import (
 	"testing/iotest"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
-	"github.com/sirupsen/logrus"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/api"
 	"github.com/plexsysio/taskmanager"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/winfsp/cgofuse/fuse"
