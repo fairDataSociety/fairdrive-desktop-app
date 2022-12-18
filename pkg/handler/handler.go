@@ -123,14 +123,13 @@ func (h *Handler) Mount(pod, location string, readOnly bool) error {
 		}
 		location = home
 	}
-	parent := filepath.Join(location, root)
-	if _, err := os.Stat(parent); err != nil {
-		err = os.MkdirAll(parent, 0700)
+	mountPoint := filepath.Join(location, root, pod)
+	if _, err := os.Stat(mountPoint); err != nil {
+		err = os.MkdirAll(mountPoint, 0766)
 		if err != nil {
 			return err
 		}
 	}
-	mountPoint := filepath.Join(parent, pod)
 	h.lock.Lock()
 	defer h.lock.Unlock()
 	_, ok := h.activeMounts[pod]
