@@ -1,7 +1,6 @@
 # Fairdrive Desktop App (FDA)
 
 ![Release](https://img.shields.io/github/v/release/fairDataSociety/fairdrive-desktop-app?include_prereleases&style=for-the-badge)
-[![Website](https://img.shields.io/badge/website-FAQ-orange?style=for-the-badge)](https://fairdatasociety.github.io/fairdrive-desktop-app/)
 ![Platform](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-green?style=for-the-badge)
 ![Workflow](https://img.shields.io/github/actions/workflow/status/fairDataSociety/fairdrive-desktop-app/go.yaml?branch=master&style=for-the-badge)
 ![Issues](https://img.shields.io/github/issues-raw/fairDataSociety/fairdrive-desktop-app?style=for-the-badge)
