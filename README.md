@@ -87,6 +87,5 @@ This could be a problem to various reasons why your node,npm,nvm installation is
 - [wails.io](https://wails.io/)
 
 
-## Thanks 
-
-This project would not exists without [fairOS-dfs](github.com/fairdatasociety/fairOS-dfs) and [bee-afs] (https://github.com/aloknerurkar/bee-afs). 
+## Thanks
+This project would not exist without [fairOS-dfs](https://github.com/fairdatasociety/fairOS-dfs) and [bee-afs](https://github.com/aloknerurkar/bee-afs).

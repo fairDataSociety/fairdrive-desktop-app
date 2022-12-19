@@ -62,6 +62,9 @@ func main() {
 	if runtime.GOOS == "darwin" {
 		appMenu.Append(menu.EditMenu()) // on macos platform, we should append EditMenu to enable Cmd+C,Cmd+V,Cmd+Z... shortcut
 	}
+	fileMenu.AddText("Import Account", keys.CmdOrCtrl("g"), func(_ *menu.CallbackData) {
+		wRuntime.EventsEmit(startContext, "accountImport")
+	})
 	fileMenu.AddText("Account Details", keys.CmdOrCtrl("i"), func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "accountDetails")
 	})	
