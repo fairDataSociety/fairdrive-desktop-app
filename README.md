@@ -9,7 +9,7 @@
 ![Go](https://img.shields.io/github/go-mod/go-version/fairDataSociety/fairdrive-desktop-app?style=for-the-badge)
 ![Discord](https://img.shields.io/discord/888359049551310869?style=for-the-badge)
 ![Created](https://img.shields.io/galaxytoolshed/created-date/fairDataSociety/fairdrive-desktop-app?style=for-the-badge) 
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=for-the-badge)](https://opensource.org/licenses/Apache-2.0)
 
 Fairdrive Desktop App is a FUSE client for fairOS-dfs. It lets you mount your
 pod on your own user space and interact with your data.
@@ -90,4 +90,3 @@ This could be a problem to various reasons why your node,npm,nvm installation is
 ## Thanks 
 
 This project would not exists without [fairOS-dfs](github.com/fairdatasociety/fairOS-dfs) and [bee-afs] (https://github.com/aloknerurkar/bee-afs). 
-
