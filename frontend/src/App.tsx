@@ -1463,7 +1463,13 @@ function App() {
                   <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
                     <h2 style={{ color: 'black', marginBottom: '0px' }}>Pods</h2>
                   </Tooltip>
-                  <Tooltip title="Currently logged in with account name">
+                  <Tooltip
+                    title={
+                      "Currently logged in with account '" +
+                      username +
+                      "'. Click to display accounts."
+                    }
+                  >
                     <Typography
                       style={{ color: 'gray' }}
                       onClick={() => setShowAccounts(true)}
@@ -1474,16 +1480,16 @@ function App() {
                   <Tooltip
                     title={
                       'This is ' +
-                      (mnemonic !== '' || mnemonic !== undefined
-                        ? 'Lite'
-                        : 'Portable') +
+                      (mnemonic === '' || mnemonic === undefined
+                        ? 'portable'
+                        : 'lite') +
                       ' account'
                     }
                   >
                     <Typography style={{ color: 'gray', fontSize: '8px' }}>
-                      {mnemonic !== '' || mnemonic !== undefined
-                        ? 'lite'
-                        : 'portable'}
+                      {mnemonic === '' || mnemonic === undefined
+                        ? 'portable'
+                        : 'lite'}
                     </Typography>
                   </Tooltip>
 
