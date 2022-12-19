@@ -181,6 +181,8 @@ function App() {
 
   const [showConfig, setShowConfig] = useState<boolean>(false)
   const [showAccountDetails, setShowAccountDetails] = useState<boolean>(false)
+  const [showAccountImport, setShowAccountImport] = useState<boolean>(false)
+
   const [showLogin, setShowLogin] = useState<boolean>(true)
   const [showPods, setShowPods] = useState<boolean>(true)
 
@@ -190,6 +192,10 @@ function App() {
   const [password, setPassword] = useState('')
   const [mnemonic, setMnemonic] = useState('')
   const [privateKey, setPrivateKey] = useState('')
+
+  const [importUsername, setImportName] = useState('')
+  const [importPassword, setImportPassword] = useState('')
+  const [importMnemonic, setImportMnemonic] = useState('')
 
   const [remember, setRemember] = useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState('') // error message
@@ -209,6 +215,12 @@ function App() {
     LoadStoredAccounts()
     EventsOn('preferences', () => {
       setShowConfig(true)
+    })
+    EventsOn('accountImport', () => {
+      setImportName('')
+      setImportPassword('')
+      setImportMnemonic('')
+      setShowAccountImport(true)
     })
     EventsOn('accountDetails', () => {
       setShowAccountDetails(true)
@@ -304,6 +316,9 @@ function App() {
   const updatePassword = (e: any) => setPassword(e.target.value)
   const updateRemember = (e: any) => setRemember(e.target.checked)
 
+  const updateImportName = (e: any) => setImportName(e.target.value)
+  const updateImportPassword = (e: any) => setImportPassword(e.target.value)
+  const updateImportMnemonic = (e: any) => setImportMnemonic(e.target.value)
   let [accounts, setAccounts] = useState<AccountInfo[]>([])
 
   const addAccount = async (
@@ -502,6 +517,24 @@ function App() {
     setIsLoading(false)
   }
 
+  /* Import account */
+  async function importAccount() {
+    let mnemonicCount = importMnemonic.split(' ').length
+    if (importUsername.length < 3) {
+      showError('Username should be lengthier')
+      return
+    }
+    if (importPassword.length < 3) {
+      showError('Oh, come on, password should be longer')
+      return
+    }
+    if (mnemonicCount < 12) {
+      showError('Mnemonic word count should be 12')
+      return
+    }
+    await doLogin(importUsername, importPassword, importMnemonic)
+  }
+
   async function doLogin(user: string, pass: string, mnem: string) {
     // TODO: logout existing user and maybe unmount all pods
     try {
@@ -566,6 +599,7 @@ function App() {
     showInfoMessage('Lite account logged in. See Details for account info.')
     addAccount(user, pass, mnem, pods)
     setOpenError(false) // close error if it was open before
+    setShowAccountImport(false)
 
     return { p, m }
   }
@@ -636,7 +670,11 @@ function App() {
           </Alert>
         </Snackbar>
         {/*shows error*/}
-        <Snackbar open={openError} onClose={handleCloseError} autoHideDuration={7000}>
+        <Snackbar
+          open={openError}
+          onClose={handleCloseError}
+          autoHideDuration={7000}
+        >
           <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
             {errorMessage}
           </Alert>
@@ -1011,6 +1049,89 @@ function App() {
           </Box>
         </Modal>
 
+        {/* Account Import */}
+        <Modal
+          open={showAccountImport}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
+        >
+          <Box
+            sx={{
+              margin: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              boxShadow: 24,
+              bgcolor: 'white',
+              p: 2,
+            }}
+          >
+            <div
+              style={{
+                marginTop: '-5px',
+                color: 'black',
+                fontWeight: 'bolder',
+                marginBottom: '15px',
+              }}
+            >
+              Import Account
+            </div>
+            <FormGroup>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="username"
+                label="Username"
+                onChange={updateImportName}
+                autoComplete="off"
+                autoFocus
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="password"
+                label="Password"
+                onChange={updateImportPassword}
+                autoComplete="off"
+                type="password"
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                multiline
+                id="mnemonic"
+                label="12-word mnemonic"
+                onChange={updateImportMnemonic}
+                autoComplete="off"
+                type="password"
+              />
+              <Stack mt={3} mb={3} spacing={2} direction="row">
+                <Tooltip title="Closes this dialog">
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={() => setShowAccountImport(false)}
+                  >
+                    Close
+                  </Button>
+                </Tooltip>
+                <Tooltip title="Import account, logs in and stores account to accounts list">
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={() => importAccount()}
+                  >
+                    Import
+                  </Button>
+                </Tooltip>
+              </Stack>
+            </FormGroup>
+          </Box>
+        </Modal>
+
         {/* Account details*/}
         <Modal
           open={showAccountDetails}
@@ -1091,15 +1212,6 @@ function App() {
                     Close
                   </Button>
                 </Tooltip>
-                {/* <Tooltip title="Remember this account">
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    onClick={() => addAccount(username, password, mnemonic, pods)}
-                  >
-                    Remember
-                  </Button>
-                </Tooltip> */}
               </Stack>
             </FormGroup>
           </Box>
