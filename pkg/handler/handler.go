@@ -123,12 +123,23 @@ func (h *Handler) Mount(pod, location string, readOnly bool) error {
 		}
 		location = home
 	}
-	mountPoint := filepath.Join(location, root, pod)
-	if _, err := os.Stat(mountPoint); err != nil {
-		err = os.MkdirAll(mountPoint, 0766)
-		if err != nil {
-			return err
+	parent := filepath.Join(location, root)
+	mountPoint := filepath.Join(parent, pod)
+	if runtime.GOOS == "linux" {
+		if _, err := os.Stat(mountPoint); err != nil {
+			err = os.MkdirAll(mountPoint, 0766)
+			if err != nil {
+				return err
+			}
 		}
+	} else {
+		if _, err := os.Stat(parent); err != nil {
+			err = os.MkdirAll(parent, 0700)
+			if err != nil {
+				return err
+			}
+		}
+
 	}
 	h.lock.Lock()
 	defer h.lock.Unlock()
