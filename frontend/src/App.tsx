@@ -79,7 +79,7 @@ function createUserInfo(
   password: string,
   mnemonic: string,
 ): UserInfo {
-  return {username, password, mnemonic}
+  return { username, password, mnemonic }
 }
 
 // function addAccount(userInfo: UserInfo, pods: PodMountedInfo[]): AccountInfo {
@@ -92,7 +92,7 @@ function createAccountInfo(
   mnemonic: string,
   pods: PodMountedInfo[],
 ): AccountInfo {
-  return {userInfo: createUserInfo(username, password, mnemonic), pods}
+  return { userInfo: createUserInfo(username, password, mnemonic), pods }
 }
 
 const theme = createTheme({
@@ -106,7 +106,7 @@ const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) 
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />
 })
 
-const AboutDialog = styled(Dialog)(({theme}) => ({
+const AboutDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
     padding: theme.spacing(2),
   },
@@ -519,7 +519,7 @@ function App() {
         EventsEmit('enableMenus')
         setOpenError(false) // close error if it was open before
         //console.log('This is Portable Account', mnem)
-        return {p, m: new handler.LiteUser()}
+        return { p, m: new handler.LiteUser() }
       } catch (e) {
         showInfoMessage('Logging into Light account')
       }
@@ -558,14 +558,14 @@ function App() {
     addAccount(user, pass, mnem, pods)
     setOpenError(false) // close error if it was open before
 
-    return {p, m}
+    return { p, m }
   }
 
   async function login() {
     setIsLoading(true)
     try {
       console.log('login', username, password, mnemonic)
-      let {p, m} = await doLogin(username, password, mnemonic)
+      let { p, m } = await doLogin(username, password, mnemonic)
 
       console.log('got login', p, m)
       if (remember) {
@@ -620,15 +620,15 @@ function App() {
         <Snackbar
           open={openInfo}
           onClose={handleCloseInfo}
-          anchorOrigin={{vertical: 'top', horizontal: 'center'}}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         >
-          <Alert onClose={handleCloseInfo} severity="info" sx={{width: '100%'}}>
+          <Alert onClose={handleCloseInfo} severity="info" sx={{ width: '100%' }}>
             {infoMessage}
           </Alert>
         </Snackbar>
         {/*shows error*/}
         <Snackbar open={openError} onClose={handleCloseError}>
-          <Alert onClose={handleCloseError} severity="error" sx={{width: '100%'}}>
+          <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
             {errorMessage}
           </Alert>
         </Snackbar>
@@ -654,9 +654,9 @@ function App() {
             }}
           >
             {/* Preferences switch */}
-            <div style={{marginTop: '-5px'}}>
+            <div style={{ marginTop: '-5px' }}>
               <div
-                style={{color: 'black', fontWeight: 'bolder', marginBottom: '5px'}}
+                style={{ color: 'black', fontWeight: 'bolder', marginBottom: '5px' }}
               >
                 Preferences
               </div>
@@ -706,7 +706,7 @@ function App() {
                           value={'no'}
                           control={<Radio/>}
                           label="No"
-                          style={{color: 'black'}}
+                          style={{ color: 'black' }}
                         />
                       </Tooltip>
                     </Grid>
@@ -717,13 +717,13 @@ function App() {
                           value={'yes'}
                           control={<Radio/>}
                           label="Yes"
-                          style={{color: 'black'}}
+                          style={{ color: 'black' }}
                         />
                       </Tooltip>
                     </Grid>
                   </Grid>
                 </RadioGroup>
-                <Box sx={{display: 'flex', alignItems: 'flex-end'}}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
                   <Tooltip title="Bee API endpoint, recommended http://localhost:1633">
                     <TextField
                       margin="normal"
@@ -738,7 +738,7 @@ function App() {
                   </Tooltip>
                 </Box>
 
-                <Box sx={{display: 'flex', alignItems: 'flex-end'}}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
                   <Tooltip title="BatchID to use for uploads, leave empty if you are using gateway.">
                     <TextField
                       margin="normal"
@@ -753,7 +753,7 @@ function App() {
                   </Tooltip>
                 </Box>
 
-                <Box sx={{display: 'flex', alignItems: 'flex-end'}}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
                   <Tooltip title="RPC Endpoint for ENS based authentication">
                     <TextField
                       margin="normal"
@@ -767,7 +767,7 @@ function App() {
                     />
                   </Tooltip>
                 </Box>
-                <Box sx={{display: 'flex', alignItems: 'flex-end'}}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
                   <Tooltip
                     title="Specify Network type for ENS based authentication"
                     placement="top"
@@ -780,14 +780,14 @@ function App() {
                       onChange={updateNetwork}
                       displayEmpty={true}
                       value={network}
-                      style={{color: 'black'}}
+                      style={{ color: 'black' }}
                     >
                       <MenuItem value={'testnet'}>Testnet</MenuItem>
                       <MenuItem value={'play'}>FDP play</MenuItem>
                     </Select>
                   </Tooltip>
                 </Box>
-                <Box sx={{display: 'flex', alignItems: 'flex-end'}}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
                   <Tooltip title="Location of the Fairdrive folder, a mounting point">
                     <TextField
                       margin="normal"
@@ -817,7 +817,7 @@ function App() {
                     <Button
                       fullWidth
                       variant="contained"
-                      sx={{mt: 3, mb: 2}}
+                      sx={{ mt: 3, mb: 2 }}
                       onClick={initFairOs}
                       disabled={isLoading}
                     >
@@ -835,7 +835,7 @@ function App() {
                   placement="bottom"
                 >
                   <>
-                    <span style={{color: 'black', marginTop: '8px'}}>
+                    <span style={{ color: 'black', marginTop: '8px' }}>
                       Bee location
                     </span>
                     <div>
@@ -884,7 +884,7 @@ function App() {
                   </>
                 </Tooltip>
 
-                <Box sx={{display: 'flex', alignItems: 'flex-end'}}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
                   <Tooltip title="Bee API endpoint, recommended http://localhost:1633">
                     <TextField
                       margin="normal"
@@ -899,7 +899,7 @@ function App() {
                   </Tooltip>
                 </Box>
                 <Box
-                  sx={{display: 'flex', alignItems: 'flex-end'}}
+                  sx={{ display: 'flex', alignItems: 'flex-end' }}
                   className={switchLocalGateway ? 'shrinkable' : ''}
                 >
                   <Tooltip title="BatchID to use for uploads, leave empty if you are using gateway.">
@@ -918,7 +918,7 @@ function App() {
                 </Box>
 
                 <Box
-                  sx={{display: 'flex', alignItems: 'flex-end'}}
+                  sx={{ display: 'flex', alignItems: 'flex-end' }}
                   className={!toggleConfigAdvanced ? 'shrinkable' : ''}
                 >
                   <Tooltip title="RPC Endpoint for ENS based authentication">
@@ -936,7 +936,7 @@ function App() {
                   </Tooltip>
                 </Box>
                 <Box
-                  sx={{display: 'flex', alignItems: 'flex-end'}}
+                  sx={{ display: 'flex', alignItems: 'flex-end' }}
                   className={!toggleConfigAdvanced ? 'shrinkable' : ''}
                 >
                   <Tooltip
@@ -951,7 +951,7 @@ function App() {
                       onChange={updateNetwork}
                       displayEmpty={true}
                       value={network}
-                      style={{color: 'black'}}
+                      style={{ color: 'black' }}
                       disabled={!toggleConfigAdvanced}
                     >
                       <MenuItem value={'testnet'}>Testnet</MenuItem>
@@ -959,7 +959,7 @@ function App() {
                     </Select>
                   </Tooltip>
                 </Box>
-                <Box sx={{display: 'flex', alignItems: 'flex-end'}}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
                   <Tooltip title="Location of the Fairdrive folder, a mounting point">
                     <TextField
                       margin="normal"
@@ -989,7 +989,7 @@ function App() {
                     <Button
                       fullWidth
                       variant="contained"
-                      sx={{mt: 3, mb: 2}}
+                      sx={{ mt: 3, mb: 2 }}
                       onClick={initFairOs}
                       disabled={isLoading}
                     >
@@ -1031,40 +1031,40 @@ function App() {
             </div>
             {username === '' ? (
               <Tooltip title="Seems like there is no account information">
-                <Typography style={{color: 'black'}}>No account info</Typography>
+                <Typography style={{ color: 'black' }}>No account info</Typography>
               </Tooltip>
             ) : (
               <>
-                <Typography style={{color: 'black'}}>
+                <Typography style={{ color: 'black' }}>
                   <strong>{username}</strong>
                 </Typography>
-                <Typography style={{color: 'black'}}>Password</Typography>
-                <span style={{color: 'transparent', textShadow: '0 0 15px #000'}}>
+                <Typography style={{ color: 'black' }}>Password</Typography>
+                <span style={{ color: 'transparent', textShadow: '0 0 15px #000' }}>
                   <strong>{password}</strong>
                 </span>
                 <br/>
                 {mnemonic != '' ? (
                   <>
-                    <Typography style={{color: 'black'}}>
+                    <Typography style={{ color: 'black' }}>
                       This is Light account
                     </Typography>
                     <br/>
-                    <Typography style={{color: 'black'}}>Mnemonic</Typography>
+                    <Typography style={{ color: 'black' }}>Mnemonic</Typography>
                     <span
-                      style={{color: 'transparent', textShadow: '0 0 15px #000'}}
+                      style={{ color: 'transparent', textShadow: '0 0 15px #000' }}
                     >
                       <strong>{mnemonic}</strong>
                     </span>
 
-                    <Typography style={{color: 'black'}}>Private Key</Typography>
+                    <Typography style={{ color: 'black' }}>Private Key</Typography>
                     <span
-                      style={{color: 'transparent', textShadow: '0 0 15px #000'}}
+                      style={{ color: 'transparent', textShadow: '0 0 15px #000' }}
                     >
-                      <strong style={{fontSize: '8px'}}>{privateKey}</strong>
+                      <strong style={{ fontSize: '8px' }}>{privateKey}</strong>
                     </span>
                   </>
                 ) : (
-                  <Typography style={{color: 'black'}}>
+                  <Typography style={{ color: 'black' }}>
                     This is Portable account
                   </Typography>
                 )}
@@ -1134,10 +1134,10 @@ function App() {
 
               {accounts.length === 0 && (
                 <>
-                  <Typography style={{color: 'black', margin: '20px'}}>
+                  <Typography style={{ color: 'black', margin: '20px' }}>
                     No accounts found
                   </Typography>
-                  <Typography style={{color: 'gray', margin: '20px'}}>
+                  <Typography style={{ color: 'gray', margin: '20px' }}>
                     To add account to this list, click on "Remember me" checkbox
                     before login. Accounts do not know about your connection
                     preferences. Lite accounts are added automatically.
@@ -1150,7 +1150,7 @@ function App() {
                     <Tooltip title="Click to switch" placement="left">
                       <Typography
                         onClick={() => handleAccountSwitch(account)}
-                        style={{cursor: 'pointer'}}
+                        style={{ cursor: 'pointer' }}
                         className="account-switch"
                       >
                         {account.userInfo.username}&nbsp;&nbsp;&nbsp;&nbsp;
@@ -1189,7 +1189,7 @@ function App() {
               </List>
               {/* <ListItem key = {account.userInfo.username} onClick={() => handleAccountSwitch(account)}> */}
               <DialogActions
-                style={{justifyContent: 'space-between', alignItems: 'center'}}
+                style={{ justifyContent: 'space-between', alignItems: 'center' }}
               >
                 <Button
                   onClick={() => setShowAccounts(false)}
@@ -1255,7 +1255,7 @@ function App() {
                   </Typography>
                   <Typography
                     align="center"
-                    sx={{fontWeight: 'light', fontSize: '0.7rem'}}
+                    sx={{ fontWeight: 'light', fontSize: '0.7rem' }}
                   >
                     Version <strong>{version}</strong> Built on{' '}
                     <strong>{buildTime}</strong>
@@ -1358,7 +1358,7 @@ function App() {
                     }}
                   >
                     <FormGroup>
-                      <h2 style={{color: 'black'}}>Fair Data Society Login</h2>
+                      <h2 style={{ color: 'black' }}>Fair Data Society Login</h2>
                       <TextField
                         margin="normal"
                         required
@@ -1391,14 +1391,14 @@ function App() {
                             <Typography>Remember and keep me logged-in</Typography>
                           </Tooltip>
                         }
-                        style={{color: 'black'}}
+                        style={{ color: 'black' }}
                       />
                       <Tooltip
                         title="This app supports Light and Portable FDS accounts. Enter your credentials and login">
                         <Button
                           fullWidth
                           variant="contained"
-                          sx={{mt: 3, mb: 2}}
+                          sx={{ mt: 3, mb: 2 }}
                           onClick={login}
                           disabled={isLoading}
                         >
@@ -1415,7 +1415,7 @@ function App() {
                             // variant="body2"
                             // onClick={openCreateLightAccount}
                             align="center"
-                            style={{color: 'black'}}
+                            style={{ color: 'black' }}
                           >
                             What is Light account
                           </Typography>
@@ -1425,7 +1425,7 @@ function App() {
                         <br/>
                         <Tooltip
                           title="Portable accounts can be used in web browsers, FairOS and in any app supporting FairDataProtocol with all the goodies provided by FDP. They require a balance.">
-                          <Typography style={{color: 'black'}}>
+                          <Typography style={{ color: 'black' }}>
                             Need Advanced features ?
                           </Typography>
                         </Tooltip>
@@ -1456,7 +1456,7 @@ function App() {
                 <Container component="main" maxWidth="xs">
                   <Tooltip
                     title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
-                    <h2 style={{color: 'black', marginBottom: '0px'}}>Pods</h2>
+                    <h2 style={{ color: 'black', marginBottom: '0px' }}>Pods</h2>
                   </Tooltip>
                   <Tooltip
                     title={
@@ -1466,7 +1466,7 @@ function App() {
                     }
                   >
                     <Typography
-                      style={{color: 'gray'}}
+                      style={{ color: 'gray' }}
                       onClick={() => setShowAccounts(true)}
                     >
                       {username}
@@ -1481,7 +1481,7 @@ function App() {
                       ' account'
                     }
                   >
-                    <Typography style={{color: 'gray', fontSize: '8px'}}>
+                    <Typography style={{ color: 'gray', fontSize: '8px' }}>
                       {mnemonic === '' || mnemonic === undefined
                         ? 'portable'
                         : 'lite'}
@@ -1544,7 +1544,7 @@ function App() {
                               </ListItemIcon>
                               <ListItemText
                                 primary={pod.podName}
-                                style={{color: 'black'}}
+                                style={{ color: 'black' }}
                               />
                             </ListItemButton>
                           </ListItem>
@@ -1570,7 +1570,7 @@ function App() {
                               </ListItemIcon>
                               <ListItemText
                                 primary={pod.podName}
-                                style={{color: 'black'}}
+                                style={{ color: 'black' }}
                               />
                             </ListItemButton>
                           </ListItem>
@@ -1585,11 +1585,11 @@ function App() {
                 <Container component="main" maxWidth="xs">
                   <Tooltip
                     title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
-                    <h2 style={{color: 'black', marginBottom: '0px'}}>Pods</h2>
+                    <h2 style={{ color: 'black', marginBottom: '0px' }}>Pods</h2>
                   </Tooltip>
                   <Tooltip title="Current account name">
                     <Typography
-                      style={{color: 'gray'}}
+                      style={{ color: 'gray' }}
                       onClick={() => setShowAccounts(true)}
                     >
                       {username}
@@ -1607,7 +1607,7 @@ function App() {
                     <Typography
                       gutterBottom
                       align="center"
-                      style={{color: 'black'}}
+                      style={{ color: 'black' }}
                     >
                       Still do not have pods?
                     </Typography>
@@ -1615,7 +1615,7 @@ function App() {
                     <Button
                       fullWidth
                       variant="contained"
-                      sx={{mt: 3, mb: 2}}
+                      sx={{ mt: 3, mb: 2 }}
                       onClick={() => setPodNew(true)}
                       disabled={isLoading}
                     >
