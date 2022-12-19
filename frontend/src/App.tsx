@@ -592,15 +592,24 @@ function App() {
     // console.log('got m:', m)
     // console.log('got mnem:', mnem)
 
-    let p = await GetPodsList()
-    setShowLogin(false)
-    setPods(p)
-    setShowPods(true)
-    EventsEmit('enableMenus')
-    showInfoMessage('Lite account logged in. See Details for account info.')
-    addAccount(user, pass, mnem, pods)
-    setOpenError(false) // close error if it was open before
-    setShowAccountImport(false)
+    try {
+      let p = await GetPodsList()
+      setShowLogin(false)
+      setPods(p)
+      setShowPods(true)
+      EventsEmit('enableMenus')
+      showInfoMessage('Lite account logged in. See Details for account info.')
+      addAccount(user, pass, mnem, pods)
+      setOpenError(false) // close error if it was open before
+      setShowAccountImport(false)
+    } catch (e) {
+      showError(e)
+      // if (e === 'ciphertext block size is too short') {
+      //   showInfoMessage(
+      //     'Your account could be garbage collected. You can revive it.',
+      //   )
+      // }
+    }
 
     return { p, m }
   }
