@@ -132,6 +132,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [openError, setOpenError] = useState(false)
   const [openInfo, setOpenInfo] = useState(false)
+  const [openDisclaimer, setOpenDisclaimer] = useState(true)
 
   const handleCloseError = (event?: SyntheticEvent | Event, reason?: string) => {
     if (reason === 'clickaway') {
@@ -677,6 +678,18 @@ function App() {
         >
           <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
             {errorMessage}
+          </Alert>
+        </Snackbar>
+
+        <Snackbar
+          open={openDisclaimer}
+          onClose={() => setOpenDisclaimer(false)}
+          autoHideDuration={15000}
+        >
+          <Alert onClose={() => setOpenDisclaimer(false)}>
+            ⚠ Fairdrive is in Beta and provided for evaluation only! File integrity
+            persistence and security are not assured! Expect that data in Fairdrive
+            can be deleted at any time.
           </Alert>
         </Snackbar>
 
@@ -1380,6 +1393,8 @@ function App() {
                   >
                     Version <strong>{version}</strong> Built on{' '}
                     <strong>{buildTime}</strong>
+                    <br />
+                    <span onClick={() => setOpenDisclaimer(true)}>Disclaimer</span>
                   </Typography>
 
                   <img
@@ -1389,7 +1404,7 @@ function App() {
                     className="logo-icon"
                     onClick={openBrowserFairDataSociety}
                   />
-
+                  <br />
                   <Typography gutterBottom align="center">
                     ©&nbsp;
                     <Link
