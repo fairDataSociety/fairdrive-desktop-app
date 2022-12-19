@@ -1,5 +1,5 @@
-import {forwardRef, SyntheticEvent, useEffect, useState} from 'react'
-import {createTheme, ThemeProvider} from '@mui/material/styles'
+import { forwardRef, SyntheticEvent, useEffect, useState } from 'react'
+import { createTheme, ThemeProvider } from '@mui/material/styles'
 import logo from './assets/images/fairdata.svg'
 import dfLogo from './assets/images/datafund.svg'
 import backgroundImage from './assets/images/sculptures_of_data_s.jpg'
@@ -17,8 +17,8 @@ import {
   Start,
   Unmount,
 } from '../wailsjs/go/handler/Handler'
-import {GetAutoMount, GetConfig, GetMountedPods, GetMountPoint, IsSet, SetupConfig,} from '../wailsjs/go/main/conf'
-import {ForgetPassword, Get, HasRemembered, RememberPassword,} from '../wailsjs/go/main/Account'
+import { GetAutoMount, GetConfig, GetMountedPods, GetMountPoint, IsSet, SetupConfig, } from '../wailsjs/go/main/conf'
+import { ForgetPassword, Get, HasRemembered, RememberPassword, } from '../wailsjs/go/main/Account'
 import {
   AlertProps,
   Box,
@@ -56,11 +56,11 @@ import {
 } from '@mui/material'
 import MuiAlert from '@mui/material/Alert'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
-import {api, handler} from '../wailsjs/go/models'
-import {BrowserOpenURL, EventsEmit, EventsOn} from '../wailsjs/runtime'
-import {Folder} from '@mui/icons-material'
+import { api, handler } from '../wailsjs/go/models'
+import { BrowserOpenURL, EventsEmit, EventsOn } from '../wailsjs/runtime'
+import { Folder } from '@mui/icons-material'
 import CloseIcon from '@mui/icons-material/Close'
-import {BuildTime, Version} from '../wailsjs/go/main/about'
+import { BuildTime, Version } from '../wailsjs/go/main/about'
 import PodMountedInfo = handler.PodMountedInfo;
 
 interface UserInfo {
