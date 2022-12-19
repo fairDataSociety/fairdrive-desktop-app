@@ -1,5 +1,17 @@
 # Fairdrive Desktop App (FDA)
 
+![Release](https://img.shields.io/github/v/release/fairDataSociety/fairdrive-desktop-app?include_prereleases&style=for-the-badge)
+![Platform](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-green?style=for-the-badge)
+![Workflow](https://img.shields.io/github/actions/workflow/status/fairDataSociety/fairdrive-desktop-app/go.yaml?branch=master&style=for-the-badge)
+![Issues](https://img.shields.io/github/issues-raw/fairDataSociety/fairdrive-desktop-app?style=for-the-badge)
+![Closed](https://img.shields.io/github/issues-closed-raw/fairDataSociety/fairdrive-desktop-app?style=for-the-badge)
+![PRs](https://img.shields.io/github/issues-pr/fairDataSociety/fairdrive-desktop-app?style=for-the-badge)
+![PRClosed](https://img.shields.io/github/issues-pr-closed-raw/fairDataSociety/fairdrive-desktop-app?style=for-the-badge)
+![Files](https://img.shields.io/github/directory-file-count/fairDataSociety/fairdrive-desktop-app?style=for-the-badge)
+![Go](https://img.shields.io/github/go-mod/go-version/fairDataSociety/fairdrive-desktop-app?style=for-the-badge&logo=go)
+![Discord](https://img.shields.io/discord/888359049551310869?style=for-the-badge&logo=discord)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=for-the-badge)](https://opensource.org/licenses/Apache-2.0)
+
 Fairdrive Desktop App is a FUSE client for fairOS-dfs. It lets you mount your
 pod on your own user space and interact with your data. 
 
