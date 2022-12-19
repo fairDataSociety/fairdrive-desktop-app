@@ -29,15 +29,16 @@ install [winfsp](https://winfsp.dev/rel/)
 
 ### Install FDA
 
-Download FDA for your operating system
+Download FDA for your operating system 
+from [Releases](https://github.com/fairDataSociety/fairdrive-desktop-app/releases) Page
 
-[MacOS (amd64)](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc6/fairdrive_darwin_amd64.dmg)
+[MacOS (amd64)](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc10/fairdrive_darwin_amd64.dmg)
 
-[MacOS (arm64)](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc6/fairdrive_darwin_arm64.dmg)
+[MacOS (arm64)](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc10/fairdrive_darwin_arm64.dmg)
 
-[Linux](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc6/fairdrive_linux)
+[Linux](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc10/fairdrive_linux)
 
-[Windows](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc6/fairdrive_windows.exe)
+[Windows](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc10/fairdrive_windows.exe)
 
 # How do I configure FDA to connect to a bee node?
 
