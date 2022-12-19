@@ -564,7 +564,7 @@ function App() {
         //console.log('This is Portable Account', mnem)
         return { p, m: new handler.LiteUser() }
       } catch (e) {
-        showInfoMessage('Logging into Light account')
+        showInfoMessage('Logging into Lite account')
       }
     } else {
     }
@@ -1189,7 +1189,7 @@ function App() {
                 {mnemonic != '' ? (
                   <>
                     <Typography style={{ color: 'black' }}>
-                      This is Light account
+                      This is Lite account
                     </Typography>
                     <br />
                     <Typography style={{ color: 'black' }}>Mnemonic</Typography>
@@ -1529,7 +1529,7 @@ function App() {
                         }
                         style={{ color: 'black' }}
                       />
-                      <Tooltip title="This app supports Light and Portable FDS accounts. Enter your credentials and login">
+                      <Tooltip title="This app supports Lite and Portable FDS accounts. Enter your credentials and login">
                         <Button
                           fullWidth
                           variant="contained"
@@ -1542,7 +1542,7 @@ function App() {
                       </Tooltip>
                       <>
                         <Tooltip
-                          title="Light account exists on local machine only. You can upgrade it to Portable FDS account using mnemonic later. Just enter username/password and new account will be auto-magically created. When logged in see information about it in 'File -> Account details.' "
+                          title="Lite account exists on local machine only. You can upgrade it to Portable FDS account using mnemonic later. Just enter username/password and new account will be auto-magically created. When logged in see information about it in 'File -> Account details.' "
                           placement="bottom"
                         >
                           <Typography
@@ -1552,7 +1552,7 @@ function App() {
                             align="center"
                             style={{ color: 'black' }}
                           >
-                            What is Light account
+                            What is Lite account?
                           </Typography>
                         </Tooltip>
                       </>
