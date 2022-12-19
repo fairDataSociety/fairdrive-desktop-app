@@ -629,13 +629,14 @@ function App() {
           open={openInfo}
           onClose={handleCloseInfo}
           anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+          autoHideDuration={5000}
         >
           <Alert onClose={handleCloseInfo} severity="info" sx={{ width: '100%' }}>
             {infoMessage}
           </Alert>
         </Snackbar>
         {/*shows error*/}
-        <Snackbar open={openError} onClose={handleCloseError}>
+        <Snackbar open={openError} onClose={handleCloseError} autoHideDuration={7000}>
           <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
             {errorMessage}
           </Alert>
