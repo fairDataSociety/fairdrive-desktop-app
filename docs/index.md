@@ -21,8 +21,9 @@ pod on your own user space and interact with your data.
 ## How do I install FDA?
 
 > **_IMPORTANT:_**  To use FDA on your system you need to install [fuse](https://www.kernel.org/doc/html/latest/filesystems/fuse.html) first.
+## Requirements
 
-### Install fuse
+### FUSE
 
 You need [FUSE](http://github.com/libfuse/libfuse) for your OS.
 
@@ -39,6 +40,9 @@ sudo apt-get -qq install libfuse-dev
 
 ##### Installing fuse on Windows
 install [winfsp](https://winfsp.dev/rel/)
+
+### BEE
+You will need a bee node running with a valid stamp id.
 
 ### Install FDA
 
