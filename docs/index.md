@@ -16,7 +16,7 @@
 Fairdrive Desktop App is a FUSE client for fairOS-dfs. It lets you mount your
 pod on your own user space and interact with your data. 
 
-> **_IMPORTANT:_**  FDA is under heavy development and in beta stage. Some abnormal behaviour, data loss can be observed.
+> **_IMPORTANT:_**  FDA is under heavy development and in BETA stage. Some abnormal behaviour, data loss can be observed. We do not recommend parallel usage of same account from multiple installations. Doing so might corrupt your data.
 
 ## How do I install FDA?
 
@@ -125,7 +125,7 @@ Once you create/move/update/delete data from your mount it will reflect everywhe
 
 > **_Note:_**  Accounts only gets added here if you checked `Remember me` before login
 
-#### I have a `Portable account`. Can I use it alongside `Lite Account`?
+#### I have a `Portable account`. Can I use it alongside `Lite Account` in FDA?
 
 - Yes. If you created your account from the create-account-app, you can log in into id from FDA. FDA internally checks if the user has a portable account. So If you provide
 credentials of a portable account, you log in into that account. But If your user is not registered with a portable account, FDA creates a `Lite` user account and lets you use Fairdrive
@@ -135,8 +135,22 @@ anonymously.
 
 - Yes. Just go to `File => Account Details` from where you created the lite account. Copy the mnemonic. Then go to `File => Import Account`, where you what to import the account.
 
-> **_IMPORTANT:_**  FDA is still under heavy development and does not support parallel usage. We recommend not to use same account from multiple installations. Doing so might corrupt your data.
+#### Still confused about different account types?
 
+So we have this `Portable` account which can be used to log in from any fdp/fairSO-dfs dapps. 
+But FDA has a "Special" case where you can create a `Lite` account to store your data without the need of a RPC connection or spending any token for on-boarding. 
+Lite account can be upgraded to Portable account from our create account app.
+
+#### So basically it's the same account just different data sets?
+
+yes, If you use same the mnemonic to create a portable account your pods and files stay the same as they were in case of lite account.
+
+#### `Lite` accounts are non persistent?
+
+Lite accounts <strong>ARE</strong> persistent in the sense that the pods, files stays on Swarm, but not your user. it currently persists in the current FDA installation. 
+You can use the mnemonic to access the same account on different FDA installations by importing.
+
+> **_NOTE:_**  `username` and `password` are just placeholders at the moment in case of `Lite` account
 
 [Bugs and issues](https://github.com/fairDataSociety/fairdrive-desktop-app/issues/issues)
 
@@ -145,5 +159,3 @@ anonymously.
 [FairOS-dfs](https://github.com/fairDataSociety/fairOS-dfs)
 
 [FairOS-dfs docs](https://docs.fairos.fairdatasociety.org/docs/)
-
-
