@@ -36,7 +36,7 @@ sudo apt-get update
 sudo apt-get -qq install libfuse-dev
 ```
 
-##### Installing fuse on windows
+##### Installing fuse on Windows
 install [winfsp](https://winfsp.dev/rel/)
 
 ### Install FDA
@@ -54,9 +54,16 @@ from [Releases](https://github.com/fairDataSociety/fairdrive-desktop-app/release
 
 # How do I configure FDA to connect to a bee node?
 
-![settings](https://user-images.githubusercontent.com/15252513/206389199-bb8eb981-9b5f-4f88-8cdb-e16ec1b676ed.gif)
+![settings](https://user-images.githubusercontent.com/15252513/208560029-91046faf-7740-494c-8c84-df1597931001.gif)
 
-## FAQ about FDA config
+## FAQ about FDA preferences/settings
+#### `Simple` vs `Advanced` mode 
+
+- In `Simple` mode you have to deal with fewer configurations. You do not have to configure any RPC endpoint for portable account.  
+- `Advanced` mode is for users, who have their own RPC fow ENS based authentication. Users can use [gateway-proxy](https://github.com/ethersphere/gateway-proxy) service with FDA.
+
+> **_NOTE:_**  If you use `Simple` mode you just have to set `bee` api endpoint and `batchID`.
+
 #### "Is bee node running behind proxy?"
 
 - On most of the cases this should be "No" if you are using a bee node directly or using your own bee.
@@ -93,7 +100,7 @@ from [Releases](https://github.com/fairDataSociety/fairdrive-desktop-app/release
 - If you have not saved your bee preferences, Go to Files -> Settings and save
 - Check "Remember Me" option before Login to save your login credentials. (You can also switch between accounts later if you check this option)
 - Login
-- After you login you should see all you pods, if you do not have one hit "ctrl/cmd + N" to create a new pod
+- After you log in you should see all you pods, if you do not have one hit "ctrl/cmd + N" to create a new pod
 - Click on the checkbox on the left of your pod name. The pod should mount in your user space
 - Click on the folder icon on the right side of the pod name to open it in your file manager
 - CONGRATULATIONS !! you have successfully mounted your fairdrive pod in your user space
@@ -110,6 +117,25 @@ Once you create/move/update/delete data from your mount it will reflect everywhe
 #### What is Lite account?
 
 - Lite account exists on local machine only. You can upgrade it to Portable FDS account using mnemonic later. Just enter username/password and new account will be auto-magically created. When logged in see information about it in 'File -> Account details.'
+
+#### What does `File => Accounts` do?
+
+- The accounts you use to log in into FDA are saved locally for your ease of use. You can switch users in just one single click.
+
+> **_Note:_**  Accounts only gets added here if you checked `Remember me` before login
+
+#### I have a `Portable account`. Can I use it alongside `Lite Account`?
+
+- Yes. If you created your account from the create-account-app, you can log in into id from FDA. FDA internally checks if the user has a portable account. So If you provide
+credentials of a portable account, you log in into that account. But If your user is not registered with a portable account, FDA creates a `Lite` user account and lets you use Fairdrive
+anonymously.
+
+#### Can I use `Lite Account` from other FDA installation or a different system?
+
+- Yes. Just go to `File => Account Details` from where you created the lite account. Copy the mnemonic. Then go to `File => Import Account`, where you what to import the account.
+
+> **_IMPORTANT:_**  FDA is still under heave development and does not support parallel usage. We recommend not to use same account from multiple installations. Do so might corrupt your data.
+
 
 [Bugs and issues](https://github.com/fairDataSociety/fairdrive-desktop-app/issues/issues)
 
