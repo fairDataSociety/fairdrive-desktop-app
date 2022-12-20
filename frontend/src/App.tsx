@@ -138,14 +138,13 @@ function App() {
     if (reason === 'clickaway') {
       return
     }
-
     setOpenError(false)
   }
+
   const handleCloseInfo = (event?: SyntheticEvent | Event, reason?: string) => {
     if (reason === 'clickaway') {
       return
     }
-
     setOpenInfo(false)
   }
 
