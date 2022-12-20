@@ -135,7 +135,7 @@ anonymously.
 
 - Yes. Just go to `File => Account Details` from where you created the lite account. Copy the mnemonic. Then go to `File => Import Account`, where you what to import the account.
 
-> **_IMPORTANT:_**  FDA is still under heave development and does not support parallel usage. We recommend not to use same account from multiple installations. Do so might corrupt your data.
+> **_IMPORTANT:_**  FDA is still under heavy development and does not support parallel usage. We recommend not to use same account from multiple installations. Doing so might corrupt your data.
 
 
 [Bugs and issues](https://github.com/fairDataSociety/fairdrive-desktop-app/issues/issues)
