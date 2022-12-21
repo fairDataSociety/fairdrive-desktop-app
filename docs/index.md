@@ -14,15 +14,16 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=for-the-badge)](https://opensource.org/licenses/Apache-2.0)
 
 Fairdrive Desktop App is a FUSE client for fairOS-dfs. It lets you mount your
-pod on your own user space and interact with your data. 
+pod on your own user space and interact with your data.
 
-> **_IMPORTANT:_**  FDA is under heavy development and in beta stage. Some abnormal behaviour, data loss can be observed.
+> **_IMPORTANT:_**  FDA is under heavy development and in BETA stage. Some abnormal behaviour, data loss can be observed. We do not recommend parallel usage of same account from multiple installations. Doing so might corrupt your data.
 
 ## How do I install FDA?
 
 > **_IMPORTANT:_**  To use FDA on your system you need to install [fuse](https://www.kernel.org/doc/html/latest/filesystems/fuse.html) first.
+## Requirements
 
-### Install fuse
+### FUSE
 
 You need [FUSE](http://github.com/libfuse/libfuse) for your OS.
 
@@ -40,9 +41,14 @@ sudo apt-get -qq install libfuse-dev
 ##### Installing fuse on Windows
 install [winfsp](https://winfsp.dev/rel/)
 
+### BEE
+You will need a bee node running with a valid stamp id.
+
+We encourage `Swarm Desktop` for setting up your bee node. Here is a [guide](https://medium.com/ethereum-swarm/upgrading-swarm-deskotp-app-beta-from-an-ultra-light-to-a-light-node-65d52cab7f2c) for it.
+
 ### Install FDA
 
-Download FDA for your operating system 
+Download FDA for your operating system
 from [Releases](https://github.com/fairDataSociety/fairdrive-desktop-app/releases) Page
 
 [MacOS (amd64)](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc11/fairdrive_darwin_amd64.dmg)
@@ -58,9 +64,9 @@ from [Releases](https://github.com/fairDataSociety/fairdrive-desktop-app/release
 ![settings](https://user-images.githubusercontent.com/15252513/208560029-91046faf-7740-494c-8c84-df1597931001.gif)
 
 ## FAQ about FDA preferences/settings
-#### `Simple` vs `Advanced` mode 
+#### `Simple` vs `Advanced` mode
 
-- In `Simple` mode you have to deal with fewer configurations. You do not have to configure any RPC endpoint for portable account.  
+- In `Simple` mode you have to deal with fewer configurations. You do not have to configure any RPC endpoint for portable account.
 - `Advanced` mode is for users, who have their own RPC fow ENS based authentication. Users can use [gateway-proxy](https://github.com/ethersphere/gateway-proxy) service with FDA.
 
 > **_NOTE:_**  If you use `Simple` mode you just have to set `bee` api endpoint and `batchID`.
@@ -80,14 +86,14 @@ from [Releases](https://github.com/fairDataSociety/fairdrive-desktop-app/release
 
 #### What is RPC? Why do we need it?
 
-- An RPC (remote procedure call) endpoint is like a node's address: it's a URL which requests for blockchain data can be sent to. 
+- An RPC (remote procedure call) endpoint is like a node's address: it's a URL which requests for blockchain data can be sent to.
 - We need this for user authentication for our portable account.
 
 #### What is "Network"? Why does it have "Testnet" and "Play"? What is "Play"?
 
 - Choosing this network determines the Ethereum network that will be used for ENS based portable accounts.
 - Currently, we only have ENS contract deployed on Goerli Blockchain. That is why "Testnet".
-- We have a small play environment for the whole FDP architecture, called [fdp-play](https://github.com/fairDataSociety/fdp-play). If you want to use fdp-play behind FDA, this option is for you.  
+- We have a small play environment for the whole FDP architecture, called [fdp-play](https://github.com/fairDataSociety/fdp-play). If you want to use fdp-play behind FDA, this option is for you.
 
 #### What is "Mount Location"?
 
@@ -112,8 +118,8 @@ from [Releases](https://github.com/fairDataSociety/fairdrive-desktop-app/release
 
 #### Where can I follow if the sync is happening?
 
-- If you are using the same bee node for accessing your data, then there is no need to wait for sync. 
-Once you create/move/update/delete data from your mount it will reflect everywhere.
+- If you are using the same bee node for accessing your data, then there is no need to wait for sync.
+  Once you create/move/update/delete data from your mount it will reflect everywhere.
 
 #### What is Lite account?
 
@@ -125,18 +131,32 @@ Once you create/move/update/delete data from your mount it will reflect everywhe
 
 > **_Note:_**  Accounts only gets added here if you checked `Remember me` before login
 
-#### I have a `Portable account`. Can I use it alongside `Lite Account`?
+#### I have a `Portable account`. Can I use it alongside `Lite Account` in FDA?
 
 - Yes. If you created your account from the create-account-app, you can log in into id from FDA. FDA internally checks if the user has a portable account. So If you provide
-credentials of a portable account, you log in into that account. But If your user is not registered with a portable account, FDA creates a `Lite` user account and lets you use Fairdrive
-anonymously.
+  credentials of a portable account, you log in into that account. But If your user is not registered with a portable account, FDA creates a `Lite` user account and lets you use Fairdrive
+  anonymously.
 
 #### Can I use `Lite Account` from other FDA installation or a different system?
 
 - Yes. Just go to `File => Account Details` from where you created the lite account. Copy the mnemonic. Then go to `File => Import Account`, where you what to import the account.
 
-> **_IMPORTANT:_**  FDA is still under heavy development and does not support parallel usage. We recommend not to use same account from multiple installations. Doing so might corrupt your data.
+#### Still confused about different account types?
 
+So we have this `Portable` account which can be used to log in from any fdp/fairSO-dfs dapps.
+But FDA has a "Special" case where you can create a `Lite` account to store your data without the need of a RPC connection or spending any token for on-boarding.
+Lite account can be upgraded to Portable account from our create account app.
+
+#### So basically it's the same account just different data sets?
+
+yes, If you use same the mnemonic to create a portable account your pods and files stay the same as they were in case of lite account.
+
+#### `Lite` accounts are non persistent?
+
+Lite accounts <strong>ARE</strong> persistent in the sense that the pods, files stays on Swarm, but not your user. it currently persists in the current FDA installation.
+You can use the mnemonic to access the same account on different FDA installations by importing.
+
+> **_NOTE:_**  `username` and `password` are just placeholders at the moment in case of `Lite` account
 
 [Bugs and issues](https://github.com/fairDataSociety/fairdrive-desktop-app/issues/issues)
 
@@ -145,5 +165,3 @@ anonymously.
 [FairOS-dfs](https://github.com/fairDataSociety/fairOS-dfs)
 
 [FairOS-dfs docs](https://docs.fairos.fairdatasociety.org/docs/)
-
-
