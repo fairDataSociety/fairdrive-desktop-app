@@ -44,6 +44,8 @@ install [winfsp](https://winfsp.dev/rel/)
 ### BEE
 You will need a bee node running with a valid stamp id.
 
+We encourage `Swarm Desktop` for setting up your bee node. Here is a [guide](https://medium.com/ethereum-swarm/upgrading-swarm-deskotp-app-beta-from-an-ultra-light-to-a-light-node-65d52cab7f2c) for it.
+ 
 ### Install FDA
 
 Download FDA for your operating system 
