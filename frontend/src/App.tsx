@@ -138,14 +138,13 @@ function App() {
     if (reason === 'clickaway') {
       return
     }
-
     setOpenError(false)
   }
+
   const handleCloseInfo = (event?: SyntheticEvent | Event, reason?: string) => {
     if (reason === 'clickaway') {
       return
     }
-
     setOpenInfo(false)
   }
 
@@ -533,7 +532,11 @@ function App() {
       showError('Mnemonic word count should be 12')
       return
     }
-    await doLogin(importUsername, importPassword, importMnemonic)
+    try {
+      await doLogin(importUsername, importPassword, importMnemonic)
+    } catch (e: any) {
+      showError(e)
+    }
   }
 
   async function doLogin(user: string, pass: string, mnem: string) {
@@ -548,10 +551,9 @@ function App() {
     */
     let isPortableAccount = mnem === '' || mnem === undefined
     if (isPortableAccount) {
-      //console.log('Could be Portable Account', mnem)
       mnem = '' // TODO fix should not be undefined, causes error and user can not be logged out
       try {
-        // try to login with Portable account, if it fails, login with portable
+        // try to log in with Portable account, if it fails, login with portable
         await Login(user, pass)
         let p = await GetPodsList()
         setPrivateKey('')
@@ -561,18 +563,18 @@ function App() {
         setShowPods(true)
         EventsEmit('enableMenus')
         setOpenError(false) // close error if it was open before
-        //console.log('This is Portable Account', mnem)
         return { p, m: new handler.LiteUser() }
       } catch (e) {
-        showInfoMessage('Logging into Lite account')
+        if (e==="invalid password") {
+          throw e
+        }
       }
-    } else {
     }
 
     const existingAccount = accounts.find((obj) => {
       return obj.userInfo.username === user
     })
-    //console.log('existingAccount', existingAccount)
+
     // if mnemonic is present then it could be stored lite account
     if (
       existingAccount !== undefined &&
@@ -580,29 +582,29 @@ function App() {
       existingAccount.userInfo.mnemonic !== ''
     ) {
       mnem = existingAccount.userInfo.mnemonic
-      //console.log('Account has stored mnemonic', mnem)
     }
 
-    let m = await Load(user, pass, mnem)
-    mnem = m.mnemonic
-    setMnemonic(m.mnemonic)
-    setPrivateKey(m.privateKey)
+    try {
+      let m = await Load(user, pass, mnem)
+      showInfoMessage('Logging into Lite account')
+      mnem = m.mnemonic
+      setMnemonic(m.mnemonic)
+      setPrivateKey(m.privateKey)
 
-    // console.log('set mnemonic:', mnemonic)
-    // console.log('got m:', m)
-    // console.log('got mnem:', mnem)
+      let p = await GetPodsList()
+      setShowLogin(false)
+      setPods(p)
+      setShowPods(true)
+      EventsEmit('enableMenus')
+      showInfoMessage('Lite account logged in. See Details for account info.')
+      addAccount(user, pass, mnem, pods)
+      setOpenError(false) // close error if it was open before
+      setShowAccountImport(false)
 
-    let p = await GetPodsList()
-    setShowLogin(false)
-    setPods(p)
-    setShowPods(true)
-    EventsEmit('enableMenus')
-    showInfoMessage('Lite account logged in. See Details for account info.')
-    addAccount(user, pass, mnem, pods)
-    setOpenError(false) // close error if it was open before
-    setShowAccountImport(false)
-
-    return { p, m }
+      return { p, m }
+    } catch (e) {
+      throw e
+    }
   }
 
   async function login() {

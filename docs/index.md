@@ -1,6 +1,7 @@
 # Fairdrive Desktop App (FDA)
 
 [![Release](https://img.shields.io/github/v/release/fairDataSociety/fairdrive-desktop-app?include_prereleases&style=for-the-badge)](https://github.com/fairDataSociety/fairdrive-desktop-app/releases)
+![GitHub all releases](https://img.shields.io/github/downloads/fairDataSociety/fairdrive-desktop-app/total?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-green?style=for-the-badge)
 [![Workflow](https://img.shields.io/github/actions/workflow/status/fairDataSociety/fairdrive-desktop-app/go.yaml?branch=master&style=for-the-badge)](https://github.com/fairDataSociety/fairdrive-desktop-app/actions)
 [![Issues](https://img.shields.io/github/issues-raw/fairDataSociety/fairdrive-desktop-app?style=for-the-badge)](https://github.com/fairDataSociety/fairdrive-desktop-app/issues)
@@ -145,6 +146,7 @@ from [Releases](https://github.com/fairDataSociety/fairdrive-desktop-app/release
 
 So we have this `Portable` account which can be used to log in from any fdp/fairSO-dfs dapps.
 But FDA has a "Special" case where you can create a `Lite` account to store your data without the need of a RPC connection or spending any token for on-boarding.
+
 Lite account can be upgraded to Portable account from our create account app.
 
 #### So basically it's the same account just different data sets?
@@ -154,6 +156,7 @@ yes, If you use same the mnemonic to create a portable account your pods and fil
 #### `Lite` accounts are non persistent?
 
 Lite accounts <strong>ARE</strong> persistent in the sense that the pods, files stays on Swarm, but not your user. it currently persists in the current FDA installation.
+
 You can use the mnemonic to access the same account on different FDA installations by importing.
 
 > **_NOTE:_**  `username` and `password` are just placeholders at the moment in case of `Lite` account

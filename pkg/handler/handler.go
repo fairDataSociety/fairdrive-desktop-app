@@ -272,7 +272,7 @@ func (h *Handler) Close() error {
 
 func mountOptions(pod string) (options []string) {
 	options = []string{}
-	options = append(options, "-o", "debug")
+	//options = append(options, "-o", "debug")
 
 	if runtime.GOOS == "windows" {
 		options = append(options, "--FileSystemName="+pod)

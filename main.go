@@ -5,10 +5,13 @@ import (
 	"embed"
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/handler"
+	"github.com/mitchellh/go-homedir"
+	"github.com/sirupsen/logrus"
 	"github.com/wailsapp/wails/v2/pkg/application"
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
@@ -17,14 +20,26 @@ import (
 	wRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
+const (
+	log = ".fda.log"
+)
+
 var (
 	//go:embed all:frontend/dist
 	assets embed.FS
 )
 
 func main() {
+	logger := logging.New(os.Stdout, logrus.WarnLevel)
 
-	logger := logging.New(os.Stdout, 5)
+	home, err := homedir.Dir()
+	if err == nil {
+		file, err := os.Create(filepath.Join(home, log))
+		if err == nil {
+			logger = logging.New(file, logrus.ErrorLevel)
+			defer file.Close()
+		}
+	}
 	dfsHandler, err := handler.New(logger)
 	if err != nil {
 		println("Error:", err.Error())
@@ -67,12 +82,11 @@ func main() {
 	})
 	fileMenu.AddText("Account Details", keys.CmdOrCtrl("i"), func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "accountDetails")
-	})	
+	})
 	fileMenu.AddText("Logout", keys.Combo("W", keys.ShiftKey, keys.CmdOrCtrlKey), func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "logout")
 	})
 	fileMenu.AddSeparator()
-	
 
 	podMenu := appMenu.AddSubmenu("Pod")
 	podMenu.AddText("New", keys.CmdOrCtrl("n"), func(_ *menu.CallbackData) {
@@ -145,7 +159,7 @@ func main() {
 						item.Disabled = true
 						//break
 					}
-					
+
 					if item.Label == "Account Details" {
 						item.Disabled = true
 						//break
