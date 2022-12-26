@@ -932,6 +932,12 @@ function App() {
                             },
                           })
                           setSwitchLocalGateway(!switchLocalGateway)
+
+                          updateProxy({
+                            target: {
+                              value: switchLocalGateway ? 'no' : 'yes',
+                            },
+                          })
                         }}
                       />
                       <span
