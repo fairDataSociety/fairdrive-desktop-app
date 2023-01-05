@@ -28,13 +28,12 @@ type CacheCleaner interface {
 }
 
 type Handler struct {
-	signalCacheCleaner chan string
-	lock               sync.Mutex
-	api                *api.DfsAPI
-	activeMounts       map[string]*hostMount
-	logger             logging.Logger
-	sessionID          string
-	lastLoadedPods     []string
+	lock           sync.Mutex
+	api            *api.DfsAPI
+	activeMounts   map[string]*hostMount
+	logger         logging.Logger
+	sessionID      string
+	lastLoadedPods []string
 }
 
 type hostMount struct {
@@ -56,9 +55,8 @@ type LiteUser struct {
 
 func New(logger logging.Logger) (*Handler, error) {
 	return &Handler{
-		activeMounts:       map[string]*hostMount{},
-		logger:             logger,
-		signalCacheCleaner: make(chan string),
+		activeMounts: map[string]*hostMount{},
+		logger:       logger,
 	}, nil
 }
 
@@ -279,8 +277,25 @@ func (h *Handler) Close() error {
 	return h.api.Close()
 }
 
+func (h *Handler) Sync(podName string) {
+	if h.api == nil {
+		return
+	}
+	h.lock.Lock()
+	defer h.lock.Unlock()
+	host, ok := h.activeMounts[podName]
+	if ok {
+		err := h.api.SyncPodAsync(context.TODO(), podName, h.sessionID)
+		if err != nil {
+			h.logger.Errorf("%s pod sync failed: %s", podName, err.Error())
+		}
+		host.c.CacheClean()
+		h.logger.Infof("%s mount cache cleaned", podName)
+	}
+}
+
 func (h *Handler) StartCacheCleaner(ctx context.Context) {
-	ticker := time.NewTicker(time.Minute * 2)
+	ticker := time.NewTicker(time.Minute * 30)
 	for {
 		select {
 		case <-ctx.Done():
@@ -289,18 +304,6 @@ func (h *Handler) StartCacheCleaner(ctx context.Context) {
 		case <-ticker.C:
 			h.lock.Lock()
 			for podName, host := range h.activeMounts {
-				err := h.api.SyncPodAsync(ctx, podName, h.sessionID)
-				if err != nil {
-					h.logger.Errorf("%s pod sync failed: %s", podName, err.Error())
-				}
-				host.c.CacheClean()
-				h.logger.Infof("%s mount cache cleaned", podName)
-			}
-			h.lock.Unlock()
-		case podName := <-h.signalCacheCleaner:
-			h.lock.Lock()
-			host, ok := h.activeMounts[podName]
-			if ok {
 				err := h.api.SyncPodAsync(ctx, podName, h.sessionID)
 				if err != nil {
 					h.logger.Errorf("%s pod sync failed: %s", podName, err.Error())

@@ -5,7 +5,7 @@ import {handler} from '../models';
 import {api} from '../models';
 import {context} from '../models';
 
-export function Close():Promise<Error>;
+export function Close():Promise<void>;
 
 export function CreatePod(arg1:string):Promise<pod.Info>;
 
@@ -15,14 +15,16 @@ export function GetPodsList():Promise<Array<handler.PodMountedInfo>>;
 
 export function Load(arg1:string,arg2:string,arg3:string):Promise<handler.LiteUser>;
 
-export function Login(arg1:string,arg2:string):Promise<Error>;
+export function Login(arg1:string,arg2:string):Promise<void>;
 
-export function Logout():Promise<Error>;
+export function Logout():Promise<void>;
 
-export function Mount(arg1:string,arg2:string,arg3:boolean):Promise<Error>;
+export function Mount(arg1:string,arg2:string,arg3:boolean):Promise<void>;
 
-export function Start(arg1:api.FairOSConfig):Promise<Error>;
+export function Start(arg1:api.FairOSConfig):Promise<void>;
 
 export function StartCacheCleaner(arg1:context.Context):Promise<void>;
 
-export function Unmount(arg1:string):Promise<Error>;
+export function Sync(arg1:string):Promise<void>;
+
+export function Unmount(arg1:string):Promise<void>;

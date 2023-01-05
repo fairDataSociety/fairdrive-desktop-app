@@ -42,6 +42,10 @@ export function StartCacheCleaner(arg1) {
   return window['go']['handler']['Handler']['StartCacheCleaner'](arg1);
 }
 
+export function Sync(arg1) {
+  return window['go']['handler']['Handler']['Sync'](arg1);
+}
+
 export function Unmount(arg1) {
   return window['go']['handler']['Handler']['Unmount'](arg1);
 }

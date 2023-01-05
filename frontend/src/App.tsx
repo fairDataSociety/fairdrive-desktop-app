@@ -16,6 +16,7 @@ import {
   CreatePod,
   GetCashedPods,
   Load,
+  Sync,
 } from '../wailsjs/go/handler/Handler'
 import {
   SetupConfig,
@@ -69,6 +70,7 @@ import {
 } from '@mui/material'
 import MuiAlert from '@mui/material/Alert'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import CachedIcon from '@mui/icons-material/Cached';
 import { api, handler } from '../wailsjs/go/models'
 import { BrowserOpenURL, EventsEmit, EventsOn } from '../wailsjs/runtime'
 import { Folder } from '@mui/icons-material'
@@ -346,6 +348,16 @@ function App() {
     })
     setAccounts(newAccounts)
     localStorage.setItem('accounts', JSON.stringify(newAccounts))
+  }
+
+  const sync = async (podName: string) => {
+    try {
+      setIsLoading(true)
+      await Sync(podName)
+    } catch (e) {
+      showError(e)
+    }
+    setIsLoading(false)
   }
 
   const mount = async (e: any) => {
@@ -1591,6 +1603,16 @@ function App() {
                             key={pod.podName}
                             secondaryAction={
                               <div>
+                                <Tooltip title="Sync">
+                                  <IconButton
+                                    onClick={() =>
+                                      sync(pod.podName)
+                                    }
+                                    disabled={isLoading}
+                                  >
+                                    <CachedIcon />
+                                  </IconButton>
+                                </Tooltip>
                                 <Tooltip title={pod.mountPoint}>
                                   <IconButton
                                     onClick={() =>
