@@ -14,4 +14,4 @@ export function IsSet():Promise<boolean>;
 
 export function ReadConfig():Promise<Error>;
 
-export function SetupConfig(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:boolean):Promise<Error>;
+export function SetupConfig(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<Error>;

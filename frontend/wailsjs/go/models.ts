@@ -1,7 +1,6 @@
 export namespace api {
 	
 	export class FairOSConfig {
-	    isProxy: boolean;
 	    bee: string;
 	    batch: string;
 	    rpc: string;
@@ -13,7 +12,6 @@ export namespace api {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.isProxy = source["isProxy"];
 	        this.bee = source["bee"];
 	        this.batch = source["batch"];
 	        this.rpc = source["rpc"];

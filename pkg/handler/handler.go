@@ -161,8 +161,10 @@ func (h *Handler) Mount(pod, location string, readOnly bool) error {
 	host := fuse.NewFileSystemHost(dfsFuse)
 	opts := mountOptions(pod)
 	if readOnly {
+		fmt.Println("============read only")
 		opts = append(opts, "-o", "ro")
 	}
+	fmt.Println(opts)
 	go func() {
 		host.SetCapReaddirPlus(true)
 		host.Mount(mountPoint, opts)
@@ -273,6 +275,7 @@ func (h *Handler) Close() error {
 func mountOptions(pod string) (options []string) {
 	options = []string{}
 	//options = append(options, "-o", "debug")
+	options = append(options, "-o", "exec")
 
 	if runtime.GOOS == "windows" {
 		options = append(options, "--FileSystemName="+pod)

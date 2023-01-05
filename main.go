@@ -5,12 +5,10 @@ import (
 	"embed"
 	"fmt"
 	"os"
-	"path/filepath"
 	"runtime"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/handler"
-	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"github.com/wailsapp/wails/v2/pkg/application"
 	"github.com/wailsapp/wails/v2/pkg/menu"
@@ -30,16 +28,16 @@ var (
 )
 
 func main() {
-	logger := logging.New(os.Stdout, logrus.WarnLevel)
+	logger := logging.New(os.Stdout, logrus.DebugLevel)
 
-	home, err := homedir.Dir()
-	if err == nil {
-		file, err := os.Create(filepath.Join(home, log))
-		if err == nil {
-			logger = logging.New(file, logrus.ErrorLevel)
-			defer file.Close()
-		}
-	}
+	//home, err := homedir.Dir()
+	//if err == nil {
+	//	file, err := os.Create(filepath.Join(home, log))
+	//	if err == nil {
+	//		logger = logging.New(file, logrus.ErrorLevel)
+	//		defer file.Close()
+	//	}
+	//}
 	dfsHandler, err := handler.New(logger)
 	if err != nil {
 		println("Error:", err.Error())
