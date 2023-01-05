@@ -3,6 +3,7 @@
 import {pod} from '../models';
 import {handler} from '../models';
 import {api} from '../models';
+import {context} from '../models';
 
 export function Close():Promise<Error>;
 
@@ -21,5 +22,7 @@ export function Logout():Promise<Error>;
 export function Mount(arg1:string,arg2:string,arg3:boolean):Promise<Error>;
 
 export function Start(arg1:api.FairOSConfig):Promise<Error>;
+
+export function StartCacheCleaner(arg1:context.Context):Promise<void>;
 
 export function Unmount(arg1:string):Promise<Error>;

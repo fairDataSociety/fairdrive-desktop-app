@@ -151,6 +151,12 @@ func New(sessionId string, pod *pod.Info, api *api.DfsAPI, logger logging.Logger
 	return f, nil
 }
 
+func (f *Ffdfs) CacheClean() {
+	defer f.synchronize()()
+
+	f.openmap = map[uint64]*node_t{}
+}
+
 // Statfs sets the filesystem stats
 func (f *Ffdfs) Statfs(_ string, stat *fuse.Statfs_t) int {
 	// TODO fix space availability logic based on batchID

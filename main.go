@@ -223,6 +223,8 @@ func main() {
 				wRuntime.MenuUpdateApplicationMenu(startContext)
 				wRuntime.EventsEmit(startContext, "mountThesePods")
 			}
+
+			go dfsHandler.StartCacheCleaner(startContext)
 		},
 		OnShutdown: func(_ context.Context) {
 			dfsHandler.Close()
@@ -232,7 +234,6 @@ func main() {
 		app.Quit()
 	})
 	app.SetApplicationMenu(appMenu)
-
 	if err := app.Run(); err != nil {
 		println("Error:", err.Error())
 		return
