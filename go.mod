@@ -3,7 +3,7 @@ module github.com/fairdatasociety/fairdrive-desktop-app
 go 1.18
 
 require (
-	github.com/fairdatasociety/fairOS-dfs v0.9.0-rc9.0.20230105084803-517b75b7a6fb
+	github.com/fairdatasociety/fairOS-dfs v0.9.2-rc2
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/plexsysio/taskmanager v0.0.0-20211220123746-de5ebdd49ae2
 	github.com/sirupsen/logrus v1.9.0
@@ -86,7 +86,7 @@ require (
 	golang.org/x/crypto v0.1.0 // indirect
 	golang.org/x/exp v0.0.0-20220426173459-3bcf042a4bf5 // indirect
 	golang.org/x/net v0.1.0 // indirect
-	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
