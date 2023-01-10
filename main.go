@@ -8,9 +8,10 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/mitchellh/go-homedir"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/handler"
-	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"github.com/wailsapp/wails/v2/pkg/application"
 	"github.com/wailsapp/wails/v2/pkg/menu"
@@ -30,7 +31,7 @@ var (
 )
 
 func main() {
-	logger := logging.New(os.Stdout, logrus.WarnLevel)
+	logger := logging.New(os.Stdout, logrus.DebugLevel)
 
 	home, err := homedir.Dir()
 	if err == nil {
@@ -225,6 +226,8 @@ func main() {
 				wRuntime.MenuUpdateApplicationMenu(startContext)
 				wRuntime.EventsEmit(startContext, "mountThesePods")
 			}
+
+			go dfsHandler.StartCacheCleaner(startContext)
 		},
 		OnShutdown: func(_ context.Context) {
 			dfsHandler.Close()
@@ -234,7 +237,6 @@ func main() {
 		app.Quit()
 	})
 	app.SetApplicationMenu(appMenu)
-
 	if err := app.Run(); err != nil {
 		println("Error:", err.Error())
 		return

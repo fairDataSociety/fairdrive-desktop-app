@@ -23,6 +23,10 @@ var (
 	root = "Fairdrive"
 )
 
+type CacheCleaner interface {
+	CacheClean()
+}
+
 type Handler struct {
 	lock           sync.Mutex
 	api            *api.DfsAPI
@@ -34,6 +38,7 @@ type Handler struct {
 
 type hostMount struct {
 	h    *fuse.FileSystemHost
+	c    CacheCleaner
 	path string
 }
 
@@ -157,25 +162,36 @@ func (h *Handler) Mount(pod, location string, readOnly bool) error {
 		return err
 	}
 
-	sig := make(chan int)
+	sig := make(chan string)
 	host := fuse.NewFileSystemHost(dfsFuse)
+
 	opts := mountOptions(pod)
 	if readOnly {
 		opts = append(opts, "-o", "ro")
 	}
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				sig <- fmt.Sprintf("%v", r)
+			}
+			defer close(sig)
+		}()
 		host.SetCapReaddirPlus(true)
 		host.Mount(mountPoint, opts)
-		close(sig)
+		sig <- ""
 	}()
 	select {
-	case <-time.After(time.Second * 1):
-		h.activeMounts[pod] = &hostMount{
-			h:    host,
-			path: mountPoint,
+	case <-time.After(time.Second * 2):
+	case e := <-sig:
+		if e == "" {
+			return fmt.Errorf("failed to mount")
 		}
-	case <-sig:
-		return fmt.Errorf("failed to mount")
+		return fmt.Errorf(e)
+	}
+	h.activeMounts[pod] = &hostMount{
+		h:    host,
+		c:    dfsFuse,
+		path: mountPoint,
 	}
 	h.logger.Infof("%s is mounted at %s", pod, mountPoint)
 	return nil
@@ -270,9 +286,49 @@ func (h *Handler) Close() error {
 	return h.api.Close()
 }
 
+func (h *Handler) Sync(podName string) {
+	if h.api == nil {
+		return
+	}
+	h.lock.Lock()
+	defer h.lock.Unlock()
+	host, ok := h.activeMounts[podName]
+	if ok {
+		err := h.api.SyncPodAsync(context.TODO(), podName, h.sessionID)
+		if err != nil {
+			h.logger.Errorf("%s pod sync failed: %s", podName, err.Error())
+		}
+		host.c.CacheClean()
+		h.logger.Infof("%s mount cache cleaned", podName)
+	}
+}
+
+func (h *Handler) StartCacheCleaner(ctx context.Context) {
+	ticker := time.NewTicker(time.Minute * 30)
+	for {
+		select {
+		case <-ctx.Done():
+			ticker.Stop()
+			return
+		case <-ticker.C:
+			h.lock.Lock()
+			for podName, host := range h.activeMounts {
+				err := h.api.SyncPodAsync(ctx, podName, h.sessionID)
+				if err != nil {
+					h.logger.Errorf("%s pod sync failed: %s", podName, err.Error())
+				}
+				host.c.CacheClean()
+				h.logger.Infof("%s mount cache cleaned", podName)
+			}
+			h.lock.Unlock()
+		}
+	}
+}
+
 func mountOptions(pod string) (options []string) {
 	options = []string{}
 	//options = append(options, "-o", "debug")
+	options = append(options, "-o", "exec")
 
 	if runtime.GOOS == "windows" {
 		options = append(options, "--FileSystemName="+pod)

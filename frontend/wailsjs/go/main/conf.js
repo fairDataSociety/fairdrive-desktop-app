@@ -26,6 +26,6 @@ export function ReadConfig() {
   return window['go']['main']['conf']['ReadConfig']();
 }
 
-export function SetupConfig(arg1, arg2, arg3, arg4, arg5, arg6) {
-  return window['go']['main']['conf']['SetupConfig'](arg1, arg2, arg3, arg4, arg5, arg6);
+export function SetupConfig(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['conf']['SetupConfig'](arg1, arg2, arg3, arg4, arg5);
 }

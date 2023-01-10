@@ -17,7 +17,6 @@ type DfsAPI struct {
 }
 
 type FairOSConfig struct {
-	IsProxy bool   `json:"isProxy"`
 	Bee     string `json:"bee"`
 	Batch   string `json:"batch"`
 	RPC     string `json:"rpc"`
@@ -37,10 +36,8 @@ func New(logger logging.Logger, fc *FairOSConfig) (*DfsAPI, error) {
 
 	ensConfig.ProviderBackend = fc.RPC
 	api, err := dfs.NewDfsAPI(
-		"/",
 		fc.Bee,
 		fc.Batch,
-		fc.IsProxy,
 		ensConfig,
 		logger,
 	)

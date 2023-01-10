@@ -21,11 +21,10 @@ type conf struct {
 	mountedPods []string
 }
 
-func (c *conf) SetupConfig(beeEndpoint, beeBatch, network, rpc, mountPoint string, beeGatewayBool bool) error {
+func (c *conf) SetupConfig(beeEndpoint, beeBatch, network, rpc, mountPoint string) error {
 	config := viper.New()
 	config.Set("bee.endpoint", beeEndpoint)
 	config.Set("bee.batch", beeBatch)
-	config.Set("bee.gateway", beeGatewayBool)
 	config.Set("network", network)
 	config.Set("rpc", rpc)
 	home, err := homedir.Dir()
@@ -56,7 +55,6 @@ func (c *conf) ReadConfig() error {
 		}
 	}
 	c.fc = &api.FairOSConfig{
-		IsProxy: config.GetBool("bee.gateway"),
 		Bee:     config.GetString("bee.endpoint"),
 		Batch:   config.GetString("bee.batch"),
 		RPC:     config.GetString("rpc"),

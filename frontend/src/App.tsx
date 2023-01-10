@@ -16,6 +16,7 @@ import {
   CreatePod,
   GetCashedPods,
   Load,
+  Sync,
 } from '../wailsjs/go/handler/Handler'
 import {
   SetupConfig,
@@ -69,6 +70,7 @@ import {
 } from '@mui/material'
 import MuiAlert from '@mui/material/Alert'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import CachedIcon from '@mui/icons-material/Cached';
 import { api, handler } from '../wailsjs/go/models'
 import { BrowserOpenURL, EventsEmit, EventsOn } from '../wailsjs/runtime'
 import { Folder } from '@mui/icons-material'
@@ -265,8 +267,6 @@ function App() {
       } else {
         let c = await GetConfig()
         if (c !== null) {
-          c.isProxy ? setProxyValue('yes') : setProxyValue('no')
-          setProxy(c.isProxy)
           setBee(c.bee)
           setBatch(c.batch)
           setNetwork(c.network)
@@ -350,15 +350,26 @@ function App() {
     localStorage.setItem('accounts', JSON.stringify(newAccounts))
   }
 
+  const sync = async (podName: string) => {
+    try {
+      setIsLoading(true)
+      await Sync(podName)
+    } catch (e) {
+      showError(e)
+    }
+    setIsLoading(false)
+  }
+
   const mount = async (e: any) => {
     setIsLoading(true)
     if (e.target.checked) {
-      // TODO need to check how mount point can be passed for Windows and linux
       try {
         await Mount(e.target.value, mountPoint, batch === '')
         EventsEmit('Mount')
       } catch (e: any) {
         showError(e)
+        setIsLoading(false)
+        return
       }
     } else {
       try {
@@ -366,6 +377,8 @@ function App() {
         EventsEmit('Mount')
       } catch (e: any) {
         showError(e)
+        setIsLoading(false)
+        return
       }
     }
     let pods = await GetCashedPods()
@@ -377,24 +390,11 @@ function App() {
   const [toggleConfigAdvanced, setToggleConfigAdvanced] = useState<boolean>(false)
   const [switchLocalGateway, setSwitchLocalGateway] = useState<boolean>(false)
 
-  const [isProxy, setProxy] = useState<boolean>(false)
-  const [proxyValue, setProxyValue] = useState('no')
   const [bee, setBee] = useState('http://localhost:1633') // should be localhost as default, as per swarm web3 PC, previously https://bee-1.dev.fairdatasociety.org // TODO check in go code
   const [batch, setBatch] = useState('')
   const [rpc, setRPC] = useState('https://xdai.dev.fairdatasociety.org')
   const [network, setNetwork] = useState('testnet')
   const [preferencesUpdated, setPreferencesUpdated] = useState(false)
-
-  const updateProxy = (e: any) => {
-    setProxyValue(e.target.value)
-    if (e.target.value === 'no') {
-      setProxy(false)
-    } else {
-      setProxy(true)
-    }
-
-    setPreferencesUpdated(true)
-  }
 
   const updateBee = (e: any) => {
     setBee(e.target.value)
@@ -431,14 +431,13 @@ function App() {
       await Close()
     }
     let cfg: api.FairOSConfig = {
-      isProxy: isProxy,
       bee: bee,
       batch: batch,
       rpc: rpc,
       network: network,
     }
     try {
-      await SetupConfig(bee, batch, network, rpc, mountPoint, isProxy)
+      await SetupConfig(bee, batch, network, rpc, mountPoint)
       // TODO show this some how
       // if (batch === "") {
       //   setInfoMessage('Providing No BatchID will cause mounts to be read-only')
@@ -755,36 +754,6 @@ function App() {
                     Is Bee running behind proxy?
                   </FormLabel>
                 </Tooltip>
-                <RadioGroup
-                  aria-labelledby="demo-controlled-radio-buttons-group"
-                  name="controlled-radio-buttons-group"
-                  onChange={updateProxy}
-                  value={proxyValue}
-                >
-                  <Grid container>
-                    <Grid item>
-                      <Tooltip title="Select if you directly access Bee">
-                        <FormControlLabel
-                          value={'no'}
-                          control={<Radio />}
-                          label="No"
-                          style={{ color: 'black' }}
-                        />
-                      </Tooltip>
-                    </Grid>
-
-                    <Grid item>
-                      <Tooltip title="Select if your bee is behind proxy (gateways are not proxies)">
-                        <FormControlLabel
-                          value={'yes'}
-                          control={<Radio />}
-                          label="Yes"
-                          style={{ color: 'black' }}
-                        />
-                      </Tooltip>
-                    </Grid>
-                  </Grid>
-                </RadioGroup>
                 <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
                   <Tooltip title="Bee API endpoint, recommended http://localhost:1633">
                     <TextField
@@ -932,12 +901,6 @@ function App() {
                             },
                           })
                           setSwitchLocalGateway(!switchLocalGateway)
-
-                          updateProxy({
-                            target: {
-                              value: switchLocalGateway ? 'no' : 'yes',
-                            },
-                          })
                         }}
                       />
                       <span
@@ -1643,6 +1606,16 @@ function App() {
                             key={pod.podName}
                             secondaryAction={
                               <div>
+                                <Tooltip title="Sync">
+                                  <IconButton
+                                    onClick={() =>
+                                      sync(pod.podName)
+                                    }
+                                    disabled={isLoading}
+                                  >
+                                    <CachedIcon />
+                                  </IconButton>
+                                </Tooltip>
                                 <Tooltip title={pod.mountPoint}>
                                   <IconButton
                                     onClick={() =>
