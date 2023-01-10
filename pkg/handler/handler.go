@@ -167,7 +167,8 @@ func (h *Handler) Mount(pod, location string, readOnly bool) error {
 
 	opts := mountOptions(pod)
 	if readOnly {
-		opts = append(opts, "-o", "ro")
+		// TODO add this back in future
+		// opts = append(opts, "-o", "ro")
 	}
 	go func() {
 		defer func() {
