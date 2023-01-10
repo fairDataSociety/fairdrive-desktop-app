@@ -162,7 +162,7 @@ func (h *Handler) Mount(pod, location string, readOnly bool) error {
 		return err
 	}
 
-	sig := make(chan int)
+	sig := make(chan string)
 	host := fuse.NewFileSystemHost(dfsFuse)
 
 	opts := mountOptions(pod)
@@ -170,19 +170,28 @@ func (h *Handler) Mount(pod, location string, readOnly bool) error {
 		opts = append(opts, "-o", "ro")
 	}
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				sig <- fmt.Sprintf("%v", r)
+			}
+			defer close(sig)
+		}()
 		host.SetCapReaddirPlus(true)
 		host.Mount(mountPoint, opts)
-		close(sig)
+		sig <- ""
 	}()
 	select {
-	case <-time.After(time.Second * 1):
-		h.activeMounts[pod] = &hostMount{
-			h:    host,
-			c:    dfsFuse,
-			path: mountPoint,
+	case <-time.After(time.Second * 2):
+	case e := <-sig:
+		if e == "" {
+			return fmt.Errorf("failed to mount")
 		}
-	case <-sig:
-		return fmt.Errorf("failed to mount")
+		return fmt.Errorf(e)
+	}
+	h.activeMounts[pod] = &hostMount{
+		h:    host,
+		c:    dfsFuse,
+		path: mountPoint,
 	}
 	h.logger.Infof("%s is mounted at %s", pod, mountPoint)
 	return nil

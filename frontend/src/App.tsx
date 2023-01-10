@@ -363,12 +363,13 @@ function App() {
   const mount = async (e: any) => {
     setIsLoading(true)
     if (e.target.checked) {
-      // TODO need to check how mount point can be passed for Windows and linux
       try {
         await Mount(e.target.value, mountPoint, batch === '')
         EventsEmit('Mount')
       } catch (e: any) {
         showError(e)
+        setIsLoading(false)
+        return
       }
     } else {
       try {
@@ -376,6 +377,8 @@ function App() {
         EventsEmit('Mount')
       } catch (e: any) {
         showError(e)
+        setIsLoading(false)
+        return
       }
     }
     let pods = await GetCashedPods()
