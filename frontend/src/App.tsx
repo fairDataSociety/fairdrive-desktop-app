@@ -464,7 +464,7 @@ function App() {
   }
 
   async function openSignUp() {
-    BrowserOpenURL('https://create.staging.fairdatasociety.org/#/register')
+    BrowserOpenURL('https://create.fairdatasociety.org/#/register')
   }
 
   async function openBrowserLicense() {
