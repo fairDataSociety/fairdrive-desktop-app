@@ -632,8 +632,10 @@ function App() {
   function showError(error: any) {
     if (typeof error === 'string') {
       setErrorMessage(error.toUpperCase())
-      if (error === 'USER NOT LOGGED IN') {
+      if (error === 'user not logged in') {
         setShowLogin(true)
+        setShowPods(false)
+        debugger
       }
     } else if (error instanceof Error) {
       setErrorMessage(error.message) // works, `e` narrowed to Error
@@ -762,7 +764,7 @@ function App() {
                       required
                       fullWidth
                       id="bee"
-                      label="Bee"
+                      label="Bee API URL"
                       onChange={updateBee}
                       autoComplete="off"
                     />
@@ -777,7 +779,7 @@ function App() {
                       required
                       fullWidth
                       id="batch"
-                      label="BatchID"
+                      label="Bee Postage Stamp Batch ID"
                       onChange={updateBatch}
                       autoComplete="off"
                     />
@@ -792,7 +794,7 @@ function App() {
                       required
                       fullWidth
                       id="rpc"
-                      label="RPC"
+                      label="RPC endpoint for selected network"
                       onChange={updateRPC}
                       autoComplete="off"
                     />
@@ -923,7 +925,7 @@ function App() {
                       required
                       fullWidth
                       id="bee"
-                      label="Bee"
+                      label="Bee API URL"
                       onChange={updateBee}
                       autoComplete="off"
                     />
@@ -940,7 +942,7 @@ function App() {
                       required
                       fullWidth
                       id="batch"
-                      label="BatchID"
+                      label="Bee Postage Stamp Batch ID"
                       onChange={updateBatch}
                       autoComplete="off"
                       disabled={switchLocalGateway}
@@ -1606,11 +1608,9 @@ function App() {
                             key={pod.podName}
                             secondaryAction={
                               <div>
-                                <Tooltip title="Sync">
+                                <Tooltip title="Sync contents">
                                   <IconButton
-                                    onClick={() =>
-                                      sync(pod.podName)
-                                    }
+                                    onClick={() => sync(pod.podName)}
                                     disabled={isLoading}
                                   >
                                     <CachedIcon />
