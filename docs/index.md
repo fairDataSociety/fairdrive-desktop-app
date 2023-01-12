@@ -21,7 +21,8 @@ pod on your own user space and interact with your data.
 
 ## How do I install FDA?
 
-> **_IMPORTANT:_**  To use FDA on your system you need to install [fuse](https://www.kernel.org/doc/html/latest/filesystems/fuse.html) first.
+> **_IMPORTANT:_**  To use FDA on your system you need to install system support for [FUSE](https://www.kernel.org/doc/html/latest/filesystems/fuse.html) first.
+
 ## Prerequisites And Requirements
 
 ### FUSE
