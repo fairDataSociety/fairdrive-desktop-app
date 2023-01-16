@@ -3,8 +3,8 @@ import { createTheme, ThemeProvider } from '@mui/material/styles'
 import logo from './assets/images/fairdata.svg'
 import dfLogo from './assets/images/datafund.svg'
 import backgroundImage from './assets/images/sculptures_of_data_s.jpg'
-
 import './App.css'
+
 import {
   Login,
   Mount,
@@ -16,7 +16,7 @@ import {
   CreatePod,
   GetCashedPods,
   Load,
-  Sync,
+  Sync, SharePod,
 } from '../wailsjs/go/handler/Handler'
 import {
   SetupConfig,
@@ -68,6 +68,7 @@ import {
   Switch,
   Slide,
 } from '@mui/material'
+import ShareIcon from '@mui/icons-material/Share';
 import MuiAlert from '@mui/material/Alert'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import CachedIcon from '@mui/icons-material/Cached';
@@ -360,11 +361,35 @@ function App() {
     setIsLoading(false)
   }
 
+  const share = async (podName: string) => {
+    try {
+      setIsLoading(true)
+      let ref = await SharePod(podName)
+      console.log(ref)
+
+      // TODO Pod share show a modal with sharing ref and copy to clipboard feature
+    } catch (e) {
+      showError(e)
+    }
+    setIsLoading(false)
+  }
+
   const mount = async (e: any) => {
     setIsLoading(true)
+    let podName = e.target.value
     if (e.target.checked) {
       try {
-        await Mount(e.target.value, mountPoint, batch === '')
+        let readOnly = false
+        pods.map(pod => {
+          if (pod.podName === podName) {
+            readOnly = pod.isShared
+          }
+        })
+        if (batch === '') {
+          readOnly = true
+        }
+        console.log(readOnly)
+        await Mount(podName, mountPoint, readOnly)
         EventsEmit('Mount')
       } catch (e: any) {
         showError(e)
@@ -373,7 +398,7 @@ function App() {
       }
     } else {
       try {
-        await Unmount(e.target.value)
+        await Unmount(podName)
         EventsEmit('Mount')
       } catch (e: any) {
         showError(e)
@@ -381,8 +406,8 @@ function App() {
         return
       }
     }
-    let pods = await GetCashedPods()
-    setPods(pods)
+    let cachedPods = await GetCashedPods()
+    setPods(cachedPods)
     setIsLoading(false)
   }
   const [mountPoint, setMountPoint] = useState('')
@@ -559,6 +584,7 @@ function App() {
         setMnemonic('')
         setShowLogin(false)
         setPods(p)
+        console.log(p)
         setShowPods(true)
         EventsEmit('enableMenus')
         setOpenError(false) // close error if it was open before
@@ -1608,6 +1634,14 @@ function App() {
                             key={pod.podName}
                             secondaryAction={
                               <div>
+                                <Tooltip title="Share pod">
+                                  <IconButton
+                                    onClick={() => share(pod.podName)}
+                                    disabled={isLoading}
+                                  >
+                                    <ShareIcon />
+                                  </IconButton>
+                                </Tooltip>
                                 <Tooltip title="Sync contents">
                                   <IconButton
                                     onClick={() => sync(pod.podName)}

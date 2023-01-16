@@ -34,6 +34,14 @@ export function Mount(arg1, arg2, arg3) {
   return window['go']['handler']['Handler']['Mount'](arg1, arg2, arg3);
 }
 
+export function ReceivePod(arg1, arg2) {
+  return window['go']['handler']['Handler']['ReceivePod'](arg1, arg2);
+}
+
+export function SharePod(arg1) {
+  return window['go']['handler']['Handler']['SharePod'](arg1);
+}
+
 export function Start(arg1) {
   return window['go']['handler']['Handler']['Start'](arg1);
 }

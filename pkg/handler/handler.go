@@ -9,6 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/api"
@@ -28,12 +30,13 @@ type CacheCleaner interface {
 }
 
 type Handler struct {
-	lock           sync.Mutex
-	api            *api.DfsAPI
-	activeMounts   map[string]*hostMount
-	logger         logging.Logger
-	sessionID      string
-	lastLoadedPods []string
+	lock                 sync.Mutex
+	api                  *api.DfsAPI
+	activeMounts         map[string]*hostMount
+	logger               logging.Logger
+	sessionID            string
+	lastLoadedPods       []string
+	lastLoadedSharedPods []string
 }
 
 type hostMount struct {
@@ -46,6 +49,7 @@ type PodMountedInfo struct {
 	PodName    string `json:"podName"`
 	IsMounted  bool   `json:"isMounted"`
 	MountPoint string `json:"mountPoint"`
+	IsShared   bool   `json:"isShared"`
 }
 
 type LiteUser struct {
@@ -144,7 +148,6 @@ func (h *Handler) Mount(pod, location string, readOnly bool) error {
 				return err
 			}
 		}
-
 	}
 	h.lock.Lock()
 	defer h.lock.Unlock()
@@ -223,17 +226,30 @@ func (h *Handler) GetPodsList() ([]*PodMountedInfo, error) {
 	}
 	h.lock.Lock()
 	defer h.lock.Unlock()
-	pods, _, err := h.api.ListPods(h.sessionID)
+	pods, shared, err := h.api.ListPods(h.sessionID)
 	if err != nil {
 		return nil, err
 	}
 	h.lastLoadedPods = pods
+	h.lastLoadedSharedPods = shared
 	podsMounted := []*PodMountedInfo{}
 	for _, podName := range pods {
 		host, ok := h.activeMounts[podName]
 		podMounted := &PodMountedInfo{
 			PodName:   podName,
 			IsMounted: ok,
+		}
+		if ok {
+			podMounted.MountPoint = host.path
+		}
+		podsMounted = append(podsMounted, podMounted)
+	}
+	for _, podName := range shared {
+		host, ok := h.activeMounts[podName]
+		podMounted := &PodMountedInfo{
+			PodName:   podName,
+			IsMounted: ok,
+			IsShared:  true,
 		}
 		if ok {
 			podMounted.MountPoint = host.path
@@ -255,6 +271,18 @@ func (h *Handler) GetCashedPods() []*PodMountedInfo {
 		podMounted := &PodMountedInfo{
 			PodName:   podName,
 			IsMounted: ok,
+		}
+		if ok {
+			podMounted.MountPoint = host.path
+		}
+		podsMounted = append(podsMounted, podMounted)
+	}
+	for _, podName := range h.lastLoadedSharedPods {
+		host, ok := h.activeMounts[podName]
+		podMounted := &PodMountedInfo{
+			PodName:   podName,
+			IsMounted: ok,
+			IsShared:  true,
 		}
 		if ok {
 			podMounted.MountPoint = host.path
@@ -301,6 +329,26 @@ func (h *Handler) Sync(podName string) {
 		host.c.CacheClean()
 		h.logger.Infof("%s mount cache cleaned", podName)
 	}
+}
+
+func (h *Handler) SharePod(podName string) (string, error) {
+	if h.api == nil {
+		return "", ErrFairOsNotInitialised
+	}
+	return h.api.PodShare(podName, "", h.sessionID)
+}
+
+func (h *Handler) ReceivePod(podSharingReference, podName string) error {
+	if h.api == nil {
+		return ErrFairOsNotInitialised
+	}
+	ref, err := utils.ParseHexReference(podSharingReference)
+	if err != nil {
+		return err
+	}
+
+	_, err = h.api.PodReceive(h.sessionID, podName, ref)
+	return err
 }
 
 func (h *Handler) StartCacheCleaner(ctx context.Context) {

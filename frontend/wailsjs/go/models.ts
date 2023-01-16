@@ -41,6 +41,7 @@ export namespace handler {
 	    podName: string;
 	    isMounted: boolean;
 	    mountPoint: string;
+	    isShared: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new PodMountedInfo(source);
@@ -51,6 +52,7 @@ export namespace handler {
 	        this.podName = source["podName"];
 	        this.isMounted = source["isMounted"];
 	        this.mountPoint = source["mountPoint"];
+	        this.isShared = source["isShared"];
 	    }
 	}
 

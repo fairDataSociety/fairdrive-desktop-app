@@ -21,6 +21,10 @@ export function Logout():Promise<void>;
 
 export function Mount(arg1:string,arg2:string,arg3:boolean):Promise<void>;
 
+export function ReceivePod(arg1:string,arg2:string):Promise<void>;
+
+export function SharePod(arg1:string):Promise<string>;
+
 export function Start(arg1:api.FairOSConfig):Promise<void>;
 
 export function StartCacheCleaner(arg1:context.Context):Promise<void>;
