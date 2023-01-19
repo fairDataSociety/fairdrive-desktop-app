@@ -73,9 +73,9 @@ function ForkPodComponent(props: ForkPodOpsProps) {
           onChange={updateNewPodName}
         />
         <Typography>
-          <span>
+          <p>
             Fork will create a new pod from {props.podName}. This process can take some based on the contents in the pod. Please do not close the app while fork is in progress.
-          </span>
+          </p>
         </Typography>
       </DialogContent>
       <DialogActions>

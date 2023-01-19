@@ -42,20 +42,21 @@ function SharedReferenceComponent(props: SharedReferenceProps) {
       <DialogContent dividers>
         <Typography>
           <span>{props.reference.slice(0, 10)}.....{props.reference.slice(-10)}</span>
-          <span>
-            This reference can be used to share {props.podName}.
-            Others can use this reference to receive/import the content of this pod
-          </span>
           <Tooltip title="Copy reference">
             <IconButton
               onClick={() =>
                 copyUrlToClipboard(props.reference)
               }
-              sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
+              sx={{ width: "20px", height: "20px", marginLeft: "15px" }}
             >
               <ContentCopyIcon />
             </IconButton>
           </Tooltip>
+          <p>
+            This reference can be used to share {props.podName}.
+            Others can use this reference to receive/import the content of this pod
+          </p>
+
         </Typography>
       </DialogContent>
       <DialogActions>

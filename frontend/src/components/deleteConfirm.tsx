@@ -2,6 +2,7 @@ import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography }
 import { DeletePod } from "../../wailsjs/go/handler/Handler";
 
 export interface DeleteProps {
+  isLoading: boolean
   isOpen: boolean
   onClose: () => void
   onError:(arg0: string) => void
@@ -32,10 +33,10 @@ function DeleteConfirmComponent(props: DeleteProps) {
         <Typography>This action is irreversible. Are you Sure? </Typography>
       </DialogContent>
       <DialogActions>
-        <Button autoFocus onClick={props.onClose}>
+        <Button autoFocus onClick={props.onClose} disabled={props.isLoading}>
           Cancel
         </Button>
-        <Button onClick={deletePod}>Ok</Button>
+        <Button onClick={deletePod} disabled={props.isLoading}>Ok</Button>
       </DialogActions>
     </Dialog>
   );

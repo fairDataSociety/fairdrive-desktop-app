@@ -91,21 +91,6 @@
    cursor: pointer;
 }
 
-
-.btn {
-}
-
-.btn:hover {
-    transform: skewX( -16deg ) translateX( 0px );
-    transition: 1s;
-} 
-
-p:hover, MuiFormControlLabel-label:hover, span:hover {
-    transform: skewX( -10deg ) translateX( 0px ) perspective(151px) scale(103%);
-    transition: 8s cubic-bezier(0, 0.56, 0.46, 1);
-    font-weight: 500;
-} 
-
 .shrinkable {
     visibility: hidden;
 }

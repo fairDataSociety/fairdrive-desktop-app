@@ -87,9 +87,9 @@ function ReceiveForkPodComponent(props: PodOpsProps) {
           onChange={updateReference}
         />
         <Typography>
-          <span>
+          <p>
             Forking from reference will create a new pod from the given reference. This process can take some based on the contents in the pod. Please do not close the app while fork is in progress.
-          </span>
+          </p>
         </Typography>
       </DialogContent>
       <DialogActions>

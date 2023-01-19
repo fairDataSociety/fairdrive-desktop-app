@@ -1,6 +1,5 @@
-import { forwardRef, SyntheticEvent, useEffect, useState } from 'react'
+import React, { forwardRef, SyntheticEvent, useEffect, useState } from 'react'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
-import logo from './assets/images/fairdata.svg'
 import backgroundImage from './assets/images/sculptures_of_data_s.jpg'
 import './App.css'
 
@@ -14,7 +13,7 @@ import {
   Logout,
   GetCashedPods,
   Load,
-  Sync, SharePod,
+  Sync,
 } from '../wailsjs/go/handler/Handler'
 import {
   SetupConfig,
@@ -33,16 +32,11 @@ import {
 import {
   TextField,
   Button,
-  Checkbox,
   FormGroup,
-  FormControlLabel,
   FormLabel,
   MenuItem,
   Select,
-  Container,
   Box,
-  Grid,
-  Link,
   Modal,
   Tooltip,
   IconButton,
@@ -52,35 +46,24 @@ import {
   Dialog,
   Typography,
   DialogActions,
-  LinearProgress,
   List,
   ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
   Switch,
-  ListSubheader,
+  CircularProgress, Backdrop,
 } from '@mui/material'
-import ShareIcon from '@mui/icons-material/Share';
 import MuiAlert from '@mui/material/Alert'
-import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import { api, handler } from '../wailsjs/go/models'
 import { EventsEmit, EventsOn } from '../wailsjs/runtime'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import PodMountedInfo = handler.PodMountedInfo
-import CloudSyncIcon from '@mui/icons-material/CloudSync';
-import AltRouteIcon from '@mui/icons-material/AltRoute';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import AboutComponent from "./components/about";
-import DeleteConfirmComponent from "./components/deleteConfirm";
-import { openSignUp } from "./utils/openBrowser";
-import { copyUrlToClipboard } from "./utils/copyToClipboard";
-import SharedReferenceComponent from "./components/sharedReference";
 import NewPodComponent from "./components/newPod";
 import { ErrorSnack } from "./components/error";
 import ReceivePodComponent from "./components/receivePod";
-import ForkPodComponent from "./components/forkPod";
 import ReceiveForkPodComponent from "./components/receiveForkPod";
+import LoginComponent from "./components/login";
+import PodsComponent from "./components/pods";
+import EmptyPodsComponent from "./components/empty";
 
 interface UserInfo {
   username: string | any
@@ -150,22 +133,9 @@ function App() {
     setShowAbout(false)
   }
 
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false)
-  const [podToDelete, setPodToDelete] = useState('')
-  const handleDeleteClose = () => {
-    setPodToDelete('')
-    setShowDeleteConfirm(false)
-  }
-  const deleteConfirm = async (podName: string) => {
-    setPodToDelete(podName)
-    setShowDeleteConfirm(true)
-  }
-
   async function loadPodsAndResetAll() {
     let p = await GetPodsList()
     setPods(p)
-    setPodToDelete('')
-    setPodToFork('')
   }
 
   const [showPodNew, setShowPodNew] = useState<boolean>(false)
@@ -183,16 +153,7 @@ function App() {
     setShowPodReceiveFork(false)
   }
 
-  const [showPodFork, setShowPodFork] = useState<boolean>(false)
-  const [podToFork, setPodToFork] = useState('')
-  const handlePodForkClose = () => {
-    setPodToFork('')
-    setShowPodFork(false)
-  }
-  const fork = async (podName: string) => {
-    setPodToFork(podName)
-    setShowPodFork(true)
-  }
+
   const [showConfig, setShowConfig] = useState<boolean>(false)
   const [showAccountDetails, setShowAccountDetails] = useState<boolean>(false)
   const [showAccountImport, setShowAccountImport] = useState<boolean>(false)
@@ -366,28 +327,6 @@ function App() {
     try {
       setIsLoading(true)
       await Sync(podName)
-    } catch (e) {
-      showError(e)
-    }
-    setIsLoading(false)
-  }
-
-  const [showSharedReference, setShowSharedReference] = useState<boolean>(false)
-  const [sharedReference, setSharedReference] = useState('')
-  const [sharedPodName, setSharedPodName] = useState('')
-  const handleSharedReferenceClose = () => {
-    setSharedReference('')
-    setSharedPodName('')
-    setShowSharedReference(false)
-  }
-  const share = async (podName: string) => {
-    setIsLoading(true)
-    try {
-      let ref = await SharePod(podName)
-      console.log(ref)
-      setSharedReference(ref)
-      setSharedPodName(podName)
-      setShowSharedReference(true)
     } catch (e) {
       showError(e)
     }
@@ -1183,23 +1122,14 @@ function App() {
           </Box>
         </Modal>
 
-        <div
-          style={{
-            position: 'absolute',
-            top: '0px',
-            zIndex: '10000',
-            width: '100%',
-            height: '10px',
-          }}
-        >
-          {isLoading && (
-            <LinearProgress
-              sx={{
-                height: 10,
-              }}
-            />
-          )}
-        </div>
+        {isLoading && (
+          <Backdrop
+            sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1000000000 }}
+            open={isLoading}
+          >
+            <CircularProgress color="inherit" />
+          </Backdrop>
+        )}
 
         {showAccounts && (
           <Box>
@@ -1299,23 +1229,10 @@ function App() {
           </Box>
         )}
 
-        {/*about dialog*/}
         {(() => {
           if (showAbout) {
             return (
               <AboutComponent  isOpen={showAbout} onClose={handleAboutClose}/>
-            )
-          }
-
-          if (showDeleteConfirm) {
-            return (
-              <DeleteConfirmComponent isOpen={showDeleteConfirm} onClose={handleDeleteClose} podName={podToDelete} onSuccess={loadPodsAndResetAll} onError={showError} showLoader={setIsLoading}/>
-            )
-          }
-
-          if (showSharedReference) {
-            return (
-              <SharedReferenceComponent isOpen={showSharedReference} onClose={handleSharedReferenceClose} podName={sharedPodName} reference={sharedReference}/>
             )
           }
 
@@ -1355,469 +1272,38 @@ function App() {
             )
           }
 
-          if (showPodFork) {
-            return (
-              <ForkPodComponent
-                podName={podToFork}
-                isOpen={showPodFork}
-                isLoading={isLoading}
-                onClose={handlePodForkClose}
-                showLoader={setIsLoading}
-                onError={showError}
-                onSuccess={loadPodsAndResetAll}/>
-            )
-          }
-
           if (showLogin) {
             return (
-              <>
-                <img
-                  src={logo}
-                  id="logo"
-                  alt="logo"
-                  className="logo-icon"
-                  onClick={() => setShowAccounts(true)}
-                />
-                <Container component="main" maxWidth="xs">
-                  <Box
-                    sx={{
-                      marginTop: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <FormGroup>
-                      <h2 style={{ color: 'black' }}>Fair Data Society Login</h2>
-                      <TextField
-                        margin="normal"
-                        required
-                        fullWidth
-                        id="username"
-                        label="Username"
-                        onChange={updateName}
-                        autoComplete="off"
-                        autoFocus
-                      />
-                      <TextField
-                        margin="normal"
-                        required
-                        fullWidth
-                        id="password"
-                        label="Password"
-                        onChange={updatePassword}
-                        autoComplete="off"
-                        type="password"
-                      />
-                      <FormControlLabel
-                        control={
-                          <Checkbox color="primary" onChange={updateRemember} />
-                        }
-                        label={
-                          <Tooltip
-                            title="This will also add information to a list of available accounts for faster switching"
-                            placement="top"
-                          >
-                            <Typography>Remember and keep me logged-in</Typography>
-                          </Tooltip>
-                        }
-                        style={{ color: 'black' }}
-                      />
-                      <Tooltip title="This app supports Lite and Portable FDS accounts. Enter your credentials and login">
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          sx={{ mt: 3, mb: 2 }}
-                          onClick={login}
-                          disabled={isLoading}
-                        >
-                          Login
-                        </Button>
-                      </Tooltip>
-                      <>
-                        <Tooltip
-                          title="Lite account exists on local machine only. You can upgrade it to Portable FDS account using mnemonic later. Just enter username/password and new account will be auto-magically created. When logged in see information about it in 'File -> Account details.' "
-                          placement="bottom"
-                        >
-                          <Typography
-                            // href="#"
-                            // variant="body2"
-                            // onClick={openCreateLightAccount}
-                            align="center"
-                            style={{ color: 'black' }}
-                          >
-                            What is Lite account?
-                          </Typography>
-                        </Tooltip>
-                      </>
-                      <>
-                        <br />
-                        <Tooltip title="Portable accounts can be used in web browsers, FairOS and in any app supporting FairDataProtocol with all the goodies provided by FDP. They require a balance.">
-                          <Typography style={{ color: 'black' }}>
-                            Need Advanced features ?
-                          </Typography>
-                        </Tooltip>
-                        <Tooltip
-                          title="Sign up for Portable FDS account."
-                          placement="bottom"
-                        >
-                          <Link
-                            href="#"
-                            variant="body2"
-                            onClick={openSignUp}
-                            align="center"
-                          >
-                            Sign Up
-                          </Link>
-                        </Tooltip>
-                      </>
-                    </FormGroup>
-                  </Box>
-                </Container>
-              </>
+              <LoginComponent
+                login={login}
+                isLoading={isLoading}
+                updateUsername={updateName}
+                updatePassword={updatePassword}
+                updateRemember={updateRemember}/>
             )
           }
 
           if (showPods) {
             if (pods != null && pods.length != 0) {
               return (
-                <Container component="main" maxWidth="xs">
-                  <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
-                    <h2 style={{ color: 'black', marginBottom: '0px' }}>Pods</h2>
-                  </Tooltip>
-                  <Tooltip
-                    title={
-                      "Currently logged in with account '" +
-                      username +
-                      "'. Click to display accounts."
-                    }
-                  >
-                    <Typography
-                      style={{ color: 'gray' }}
-                      onClick={() => setShowAccounts(true)}
-                    >
-                      {username}
-                    </Typography>
-                  </Tooltip>
-                  <Tooltip
-                    title={
-                      'This is ' +
-                      (mnemonic === '' || mnemonic === undefined
-                        ? 'portable'
-                        : 'lite') +
-                      ' account'
-                    }
-                  >
-                    <Typography style={{ color: 'gray', fontSize: '8px' }}>
-                      {mnemonic === '' || mnemonic === undefined
-                        ? 'portable'
-                        : 'lite'}
-                    </Typography>
-                  </Tooltip>
-
-                  <Box
-                    sx={{
-                      width: '100%',
-                      maxWidth: 360,
-                      bgcolor: 'background.paper',
-                    }}
-                  >
-                    <List
-                      subheader={
-                        <ListSubheader
-                          sx={{ bgcolor: 'transparent' }}>
-                          Own Pods
-                        </ListSubheader>
-                      }>
-                      {pods.map((pod) =>
-                        !pod.isShared ?
-                          pod.isMounted ? (
-                            <ListItem
-                              key={pod.podName}
-                              secondaryAction={
-                                <div>
-                                  <Tooltip title="Share pod">
-                                    <IconButton
-                                      onClick={() => share(pod.podName)}
-                                      disabled={isLoading}
-                                      sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
-                                    >
-                                      <ShareIcon sx={{ fontSize: "20px" }}/>
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title="Sync contents">
-                                    <IconButton
-                                      onClick={() => sync(pod.podName)}
-                                      disabled={isLoading}
-                                      sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
-                                    >
-                                      <CloudSyncIcon sx={{ fontSize: "20px" }}/>
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title={pod.mountPoint}>
-                                    <IconButton
-                                      onClick={() =>
-                                        copyUrlToClipboard(pod.mountPoint)
-                                      }
-                                      sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
-                                    >
-                                      <ContentCopyIcon />
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title="Open">
-                                    <IconButton
-                                      onClick={() =>
-                                        EventsEmit('open', pod.mountPoint)
-                                      }
-                                      sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
-                                    >
-                                      <OpenInNewIcon sx={{ fontSize: "20px" }}/>
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title="Fork">
-                                    <IconButton
-                                      onClick={() =>
-                                        fork(pod.podName)
-                                      }
-                                      sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
-                                    >
-                                      <AltRouteIcon sx={{ fontSize: "20px" }}/>
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title="Delete">
-                                    <IconButton
-                                      onClick={() =>
-                                        deleteConfirm(pod.podName)
-                                      }
-                                      sx={{ width: "20px", height: "20px", marginLeft: "5px"}}
-                                    >
-                                      <DeleteForeverIcon sx={{ fontSize: "20px" }}/>
-                                    </IconButton>
-                                  </Tooltip>
-                                </div>
-                              }
-                              disablePadding
-                            >
-                              <ListItemButton>
-                                <ListItemIcon>
-                                  <Tooltip
-                                    title={
-                                      pod.isMounted
-                                        ? 'Unmount this pod'
-                                        : 'Mount this pod'
-                                    }
-                                  >
-                                    <Checkbox
-                                      onChange={mount}
-                                      value={pod.podName}
-                                      color="primary"
-                                      disabled={isLoading}
-                                      checked={pod.isMounted}
-                                    />
-                                  </Tooltip>
-                                </ListItemIcon>
-                                <ListItemText
-                                  primary={pod.podName}
-                                  style={{ color: 'black' }}
-                                />
-                              </ListItemButton>
-                            </ListItem>
-                          ) : (
-                            <ListItem key={pod.podName} disablePadding>
-                              <ListItemButton>
-                                <ListItemIcon>
-                                  <Tooltip
-                                    title={
-                                      pod.isMounted
-                                        ? 'Unmount this pod'
-                                        : 'Mount this pod'
-                                    }
-                                  >
-                                    <Checkbox
-                                      onChange={mount}
-                                      value={pod.podName}
-                                      color="primary"
-                                      disabled={isLoading}
-                                      checked={pod.isMounted}
-                                    />
-                                  </Tooltip>
-                                </ListItemIcon>
-                                <ListItemText
-                                  primary={pod.podName}
-                                  style={{ color: 'black' }}
-                                />
-                              </ListItemButton>
-                            </ListItem>
-                          ) : <></>
-                      )}
-                    </List>
-                    <List
-                      subheader={
-                        <ListSubheader sx={{ bgcolor: 'transparent' }}>
-                          Received Pods
-                        </ListSubheader>
-                      }>
-                      {pods.map((pod) =>
-                        pod.isShared ?
-                          pod.isMounted ? (
-                            <ListItem
-                              key={pod.podName}
-                              secondaryAction={
-                                <div>
-                                  <Tooltip title="Share pod">
-                                    <IconButton
-                                      onClick={() => share(pod.podName)}
-                                      disabled={isLoading}
-                                    >
-                                      <ShareIcon />
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title="Sync contents">
-                                    <IconButton
-                                      onClick={() => sync(pod.podName)}
-                                      disabled={isLoading}
-                                    >
-                                      <CloudSyncIcon />
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title={pod.mountPoint}>
-                                    <IconButton
-                                      onClick={() =>
-                                        copyUrlToClipboard(pod.mountPoint)
-                                      }
-                                    >
-                                      <ContentCopyIcon />
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title="Open">
-                                    <IconButton
-                                      onClick={() =>
-                                        EventsEmit('open', pod.mountPoint)
-                                      }
-                                    >
-                                      <OpenInNewIcon />
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title="Fork">
-                                    <IconButton
-                                      onClick={() =>
-                                        fork(pod.podName)
-                                      }
-                                    >
-                                      <AltRouteIcon />
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title="Delete">
-                                    <IconButton
-                                      onClick={() =>
-                                        deleteConfirm(pod.podName)
-                                      }
-                                    >
-                                      <DeleteForeverIcon />
-                                    </IconButton>
-                                  </Tooltip>
-                                </div>
-                              }
-                              disablePadding
-                            >
-                              <ListItemButton>
-                                <ListItemIcon>
-                                  <Tooltip
-                                    title={
-                                      pod.isMounted
-                                        ? 'Unmount this pod'
-                                        : 'Mount this pod'
-                                    }
-                                  >
-                                    <Checkbox
-                                      onChange={mount}
-                                      value={pod.podName}
-                                      color="primary"
-                                      disabled={isLoading}
-                                      checked={pod.isMounted}
-                                    />
-                                  </Tooltip>
-                                </ListItemIcon>
-                                <ListItemText
-                                  primary={pod.podName}
-                                  style={{ color: 'black' }}
-                                />
-                              </ListItemButton>
-                            </ListItem>
-                          ) : (
-                            <ListItem key={pod.podName} disablePadding>
-                              <ListItemButton>
-                                <ListItemIcon>
-                                  <Tooltip
-                                    title={
-                                      pod.isMounted
-                                        ? 'Unmount this pod'
-                                        : 'Mount this pod'
-                                    }
-                                  >
-                                    <Checkbox
-                                      onChange={mount}
-                                      value={pod.podName}
-                                      color="primary"
-                                      disabled={isLoading}
-                                      checked={pod.isMounted}
-                                    />
-                                  </Tooltip>
-                                </ListItemIcon>
-                                <ListItemText
-                                  primary={pod.podName}
-                                  style={{ color: 'black' }}
-                                />
-                              </ListItemButton>
-                            </ListItem>
-                          ) : <></>
-                      )}
-                    </List>
-                  </Box>
-                </Container>
+                <PodsComponent
+                  isLoading={isLoading}
+                  pods={pods}
+                  username={username}
+                  mnemonic={mnemonic}
+                  onError={showError}
+                  setShowAccounts={setShowAccounts}
+                  showLoader={setIsLoading}
+                  onSuccess={loadPodsAndResetAll}
+                  mount={mount}/>
               )
             } else {
               return (
-                <Container component="main" maxWidth="xs">
-                  <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
-                    <h2 style={{ color: 'black', marginBottom: '0px' }}>Pods</h2>
-                  </Tooltip>
-                  <Tooltip title="Current account name">
-                    <Typography
-                      style={{ color: 'gray' }}
-                      onClick={() => setShowAccounts(true)}
-                    >
-                      {username}
-                    </Typography>
-                  </Tooltip>
-
-                  <Box
-                    sx={{
-                      width: '100%',
-                      maxWidth: 360,
-                      bgcolor: 'background.paper',
-                    }}
-                  >
-                    <br />
-                    <Typography
-                      gutterBottom
-                      align="center"
-                      style={{ color: 'black' }}
-                    >
-                      Still do not have pods?
-                    </Typography>
-
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      sx={{ mt: 3, mb: 2 }}
-                      onClick={() => setShowPodNew(true)}
-                      disabled={isLoading}
-                    >
-                      Create Pod
-                    </Button>
-                  </Box>
-                </Container>
+                <EmptyPodsComponent
+                  isLoading={isLoading}
+                  username={username}
+                  mnemonic={mnemonic}
+                  setShowAccounts={setShowAccounts}/>
               )
             }
           }
