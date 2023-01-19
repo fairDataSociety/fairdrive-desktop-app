@@ -5,10 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"os"
-	"path/filepath"
 	"runtime"
-
-	"github.com/mitchellh/go-homedir"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/handler"
@@ -33,14 +30,14 @@ var (
 func main() {
 	logger := logging.New(os.Stdout, logrus.DebugLevel)
 
-	home, err := homedir.Dir()
-	if err == nil {
-		file, err := os.Create(filepath.Join(home, log))
-		if err == nil {
-			logger = logging.New(file, logrus.ErrorLevel)
-			defer file.Close()
-		}
-	}
+	//home, err := homedir.Dir()
+	//if err == nil {
+	//	file, err := os.Create(filepath.Join(home, log))
+	//	if err == nil {
+	//		logger = logging.New(file, logrus.ErrorLevel)
+	//		defer file.Close()
+	//	}
+	//}
 	dfsHandler, err := handler.New(logger)
 	if err != nil {
 		println("Error:", err.Error())
@@ -92,6 +89,12 @@ func main() {
 	podMenu := appMenu.AddSubmenu("Pod")
 	podMenu.AddText("New", keys.CmdOrCtrl("n"), func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "podNew")
+	})
+	podMenu.AddText("Receive", keys.CmdOrCtrl("r"), func(_ *menu.CallbackData) {
+		wRuntime.EventsEmit(startContext, "podReceive")
+	})
+	podMenu.AddText("Fork from reference", keys.CmdOrCtrl("r"), func(_ *menu.CallbackData) {
+		wRuntime.EventsEmit(startContext, "podReceiveFork")
 	})
 	//podMenu.AddSeparator()
 	//auto := podMenu.AddText("Auto mount", nil, func(it *menu.CallbackData) {
@@ -150,10 +153,7 @@ func main() {
 			})
 			wRuntime.EventsOn(startContext, "disableMenus", func(_ ...interface{}) {
 				for _, item := range podMenu.Items {
-					if item.Label == "New" {
-						item.Disabled = false
-						break
-					}
+					item.Disabled = true
 				}
 				for _, item := range fileMenu.Items {
 					if item.Label == "Logout" {
@@ -170,10 +170,7 @@ func main() {
 			})
 			wRuntime.EventsOn(startContext, "enableMenus", func(_ ...interface{}) {
 				for _, item := range podMenu.Items {
-					if item.Label == "New" {
-						item.Disabled = false
-						break
-					}
+					item.Disabled = false
 				}
 				for _, item := range fileMenu.Items {
 					if item.Label == "Logout" {

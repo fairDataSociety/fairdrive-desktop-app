@@ -119,6 +119,22 @@ func (h *Handler) Logout() error {
 	return h.api.LogoutUser(h.sessionID)
 }
 
+func (h *Handler) Fork(podName, forkName string) error {
+	if h.api == nil {
+		h.logger.Errorf("mount: fairos not initialised")
+		return ErrFairOsNotInitialised
+	}
+	return h.api.ForkPod(podName, forkName, h.sessionID)
+}
+
+func (h *Handler) ForkFromReference(forkName, reference string) error {
+	if h.api == nil {
+		h.logger.Errorf("mount: fairos not initialised")
+		return ErrFairOsNotInitialised
+	}
+	return h.api.ForkPodFromRef(forkName, reference, h.sessionID)
+}
+
 func (h *Handler) Mount(pod, location string, readOnly bool) error {
 	createPod := false
 	if h.api == nil {
@@ -298,6 +314,14 @@ func (h *Handler) CreatePod(podname string) (*pod.Info, error) {
 		return nil, ErrFairOsNotInitialised
 	}
 	return h.api.CreatePod(podname, h.sessionID)
+}
+
+func (h *Handler) DeletePod(podname string) error {
+	if h.api == nil {
+		h.logger.Errorf("delete pod: fairos not initialised")
+		return ErrFairOsNotInitialised
+	}
+	return h.api.DeletePod(podname, h.sessionID)
 }
 
 func (h *Handler) Close() error {

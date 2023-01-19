@@ -10,6 +10,18 @@ export function CreatePod(arg1) {
   return window['go']['handler']['Handler']['CreatePod'](arg1);
 }
 
+export function DeletePod(arg1) {
+  return window['go']['handler']['Handler']['DeletePod'](arg1);
+}
+
+export function Fork(arg1, arg2) {
+  return window['go']['handler']['Handler']['Fork'](arg1, arg2);
+}
+
+export function ForkFromReference(arg1, arg2) {
+  return window['go']['handler']['Handler']['ForkFromReference'](arg1, arg2);
+}
+
 export function GetCashedPods() {
   return window['go']['handler']['Handler']['GetCashedPods']();
 }

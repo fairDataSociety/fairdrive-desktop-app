@@ -1,0 +1,95 @@
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  TextField,
+  Tooltip
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import { useState } from "react";
+import { CreatePod, GetPodsList } from "../../wailsjs/go/handler/Handler";
+
+export interface PodOpsProps {
+  isOpen: boolean
+  isLoading: boolean
+  onClose: () => void
+  onSuccess: () => void
+  onError: (arg0: string) => void
+  showLoader: (arg0: boolean) => void
+}
+
+function NewPodComponent(props: PodOpsProps) {
+  const [newPodName, setNewPodName] = useState('')
+  const updateNewPodName = (e: any) => {
+    setNewPodName(e.target.value)
+  }
+  const handlePodNew = async () => {
+    props.showLoader(true)
+    try {
+      if (newPodName !== '') {
+        await CreatePod(newPodName)
+        setNewPodName('')
+        await props.onSuccess()
+        props.onClose()
+      } else {
+        props.onError("pod name cannot be empty")
+      }
+    } catch (e: any) {
+      props.onError(String(e))
+    }
+    props.showLoader(false)
+  }
+  return (
+    <Dialog open={props.isOpen} onClose={props.onClose}>
+      <Tooltip title="Imagine POD is one of your drives">
+        <DialogTitle>
+          Create new Pod
+          <IconButton
+            aria-label="close"
+            onClick={props.onClose}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon/>
+          </IconButton>
+        </DialogTitle>
+      </Tooltip>
+      <DialogContent>
+        <TextField
+          autoFocus
+          margin="dense"
+          id="podName"
+          label="Pod Name"
+          fullWidth
+          variant="standard"
+          onChange={updateNewPodName}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button
+          onClick={props.onClose}
+          disabled={props.isLoading}
+          variant="contained"
+        >
+          Close
+        </Button>
+        <Button
+          onClick={handlePodNew}
+          disabled={props.isLoading}
+          variant="contained"
+        >
+          Create
+        </Button>
+      </DialogActions>
+    </Dialog>
+  )
+}
+
+export default NewPodComponent
