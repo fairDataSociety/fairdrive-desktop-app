@@ -31,7 +31,7 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            height: '100vh',
+            height: '98vh',
           }}
         >
           <img
@@ -39,9 +39,11 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
             id="logo"
             alt="logo"
             className="logo-icon"
-            onClick={() => EventsEmit("showAccounts")}
+            onClick={() => EventsEmit('showAccounts')}
+            style={{ height: '100%', cursor: 'pointer' }}
           />
-          <FormGroup sx={{marginBottom: '50px'}}>
+          <h2>Enter credentials</h2>
+          <FormGroup sx={{ marginBottom: '50px' }}>
             <TextField
               margin="normal"
               required
@@ -51,9 +53,9 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
               onChange={updateUsername}
               autoComplete="off"
               autoFocus
-              onKeyDown={event => {
-                if (event.key === "Enter") {
-                  login();
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  login()
                 }
               }}
             />
@@ -66,16 +68,14 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
               onChange={updatePassword}
               autoComplete="off"
               type="password"
-              onKeyDown={event => {
-                if (event.key === "Enter") {
-                  login();
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  login()
                 }
               }}
             />
             <FormControlLabel
-              control={
-                <Checkbox color="primary" onChange={updateRemember} />
-              }
+              control={<Checkbox color="primary" onChange={updateRemember} />}
               label={
                 <Tooltip
                   title="This will also add information to a list of available accounts for faster switching"
@@ -101,11 +101,7 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
                 title="Lite account exists on local machine only. You can upgrade it to Portable FDS account using mnemonic later. Just enter username/password and new account will be auto-magically created. When logged in see information about it in 'File -> Account details.' "
                 placement="bottom"
               >
-                <Typography
-                  align="center"
-                >
-                  What is Lite account?
-                </Typography>
+                <Typography align="center">What is Lite account?</Typography>
               </Tooltip>
             </>
             <>
@@ -118,12 +114,7 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
                   title="Sign up for Portable FDS account."
                   placement="bottom"
                 >
-                  <Link
-                    href="#"
-                    variant="body2"
-                    onClick={openSignUp}
-                    align="center"
-                  >
+                  <Link href="#" variant="body2" onClick={openSignUp} align="center">
                     Sign Up
                   </Link>
                 </Tooltip>
