@@ -1,5 +1,5 @@
 import {
-  Box,
+  Box, Card, CardActions, CardContent,
   Checkbox,
   Container,
   IconButton,
@@ -160,150 +160,49 @@ function PodsComponent(
               </TabList>
             </Box>
             <TabPanel value="1" sx={{ padding: 0 }}>
-              <List>
-                {pods.map((pod) =>
-                  !pod.isShared ?
-                    pod.isMounted ?
-                      <ListItem
-                        key={pod.podName}
-                        secondaryAction={
-                          <div>
-                            <Tooltip title="Share pod">
-                              <IconButton
-                                onClick={() => share(pod.podName)}
-                                disabled={isLoading}
-                                sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
-                              >
-                                <ShareIcon sx={{ fontSize: "20px" }}/>
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Sync contents">
-                              <IconButton
-                                onClick={() => sync(pod.podName)}
-                                disabled={isLoading}
-                                sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
-                              >
-                                <CloudSyncIcon sx={{ fontSize: "20px" }}/>
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title={pod.mountPoint}>
-                              <IconButton
-                                onClick={() =>
-                                  copyUrlToClipboard(pod.mountPoint)
-                                }
-                                sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
-                              >
-                                <ContentCopyIcon/>
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Open">
-                              <IconButton
-                                onClick={() =>
-                                  EventsEmit('open', pod.mountPoint)
-                                }
-                                sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
-                              >
-                                <OpenInNewIcon sx={{ fontSize: "20px" }}/>
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Fork">
-                              <IconButton
-                                onClick={() =>
-                                  fork(pod.podName)
-                                }
-                                sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
-                              >
-                                <AltRouteIcon sx={{ fontSize: "20px" }}/>
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Delete">
-                              <IconButton
-                                onClick={() =>
-                                  deleteConfirm(pod.podName)
-                                }
-                                sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
-                              >
-                                <DeleteForeverIcon sx={{ fontSize: "20px" }}/>
-                              </IconButton>
-                            </Tooltip>
-                          </div>
-                        }
-                        disablePadding
-                      >
-                        <ListItemButton>
-                          <ListItemIcon>
-                            <Tooltip
-                              title={
-                                pod.isMounted
-                                  ? 'Unmount this pod'
-                                  : 'Mount this pod'
-                              }
-                            >
-                              <Checkbox
-                                onChange={mount}
-                                value={pod.podName}
-                                color="primary"
-                                disabled={isLoading}
-                                checked={pod.isMounted}
-                              />
-                            </Tooltip>
-                          </ListItemIcon>
-                          <ListItemText
-                            primary={pod.podName}
-                          />
-                        </ListItemButton>
-                      </ListItem>
-                      :
-                      <ListItem key={pod.podName} disablePadding>
-                        <ListItemButton>
-                          <ListItemIcon>
-                            <Tooltip
-                              title={
-                                pod.isMounted
-                                  ? 'Unmount this pod'
-                                  : 'Mount this pod'
-                              }
-                            >
-                              <Checkbox
-                                onChange={mount}
-                                value={pod.podName}
-                                color="primary"
-                                disabled={isLoading}
-                                checked={pod.isMounted}
-                              />
-                            </Tooltip>
-                          </ListItemIcon>
-                          <ListItemText
-                            primary={pod.podName}
-                          />
-                        </ListItemButton>
-                      </ListItem> :<></>
-                )}
-              </List>
-            </TabPanel>
-            <TabPanel value="2" sx={{ padding: 0 }}>
-              <List>
               {pods.map((pod) =>
-                pod.isShared ?
-                  pod.isMounted ?
-                    <ListItem
-                      key={pod.podName}
-                      secondaryAction={
-                        <div>
+                !pod.isShared ?
+                  <Card sx={{ maxWidth: 345,  margin: "5px" }}>
+                    <CardContent sx={{ padding: "0px" }}>
+                      <Typography sx={{ textAlign: "left" }}>
+                        <Tooltip
+                          title={
+                            pod.isMounted
+                              ? 'Unmount this pod'
+                              : 'Mount this pod'
+                          }
+                        >
+                          <Checkbox
+                            onChange={mount}
+                            value={pod.podName}
+                            color="primary"
+                            disabled={isLoading}
+                            checked={pod.isMounted}
+                          />
+                        </Tooltip>
+
+                        {pod.podName.length>20 ? pod.podName.slice(0, 12)+"...."+pod.podName.slice(-12) : pod.podName }
+                      </Typography>
+                    </CardContent>
+                    {
+                      pod.isMounted ?
+                        <CardActions sx={{ justifyContent: "end" }}>
                           <Tooltip title="Share pod">
                             <IconButton
                               onClick={() => share(pod.podName)}
                               disabled={isLoading}
+                              sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
                             >
-                              <ShareIcon/>
+                              <ShareIcon sx={{ fontSize: "20px" }}/>
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Sync contents">
                             <IconButton
                               onClick={() => sync(pod.podName)}
                               disabled={isLoading}
+                              sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
                             >
-                              <CloudSyncIcon/>
+                              <CloudSyncIcon sx={{ fontSize: "20px" }}/>
                             </IconButton>
                           </Tooltip>
                           <Tooltip title={pod.mountPoint}>
@@ -311,6 +210,7 @@ function PodsComponent(
                               onClick={() =>
                                 copyUrlToClipboard(pod.mountPoint)
                               }
+                              sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
                             >
                               <ContentCopyIcon/>
                             </IconButton>
@@ -320,8 +220,9 @@ function PodsComponent(
                               onClick={() =>
                                 EventsEmit('open', pod.mountPoint)
                               }
+                              sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
                             >
-                              <OpenInNewIcon/>
+                              <OpenInNewIcon sx={{ fontSize: "20px" }}/>
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Fork">
@@ -329,8 +230,9 @@ function PodsComponent(
                               onClick={() =>
                                 fork(pod.podName)
                               }
+                              sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
                             >
-                              <AltRouteIcon/>
+                              <AltRouteIcon sx={{ fontSize: "20px" }}/>
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Delete">
@@ -338,63 +240,106 @@ function PodsComponent(
                               onClick={() =>
                                 deleteConfirm(pod.podName)
                               }
+                              sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
                             >
-                              <DeleteForeverIcon/>
+                              <DeleteForeverIcon sx={{ fontSize: "20px" }}/>
                             </IconButton>
                           </Tooltip>
-                        </div>
-                      }
-                      disablePadding
-                    >
-                      <ListItemButton>
-                        <ListItemIcon>
-                          <Tooltip
-                            title={
-                              pod.isMounted
-                                ? 'Unmount this pod'
-                                : 'Mount this pod'
-                            }
-                          >
-                            <Checkbox
-                              onChange={mount}
-                              value={pod.podName}
-                              color="primary"
-                              disabled={isLoading}
-                              checked={pod.isMounted}
-                            />
-                          </Tooltip>
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={pod.podName}
-                        />
-                      </ListItemButton>
-                    </ListItem> :
-                    <ListItem key={pod.podName} disablePadding>
-                      <ListItemButton>
-                        <ListItemIcon>
-                          <Tooltip
-                            title={
-                              pod.isMounted
-                                ? 'Unmount this pod'
-                                : 'Mount this pod'
-                            }
-                          >
-                            <Checkbox
-                              onChange={mount}
-                              value={pod.podName}
-                              color="primary"
-                              disabled={isLoading}
-                              checked={pod.isMounted}
-                            />
-                          </Tooltip>
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={pod.podName}
-                        />
-                      </ListItemButton>
-                    </ListItem> :<></>
+                        </CardActions> : <></>
+                    }
+
+                  </Card> : <></>
               )}
-            </List>
+            </TabPanel>
+            <TabPanel value="2" sx={{ padding: 0 }}>
+              {pods.map((pod) =>
+                pod.isShared ?
+                  <Card sx={{ maxWidth: 345 }}>
+                    <CardContent>
+                      <Typography gutterBottom variant="h5" component="div" sx={{ textAlign: "left" }}>
+                        <Tooltip
+                          title={
+                            pod.isMounted
+                              ? 'Unmount this pod'
+                              : 'Mount this pod'
+                          }
+                        >
+                          <Checkbox
+                            onChange={mount}
+                            value={pod.podName}
+                            color="primary"
+                            disabled={isLoading}
+                            checked={pod.isMounted}
+                          />
+                        </Tooltip>
+                        {pod.podName}
+                      </Typography>
+                    </CardContent>
+                    {
+                      pod.isMounted ?
+                      <CardActions sx={{ justifyContent: "end" }}>
+                        <Tooltip title="Share pod">
+                          <IconButton
+                            onClick={() => share(pod.podName)}
+                            disabled={isLoading}
+                            sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
+                          >
+                            <ShareIcon sx={{ fontSize: "20px" }}/>
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Sync contents">
+                          <IconButton
+                            onClick={() => sync(pod.podName)}
+                            disabled={isLoading}
+                            sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
+                          >
+                            <CloudSyncIcon sx={{ fontSize: "20px" }}/>
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title={pod.mountPoint}>
+                          <IconButton
+                            onClick={() =>
+                              copyUrlToClipboard(pod.mountPoint)
+                            }
+                            sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
+                          >
+                            <ContentCopyIcon/>
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Open">
+                          <IconButton
+                            onClick={() =>
+                              EventsEmit('open', pod.mountPoint)
+                            }
+                            sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
+                          >
+                            <OpenInNewIcon sx={{ fontSize: "20px" }}/>
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Fork">
+                          <IconButton
+                            onClick={() =>
+                              fork(pod.podName)
+                            }
+                            sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
+                          >
+                            <AltRouteIcon sx={{ fontSize: "20px" }}/>
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete">
+                          <IconButton
+                            onClick={() =>
+                              deleteConfirm(pod.podName)
+                            }
+                            sx={{ width: "20px", height: "20px", marginLeft: "5px" }}
+                          >
+                            <DeleteForeverIcon sx={{ fontSize: "20px" }}/>
+                          </IconButton>
+                        </Tooltip>
+                      </CardActions> : <></>
+                    }
+                  </Card> : <></>
+                )}
             </TabPanel>
           </TabContext>
         </Box>

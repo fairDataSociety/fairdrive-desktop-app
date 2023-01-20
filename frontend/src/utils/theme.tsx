@@ -4,7 +4,7 @@ export const darkPalette: PaletteOptions = {
   "mode": "dark",
   "background": {
     "default": "#202226",
-    "paper": "#121212",
+    "paper": "#2a2f3d",
   },
   "common": {
     "black": "#000",
