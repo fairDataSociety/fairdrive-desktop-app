@@ -11,6 +11,7 @@ import {
   Typography
 } from "@mui/material";
 import { openSignUp } from "../utils/openBrowser";
+import { EventsEmit } from "../../wailsjs/runtime";
 
 interface LoginProps {
   isLoading: boolean
@@ -23,13 +24,6 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
 
   return (
     <>
-      <img
-        src={logo}
-        id="logo"
-        alt="logo"
-        className="logo-icon"
-        // onClick={() => setShowAccounts(true)}
-      />
       <Container component="main" maxWidth="xs">
         <Box
           sx={{
@@ -37,10 +31,17 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            height: '100vh',
           }}
         >
-          <FormGroup>
-            <h2 style={{ color: 'black' }}>Fair Data Society Login</h2>
+          <img
+            src={logo}
+            id="logo"
+            alt="logo"
+            className="logo-icon"
+            onClick={() => EventsEmit("showAccounts")}
+          />
+          <FormGroup sx={{marginBottom: '50px'}}>
             <TextField
               margin="normal"
               required
@@ -73,7 +74,6 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
                   <Typography>Remember and keep me logged-in</Typography>
                 </Tooltip>
               }
-              style={{ color: 'black' }}
             />
             <Tooltip title="This app supports Lite and Portable FDS accounts. Enter your credentials and login">
               <Button
@@ -92,11 +92,7 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
                 placement="bottom"
               >
                 <Typography
-                  // href="#"
-                  // variant="body2"
-                  // onClick={openCreateLightAccount}
                   align="center"
-                  style={{ color: 'black' }}
                 >
                   What is Lite account?
                 </Typography>
@@ -104,24 +100,26 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
             </>
             <>
               <br />
-              <Tooltip title="Portable accounts can be used in web browsers, FairOS and in any app supporting FairDataProtocol with all the goodies provided by FDP. They require a balance.">
-                <Typography style={{ color: 'black' }}>
-                  Need Advanced features ?
-                </Typography>
-              </Tooltip>
-              <Tooltip
-                title="Sign up for Portable FDS account."
-                placement="bottom"
-              >
-                <Link
-                  href="#"
-                  variant="body2"
-                  onClick={openSignUp}
-                  align="center"
+              <Typography>
+                <Tooltip title="Portable accounts can be used in web browsers, FairOS and in any app supporting FairDataProtocol with all the goodies provided by FDP. They require a balance.">
+                  <span>Need Advanced features ? </span>
+                </Tooltip>
+                <Tooltip
+                  title="Sign up for Portable FDS account."
+                  placement="bottom"
                 >
-                  Sign Up
-                </Link>
-              </Tooltip>
+                  <Link
+                    href="#"
+                    variant="body2"
+                    onClick={openSignUp}
+                    align="center"
+                  >
+                    Sign Up
+                  </Link>
+                </Tooltip>
+              </Typography>
+
+
             </>
           </FormGroup>
         </Box>

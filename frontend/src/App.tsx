@@ -37,17 +37,12 @@ import {
   MenuItem,
   Select,
   Box,
-  Modal,
   Tooltip,
   IconButton,
   Stack,
   Snackbar,
   AlertProps,
   Dialog,
-  Typography,
-  DialogActions,
-  List,
-  ListItem,
   Switch,
   CircularProgress, Backdrop,
 } from '@mui/material'
@@ -193,8 +188,8 @@ function App() {
       html.style.setProperty('--background-color', theme.palette.background.default);
       body.style.setProperty('--background-color', theme.palette.background.default);
 
-      html.style.setProperty('--color', theme.palette.getContrastText(theme.palette.background.default));
-      body.style.setProperty('--color', theme.palette.getContrastText(theme.palette.background.default));
+      html.style.setProperty('--color', theme.palette.text.primary);
+      body.style.setProperty('--color', theme.palette.text.primary);
     }
     LoadStoredAccounts()
     EventsOn('preferences', () => {
@@ -453,8 +448,6 @@ function App() {
     setIsLoading(false)
   }
 
-  async function openCreateLightAccount() {}
-
   async function handleAccountSwitch(account: AccountInfo) {
     setIsLoading(true)
     try {
@@ -463,7 +456,7 @@ function App() {
       setName(account.userInfo.username)
       setPassword(account.userInfo.password)
       setMnemonic(account.userInfo.mnemonic)
-      doLogin(
+      await doLogin(
         account.userInfo.username,
         account.userInfo.password,
         account.userInfo.mnemonic,
@@ -477,7 +470,7 @@ function App() {
   }
   async function handleAccountRemove(account: AccountInfo) {
     setIsLoading(true)
-    removeAccount(account)
+    await removeAccount(account)
     setInfoMessage('Account removed.')
     setIsLoading(false)
   }

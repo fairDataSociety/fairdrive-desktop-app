@@ -1,9 +1,10 @@
-export const darkPalette = {
+import { PaletteOptions } from "@mui/material/styles/createPalette";
+
+export const darkPalette: PaletteOptions = {
   "mode": "dark",
   "background": {
     "default": "#202226",
     "paper": "#121212",
-    "defaultChannel": "18 18 18"
   },
   "common": {
     "black": "#000",
@@ -67,7 +68,6 @@ export const darkPalette = {
     "primary": "#ccd3ff",
     "secondary": "#9aa8ff",
     "disabled": "#82848e",
-    "icon": "#9aa8ff",
   },
   "divider": "rgba(255, 255, 255, 0.12)",
   "action": {
@@ -82,7 +82,5 @@ export const darkPalette = {
     "focus": "rgba(255, 255, 255, 0.12)",
     "focusOpacity": 0.12,
     "activatedOpacity": 0.24,
-    "activeChannel": "255 255 255",
-    "selectedChannel": "255 255 255"
   }
 }
