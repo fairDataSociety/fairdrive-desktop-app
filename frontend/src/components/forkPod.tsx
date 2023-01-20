@@ -44,7 +44,7 @@ function ForkPodComponent(props: ForkPodOpsProps) {
     props.showLoader(false)
   }
   return (
-    <Dialog open={props.isOpen} onClose={props.onClose}>
+    <Dialog open={props.isOpen} onClose={props.onClose} fullWidth>
       <Tooltip title="Imagine POD is one of your drives">
         <DialogTitle>
           Fork {props.podName}
@@ -58,7 +58,7 @@ function ForkPodComponent(props: ForkPodOpsProps) {
               color: (theme) => theme.palette.grey[500],
             }}
           >
-            <CloseIcon/>
+            <CloseIcon />
           </IconButton>
         </DialogTitle>
       </Tooltip>
@@ -74,7 +74,9 @@ function ForkPodComponent(props: ForkPodOpsProps) {
         />
         <Typography>
           <p>
-            Fork will create a new pod from {props.podName}. This process can take some based on the contents in the pod. Please do not close the app while fork is in progress.
+            Fork will create a new pod from {props.podName}. This process can take
+            some based on the contents in the pod. Please do not close the app while
+            fork is in progress.
           </p>
         </Typography>
       </DialogContent>
