@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useState } from "react";
-import { ForkFromReference, ReceivePod } from "../../wailsjs/go/handler/Handler";
+import { ForkFromReference } from "../../wailsjs/go/handler/Handler";
 
 export interface PodOpsProps {
   isOpen: boolean

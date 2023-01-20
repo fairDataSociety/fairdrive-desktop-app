@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useState } from "react";
-import { CreatePod, GetPodsList, ReceivePod } from "../../wailsjs/go/handler/Handler";
+import { ReceivePod } from "../../wailsjs/go/handler/Handler";
 
 export interface PodOpsProps {
   isOpen: boolean

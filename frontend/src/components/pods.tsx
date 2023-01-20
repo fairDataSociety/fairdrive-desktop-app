@@ -1,6 +1,5 @@
 import {
   Box,
-  Button,
   Checkbox,
   Container,
   IconButton,
@@ -112,7 +111,7 @@ function PodsComponent(
       <Container component="main" maxWidth="xs">
         <Tooltip
           title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
-          <h2 style={{ color: 'black', marginBottom: '0px' }}>Pods</h2>
+          <h2 style={{ marginBottom: '0px' }}>Pods</h2>
         </Tooltip>
         <Tooltip
           title={
@@ -144,13 +143,12 @@ function PodsComponent(
           sx={{
             width: '100%',
             maxWidth: 360,
-            bgcolor: 'background.paper',
           }}>
           <List
             subheader={
               <ListSubheader
                 sx={{ bgcolor: 'transparent' }}>
-                Own Pods
+                Private
               </ListSubheader>
             }>
             {pods.map((pod) =>
@@ -242,7 +240,6 @@ function PodsComponent(
                       </ListItemIcon>
                       <ListItemText
                         primary={pod.podName}
-                        style={{ color: 'black' }}
                       />
                     </ListItemButton>
                   </ListItem>
@@ -268,7 +265,6 @@ function PodsComponent(
                       </ListItemIcon>
                       <ListItemText
                         primary={pod.podName}
-                        style={{ color: 'black' }}
                       />
                     </ListItemButton>
                   </ListItem> :<></>
@@ -277,7 +273,7 @@ function PodsComponent(
           <List
             subheader={
               <ListSubheader sx={{ bgcolor: 'transparent' }}>
-                Received Pods
+                Shared
               </ListSubheader>
             }>
             {pods.map((pod) =>
@@ -363,7 +359,6 @@ function PodsComponent(
                       </ListItemIcon>
                       <ListItemText
                         primary={pod.podName}
-                        style={{ color: 'black' }}
                       />
                     </ListItemButton>
                   </ListItem> :
@@ -388,7 +383,6 @@ function PodsComponent(
                       </ListItemIcon>
                       <ListItemText
                         primary={pod.podName}
-                        style={{ color: 'black' }}
                       />
                     </ListItemButton>
                   </ListItem> :<></>
@@ -397,35 +391,29 @@ function PodsComponent(
         </Box>
       </Container>
 
-      if (showDeleteConfirm) {
-        <DeleteConfirmComponent
-          isLoading={isLoading}
-          isOpen={showDeleteConfirm}
-          onClose={handleDeleteClose}
-          podName={podToDelete}
-          onSuccess={onSuccess}
-          onError={onError}
-          showLoader={showLoader}/>
-      }
+      <DeleteConfirmComponent
+        isLoading={isLoading}
+        isOpen={showDeleteConfirm}
+        onClose={handleDeleteClose}
+        podName={podToDelete}
+        onSuccess={onSuccess}
+        onError={onError}
+        showLoader={showLoader}/>
 
-      if (showSharedReference) {
-        <SharedReferenceComponent
-          isOpen={showSharedReference}
-          onClose={handleSharedReferenceClose}
-          podName={sharedPodName}
-          reference={sharedReference}/>
-      }
+      <SharedReferenceComponent
+        isOpen={showSharedReference}
+        onClose={handleSharedReferenceClose}
+        podName={sharedPodName}
+        reference={sharedReference}/>
 
-      if (showPodFork) {
-        <ForkPodComponent
-          podName={podToFork}
-          isOpen={showPodFork}
-          isLoading={isLoading}
-          onClose={handlePodForkClose}
-          showLoader={showLoader}
-          onError={onError}
-          onSuccess={onSuccess}/>
-      }
+      <ForkPodComponent
+        podName={podToFork}
+        isOpen={showPodFork}
+        isLoading={isLoading}
+        onClose={handlePodForkClose}
+        showLoader={showLoader}
+        onError={onError}
+        onSuccess={onSuccess}/>
     </>
   )
 }

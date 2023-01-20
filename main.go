@@ -7,6 +7,8 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/wailsapp/wails/v2/pkg/options/mac"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/handler"
 	"github.com/sirupsen/logrus"
@@ -58,6 +60,9 @@ func main() {
 	fileMenu.AddText("About", nil, func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "about")
 	})
+	fileMenu.AddText("Preferences", prefShortcut, func(_ *menu.CallbackData) {
+		wRuntime.EventsEmit(startContext, "preferences")
+	})
 	//fileMenu.AddText("Check for updates...", nil, func(_ *menu.CallbackData) {
 	//	// TODO check for update
 	//})
@@ -67,11 +72,6 @@ func main() {
 		wRuntime.EventsEmit(startContext, "showAccounts")
 	})
 
-	fileMenu.AddText("Preferences", prefShortcut, func(_ *menu.CallbackData) {
-		wRuntime.EventsEmit(startContext, "preferences")
-	})
-
-	fileMenu.AddSeparator()
 	if runtime.GOOS == "darwin" {
 		appMenu.Append(menu.EditMenu()) // on macos platform, we should append EditMenu to enable Cmd+C,Cmd+V,Cmd+Z... shortcut
 	}
@@ -129,7 +129,19 @@ func main() {
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
+		Mac: &mac.Options{
+			TitleBar: &mac.TitleBar{
+				TitlebarAppearsTransparent: true,
+				HideTitle:                  true,
+				HideTitleBar:               false,
+				FullSizeContent:            true,
+				UseToolbar:                 false,
+				HideToolbarSeparator:       true,
+			},
+			WebviewIsTransparent: true,
+			WindowIsTranslucent:  true,
+		},
+		BackgroundColour: &options.RGBA{R: 0, G: 0, B: 0, A: 0},
 		Bind: []interface{}{
 			dfsHandler,
 			cnf,

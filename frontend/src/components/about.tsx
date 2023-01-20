@@ -118,9 +118,8 @@ function AboutComponent(props: AlertProps) {
                   </Typography> */}
         </DialogContent>
       </Dialog>
-      if (openDisclaimer) {
-        <Disclaimer isOpen={openDisclaimer} onClose={closeDisclaimer}/>
-      }
+      <Disclaimer isOpen={openDisclaimer} onClose={closeDisclaimer}/>
+
     </>
   )
 }

@@ -11,11 +11,6 @@ import {
   Typography
 } from "@mui/material";
 import { openSignUp } from "../utils/openBrowser";
-import { useEffect, useState } from "react";
-import { GetPodsList, Load, Login, Logout } from "../../wailsjs/go/handler/Handler";
-import { EventsEmit } from "../../wailsjs/runtime";
-import { handler } from "../../wailsjs/go/models";
-import { ForgetPassword, Get, RememberPassword } from "../../wailsjs/go/main/Account";
 
 interface LoginProps {
   isLoading: boolean

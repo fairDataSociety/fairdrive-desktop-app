@@ -1,6 +1,6 @@
 import React, { forwardRef, SyntheticEvent, useEffect, useState } from 'react'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
-import backgroundImage from './assets/images/sculptures_of_data_s.jpg'
+import { DialogContent, DialogTitle, useMediaQuery } from '@mui/material';
 import './App.css'
 
 import {
@@ -64,17 +64,12 @@ import ReceiveForkPodComponent from "./components/receiveForkPod";
 import LoginComponent from "./components/login";
 import PodsComponent from "./components/pods";
 import EmptyPodsComponent from "./components/empty";
-
-interface UserInfo {
-  username: string | any
-  password: string | any
-  mnemonic: string | any
-}
-
-interface AccountInfo {
-  userInfo: UserInfo[] | any
-  pods: PodMountedInfo[] | any
-}
+import CloseIcon from "@mui/icons-material/Close";
+import { darkPalette } from "./utils/theme";
+import ImportAccountComponent from "./components/importAccount";
+import AccountDetailsComponent from "./components/accountDetails";
+import { AccountInfo, UserInfo } from "./types/info";
+import ShowAccountsComponent from "./components/showAccounts";
 
 function createUserInfo(
   username: string,
@@ -97,19 +92,22 @@ function createAccountInfo(
   return { userInfo: createUserInfo(username, password, mnemonic), pods }
 }
 
-const theme = createTheme({
-  typography: {
-    fontFamily: `"WorkSans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif`,
-  },
-})
-
 const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />
 })
 
 function App() {
+  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+
+  const theme = createTheme({
+    palette: darkPalette,
+    typography: {
+      fontFamily: `"WorkSans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif`,
+    },
+  })
+
   const [isLoading, setIsLoading] = useState(false)
   const [openError, setOpenError] = useState(false)
   const [openInfo, setOpenInfo] = useState(false)
@@ -187,6 +185,17 @@ function App() {
   }
 
   useEffect(() => {
+    const html = document.querySelector('html');
+    const body = document.querySelector('body');
+    if (html && body) {
+      console.log(JSON.stringify(theme.palette))
+
+      html.style.setProperty('--background-color', theme.palette.background.default);
+      body.style.setProperty('--background-color', theme.palette.background.default);
+
+      html.style.setProperty('--color', theme.palette.getContrastText(theme.palette.background.default));
+      body.style.setProperty('--color', theme.palette.getContrastText(theme.palette.background.default));
+    }
     LoadStoredAccounts()
     EventsOn('preferences', () => {
       setShowConfig(true)
@@ -204,6 +213,7 @@ function App() {
       setShowAccounts(true)
     })
     EventsOn('podNew', () => {
+      console.log(theme)
       setShowPodNew(true)
     })
     EventsOn('podReceive', () => {
@@ -619,29 +629,28 @@ function App() {
         {/* <img src={logo} id="logo" alt="logo" className="logo-icon" /> */}
 
         {/*settings modal*/}
-        <Modal
+        <Dialog
           open={showConfig}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
+          aria-labelledby="settings"
         >
-          <Box
-            sx={{
-              margin: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              boxShadow: 24,
-              bgcolor: 'white',
-              p: 2,
-            }}
-          >
+          <DialogTitle>
+            Preferences
+            <IconButton
+              aria-label="close"
+              onClick={closeSettings}
+              sx={{
+                position: 'absolute',
+                right: 8,
+                top: 8,
+                color: (theme) => theme.palette.grey[500],
+              }}
+            >
+              <CloseIcon/>
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers>
             {/* Preferences switch */}
             <div style={{ marginTop: '-5px' }}>
-              <div
-                style={{ color: 'black', fontWeight: 'bolder', marginBottom: '5px' }}
-              >
-                Preferences
-              </div>
               <span
                 style={{
                   color: toggleConfigAdvanced ? 'gray' : 'black',
@@ -951,176 +960,26 @@ function App() {
                 </Stack>
               </FormGroup>
             )}
-          </Box>
-        </Modal>
+          </DialogContent>
+        </Dialog>
 
         {/* Account Import */}
-        <Modal
-          open={showAccountImport}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-        >
-          <Box
-            sx={{
-              margin: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              boxShadow: 24,
-              bgcolor: 'white',
-              p: 2,
-            }}
-          >
-            <div
-              style={{
-                marginTop: '-5px',
-                color: 'black',
-                fontWeight: 'bolder',
-                marginBottom: '15px',
-              }}
-            >
-              Import Account
-            </div>
-            <FormGroup>
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="username"
-                label="Username"
-                onChange={updateImportName}
-                autoComplete="off"
-                autoFocus
-              />
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="password"
-                label="Password"
-                onChange={updateImportPassword}
-                autoComplete="off"
-                type="password"
-              />
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                multiline
-                id="mnemonic"
-                label="12-word mnemonic"
-                onChange={updateImportMnemonic}
-                autoComplete="off"
-                type="password"
-              />
-              <Stack mt={3} mb={3} spacing={2} direction="row">
-                <Tooltip title="Closes this dialog">
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    onClick={() => setShowAccountImport(false)}
-                  >
-                    Close
-                  </Button>
-                </Tooltip>
-                <Tooltip title="Import account, logs in and stores account to accounts list">
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    onClick={() => importAccount()}
-                  >
-                    Import
-                  </Button>
-                </Tooltip>
-              </Stack>
-            </FormGroup>
-          </Box>
-        </Modal>
+        <ImportAccountComponent
+          isOpen={showAccountImport}
+          onClose={() => setShowAccountImport(false)}
+          updateImportName={updateImportName}
+          updateImportPassword={updateImportPassword}
+          updateImportMnemonic={updateImportMnemonic}
+          importAccount={importAccount} />
 
         {/* Account details*/}
-        <Modal
-          open={showAccountDetails}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-        >
-          <Box
-            sx={{
-              margin: 2,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              boxShadow: 24,
-              bgcolor: 'white',
-              p: 2,
-            }}
-          >
-            <div
-              style={{
-                marginTop: '-5px',
-                color: 'black',
-                fontWeight: 'bolder',
-                marginBottom: '15px',
-              }}
-            >
-              Account Details
-            </div>
-            {username === '' ? (
-              <Tooltip title="Seems like there is no account information">
-                <Typography style={{ color: 'black' }}>No account info</Typography>
-              </Tooltip>
-            ) : (
-              <>
-                <Typography style={{ color: 'black' }}>
-                  <strong>{username}</strong>
-                </Typography>
-                <Typography style={{ color: 'black' }}>Password</Typography>
-                <span style={{ color: 'transparent', textShadow: '0 0 15px #000' }}>
-                  <strong>{password}</strong>
-                </span>
-                <br />
-                {mnemonic != '' ? (
-                  <>
-                    <Typography style={{ color: 'black' }}>
-                      This is Lite account
-                    </Typography>
-                    <br />
-                    <Typography style={{ color: 'black' }}>Mnemonic</Typography>
-                    <span
-                      style={{ color: 'transparent', textShadow: '0 0 15px #000' }}
-                    >
-                      <strong>{mnemonic}</strong>
-                    </span>
-
-                    <Typography style={{ color: 'black' }}>Private Key</Typography>
-                    <span
-                      style={{ color: 'transparent', textShadow: '0 0 15px #000' }}
-                    >
-                      <strong style={{ fontSize: '8px' }}>{privateKey}</strong>
-                    </span>
-                  </>
-                ) : (
-                  <Typography style={{ color: 'black' }}>
-                    This is Portable account
-                  </Typography>
-                )}
-                <br />
-              </>
-            )}
-            <FormGroup>
-              <Stack mt={3} mb={3} spacing={2} direction="row">
-                <Tooltip title="Closes this dialog">
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    onClick={() => setShowAccountDetails(false)}
-                  >
-                    Close
-                  </Button>
-                </Tooltip>
-              </Stack>
-            </FormGroup>
-          </Box>
-        </Modal>
+        <AccountDetailsComponent
+          isOpen={showAccountDetails}
+          onClose={() => setShowAccountDetails(false)}
+          username={username}
+          password={password}
+          mnemonic={mnemonic}
+          privateKey={privateKey} />
 
         {isLoading && (
           <Backdrop
@@ -1131,103 +990,13 @@ function App() {
           </Backdrop>
         )}
 
-        {showAccounts && (
-          <Box>
-            <Dialog open={showAccounts}>
-              <Tooltip
-                title="Your previously logged accounts. Click on account name to login."
-                placement="top"
-              >
-                <div
-                  style={{
-                    color: 'black',
-                    fontWeight: 'bolder',
-                    margin: '5px',
-                  }}
-                >
-                  Accounts
-                </div>
-              </Tooltip>
-
-              {accounts.length === 0 && (
-                <>
-                  <Typography style={{ color: 'black', margin: '20px' }}>
-                    No accounts found
-                  </Typography>
-                  <Typography style={{ color: 'gray', margin: '20px' }}>
-                    To add account to this list, click on "Remember me" checkbox
-                    before login. Accounts do not know about your connection
-                    preferences. Lite accounts are added automatically.
-                  </Typography>
-                </>
-              )}
-              <List>
-                {accounts.map((account) => (
-                  <ListItem key={account.userInfo.username} disabled={isLoading}>
-                    <Tooltip title="Click to switch" placement="left">
-                      <Typography
-                        onClick={() => handleAccountSwitch(account)}
-                        style={{ cursor: 'pointer' }}
-                        className="account-switch"
-                      >
-                        {account.userInfo.username}&nbsp;&nbsp;&nbsp;&nbsp;
-                        {/* {account.userInfo.mnemonic} */}
-                      </Typography>
-                    </Tooltip>
-                    <span
-                      style={{
-                        fontSize: '8px',
-                        position: 'absolute',
-                        left: '16px',
-                        top: '1.6rem',
-                      }}
-                    >
-                      {account.userInfo.mnemonic !== undefined ||
-                      account.userInfo.mnemonic === ''
-                        ? 'lite'
-                        : 'portable'}
-                    </span>
-
-                    <Tooltip title="Remove account" placement="top">
-                      <Typography
-                        onClick={() => handleAccountRemove(account)}
-                        style={{
-                          cursor: 'pointer',
-                          position: 'absolute',
-                          right: '5px',
-                          top: '6px',
-                        }}
-                      >
-                        x
-                      </Typography>
-                    </Tooltip>
-                  </ListItem>
-                ))}
-              </List>
-              {/* <ListItem key = {account.userInfo.username} onClick={() => handleAccountSwitch(account)}> */}
-              <DialogActions
-                style={{ justifyContent: 'space-between', alignItems: 'center' }}
-              >
-                <Button
-                  onClick={() => setShowAccounts(false)}
-                  disabled={isLoading}
-                  variant="contained"
-                  style={{
-                    width: '100%',
-                  }}
-                >
-                  Close
-                </Button>
-              </DialogActions>
-            </Dialog>
-            {/* <Slide
-              direction="up"
-              in={showAccounts}
-              mountOnEnter
-              unmountOnExit
-            ></Slide> */}
-          </Box>
-        )}
+        <ShowAccountsComponent
+          isOpen={showAccounts}
+          isLoading={isLoading}
+          onClose={() => setShowAccounts(false)}
+          accounts={accounts}
+          handleAccountSwitch={handleAccountSwitch}
+          handleAccountRemove={handleAccountRemove} />
 
         {(() => {
           if (showAbout) {
@@ -1308,21 +1077,6 @@ function App() {
             }
           }
         })()}
-
-        <img
-          src={backgroundImage}
-          id="background"
-          alt="background"
-          style={{
-            opacity: '0.1',
-            position: 'fixed',
-            top: '0',
-            left: '0',
-            width: '100%',
-            height: '100%',
-            pointerEvents: 'none',
-          }}
-        />
       </ThemeProvider>
     </div>
   )
