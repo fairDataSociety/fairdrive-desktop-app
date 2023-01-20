@@ -570,6 +570,9 @@ function App() {
   function showError(error: any) {
     setOpenError(true)
     setErrorMessage(error.toUpperCase())
+    if (error === 'user not logged in') {
+      setShowLogin(true) // THIS HAS TO BE IN !
+    }
   }
 
   function showInfoMessage(message: any) {
@@ -594,16 +597,17 @@ function App() {
           </Alert>
         </Snackbar>
         {/*shows error*/}
-        <ErrorSnack errorMessage={errorMessage} open={openError} show={setOpenError}/>
+        <ErrorSnack
+          errorMessage={errorMessage}
+          open={openError}
+          show={setOpenError}
+        />
 
         {/*logo*/}
         {/* <img src={logo} id="logo" alt="logo" className="logo-icon" /> */}
 
         {/*settings modal*/}
-        <Dialog
-          open={showConfig}
-          aria-labelledby="settings"
-        >
+        <Dialog open={showConfig} aria-labelledby="settings" fullWidth>
           <DialogTitle>
             Preferences
             <IconButton
@@ -616,7 +620,7 @@ function App() {
                 color: (theme) => theme.palette.grey[500],
               }}
             >
-              <CloseIcon/>
+              <CloseIcon />
             </IconButton>
           </DialogTitle>
           <DialogContent dividers>
@@ -941,7 +945,8 @@ function App() {
           updateImportName={updateImportName}
           updateImportPassword={updateImportPassword}
           updateImportMnemonic={updateImportMnemonic}
-          importAccount={importAccount} />
+          importAccount={importAccount}
+        />
 
         {/* Account details*/}
         <AccountDetailsComponent
@@ -950,11 +955,15 @@ function App() {
           username={username}
           password={password}
           mnemonic={mnemonic}
-          privateKey={privateKey} />
+          privateKey={privateKey}
+        />
 
         {isLoading && (
           <Backdrop
-            sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1000000000 }}
+            sx={{
+              color: '#fff',
+              zIndex: (theme) => theme.zIndex.drawer + 1000000000,
+            }}
             open={isLoading}
           >
             <CircularProgress color="inherit" />
@@ -967,13 +976,12 @@ function App() {
           onClose={() => setShowAccounts(false)}
           accounts={accounts}
           handleAccountSwitch={handleAccountSwitch}
-          handleAccountRemove={handleAccountRemove} />
+          handleAccountRemove={handleAccountRemove}
+        />
 
         {(() => {
           if (showAbout) {
-            return (
-              <AboutComponent  isOpen={showAbout} onClose={handleAboutClose}/>
-            )
+            return <AboutComponent isOpen={showAbout} onClose={handleAboutClose} />
           }
 
           if (showPodNew) {
@@ -984,7 +992,8 @@ function App() {
                 onClose={handlePodNewClose}
                 showLoader={setIsLoading}
                 onError={showError}
-                onSuccess={loadPodsAndResetAll}/>
+                onSuccess={loadPodsAndResetAll}
+              />
             )
           }
 
@@ -996,7 +1005,8 @@ function App() {
                 onClose={handlePodReceiveClose}
                 showLoader={setIsLoading}
                 onError={showError}
-                onSuccess={loadPodsAndResetAll}/>
+                onSuccess={loadPodsAndResetAll}
+              />
             )
           }
 
@@ -1008,7 +1018,8 @@ function App() {
                 onClose={handlePodReceiveForkClose}
                 showLoader={setIsLoading}
                 onError={showError}
-                onSuccess={loadPodsAndResetAll}/>
+                onSuccess={loadPodsAndResetAll}
+              />
             )
           }
 
@@ -1019,7 +1030,8 @@ function App() {
                 isLoading={isLoading}
                 updateUsername={updateName}
                 updatePassword={updatePassword}
-                updateRemember={updateRemember}/>
+                updateRemember={updateRemember}
+              />
             )
           }
 
@@ -1035,7 +1047,8 @@ function App() {
                   setShowAccounts={setShowAccounts}
                   showLoader={setIsLoading}
                   onSuccess={loadPodsAndResetAll}
-                  mount={mount}/>
+                  mount={mount}
+                />
               )
             } else {
               return (
@@ -1043,7 +1056,8 @@ function App() {
                   isLoading={isLoading}
                   username={username}
                   mnemonic={mnemonic}
-                  setShowAccounts={setShowAccounts}/>
+                  setShowAccounts={setShowAccounts}
+                />
               )
             }
           }

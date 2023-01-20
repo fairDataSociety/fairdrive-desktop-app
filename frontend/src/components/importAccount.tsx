@@ -31,7 +31,7 @@ function ImportAccountComponent(
   }: ImportAccountProps) {
   return (
     <>
-      <Dialog aria-labelledby="about" open={isOpen} onClose={onClose}>
+      <Dialog aria-labelledby="about" open={isOpen} onClose={onClose} fullWidth>
         <DialogTitle>
           Import Account
           <IconButton
@@ -44,7 +44,7 @@ function ImportAccountComponent(
               color: (theme) => theme.palette.grey[500],
             }}
           >
-            <CloseIcon/>
+            <CloseIcon />
           </IconButton>
         </DialogTitle>
         <DialogContent dividers>
@@ -82,20 +82,12 @@ function ImportAccountComponent(
             />
             <Stack mt={3} mb={3} spacing={2} direction="row">
               <Tooltip title="Closes this dialog">
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  onClick={onClose}
-                >
+                <Button fullWidth variant="outlined" onClick={onClose}>
                   Close
                 </Button>
               </Tooltip>
               <Tooltip title="Import account, logs in and stores account to accounts list">
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  onClick={() => importAccount()}
-                >
+                <Button fullWidth variant="outlined" onClick={() => importAccount()}>
                   Import
                 </Button>
               </Tooltip>
@@ -103,7 +95,6 @@ function ImportAccountComponent(
           </FormGroup>
         </DialogContent>
       </Dialog>
-
     </>
   )
 }

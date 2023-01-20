@@ -30,7 +30,7 @@ function AccountDetailsComponent(
     privateKey
   }: AccountDetailsProps) {
   return (
-    <Dialog aria-labelledby="about" open={isOpen} onClose={onClose}>
+    <Dialog aria-labelledby="about" open={isOpen} onClose={onClose} fullWidth>
       <DialogTitle>
         Account Details
         <IconButton
@@ -43,7 +43,7 @@ function AccountDetailsComponent(
             color: (theme) => theme.palette.grey[500],
           }}
         >
-          <CloseIcon/>
+          <CloseIcon />
         </IconButton>
       </DialogTitle>
       <DialogContent dividers>
@@ -58,33 +58,25 @@ function AccountDetailsComponent(
             </Typography>
             <Typography>Password</Typography>
             <span style={{ color: 'transparent', textShadow: '0 0 15px #000' }}>
-                  <strong>{password}</strong>
-                </span>
+              <strong>{password}</strong>
+            </span>
             <br />
             {mnemonic != '' ? (
               <>
-                <Typography>
-                  This is Lite account
-                </Typography>
+                <Typography>This is Lite account</Typography>
                 <br />
                 <Typography>Mnemonic</Typography>
-                <span
-                  style={{ color: 'transparent', textShadow: '0 0 15px #000' }}
-                >
-                      <strong>{mnemonic}</strong>
-                    </span>
+                <span style={{ color: 'transparent', textShadow: '0 0 15px #000' }}>
+                  <strong>{mnemonic}</strong>
+                </span>
 
                 <Typography>Private Key</Typography>
-                <span
-                  style={{ color: 'transparent', textShadow: '0 0 15px #000' }}
-                >
-                      <strong style={{ fontSize: '8px' }}>{privateKey}</strong>
-                    </span>
+                <span style={{ color: 'transparent', textShadow: '0 0 15px #000' }}>
+                  <strong style={{ fontSize: '8px' }}>{privateKey}</strong>
+                </span>
               </>
             ) : (
-              <Typography>
-                This is Portable account
-              </Typography>
+              <Typography>This is Portable account</Typography>
             )}
             <br />
           </>
@@ -92,11 +84,7 @@ function AccountDetailsComponent(
         <FormGroup>
           <Stack mt={3} mb={3} spacing={2} direction="row">
             <Tooltip title="Closes this dialog">
-              <Button
-                fullWidth
-                variant="outlined"
-                onClick={onClose}
-              >
+              <Button fullWidth variant="outlined" onClick={onClose}>
                 Close
               </Button>
             </Tooltip>

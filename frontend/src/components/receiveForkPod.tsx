@@ -50,9 +50,9 @@ function ReceiveForkPodComponent(props: PodOpsProps) {
   }
   return (
     <Dialog open={props.isOpen} onClose={props.onClose} fullWidth>
-      <Tooltip title="Imagine POD is one of your drives">
+      <Tooltip title="Forking a pod from reference creates a new pod and copies content from shared pod reference. Forked pod becomes your private pod and can be written to, contents are synced only when forking is done.">
         <DialogTitle>
-          Fork Pod from Reference
+          Fork from Reference
           <IconButton
             aria-label="close"
             onClick={props.onClose}
@@ -86,12 +86,18 @@ function ReceiveForkPodComponent(props: PodOpsProps) {
           variant="standard"
           onChange={updateReference}
         />
+        <br />
         <Typography>
-          <p>
+          <small>
             Forking from reference will create a new pod from the given reference.
-            This process can take some based on the contents in the pod. Please do
-            not close the app while fork is in progress.
-          </p>
+            This process can take some based on the contents in the pod.
+          </small>
+        </Typography>
+        <br />
+        <Typography>
+          <small>
+            <strong>DO NOT CLOSE the app while fork is in progress. </strong>
+          </small>
         </Typography>
       </DialogContent>
       <DialogActions>
