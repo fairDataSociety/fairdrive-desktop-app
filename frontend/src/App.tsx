@@ -607,7 +607,7 @@ function App() {
         {/* <img src={logo} id="logo" alt="logo" className="logo-icon" /> */}
 
         {/*settings modal*/}
-        <Dialog open={showConfig} aria-labelledby="settings" fullWidth>
+        <Dialog open={showConfig} aria-labelledby="settings" fullWidth fullScreen>
           <DialogTitle>
             Preferences
             <IconButton
@@ -625,7 +625,7 @@ function App() {
           </DialogTitle>
           <DialogContent dividers>
             {/* Preferences switch */}
-            <div style={{ marginTop: '-5px' }}>
+            <div style={{ marginTop: '-15px' }}>
               <span
                 style={{
                   color: toggleConfigAdvanced ? 'gray' : 'black',
@@ -651,14 +651,15 @@ function App() {
             {/* Advanced configuration */}
             {toggleConfigAdvanced && (
               <FormGroup>
-                <Tooltip
+                {/* Did we loose proxy switch ? */}
+                {/* <Tooltip
                   title="Usually bee nodes and gateways are not behind proxy. Please check before connecting via proxy."
                   placement="bottom"
                 >
                   <FormLabel id="demo-controlled-radio-buttons-group">
                     Is Bee running behind proxy?
                   </FormLabel>
-                </Tooltip>
+                </Tooltip> */}
                 <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
                   <Tooltip title="Bee API endpoint, recommended http://localhost:1633">
                     <TextField

@@ -93,6 +93,8 @@
 
 .shrinkable {
     visibility: hidden;
+    overflow: hidden;
+    height: 0px;
 }
 .shrinkable:disabled {
     transform: scale( 10% ) translateX( 0px );
