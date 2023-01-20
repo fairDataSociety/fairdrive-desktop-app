@@ -32,7 +32,7 @@ function ShowAccountsComponent(
     handleAccountRemove,
   }: ShowAccountsProps) {
   return (
-    <Dialog open={isOpen}>
+    <Dialog open={isOpen} fullWidth>
       <DialogTitle>
         Accounts
         <IconButton
@@ -45,7 +45,7 @@ function ShowAccountsComponent(
             color: (theme) => theme.palette.grey[500],
           }}
         >
-          <CloseIcon/>
+          <CloseIcon />
         </IconButton>
       </DialogTitle>
 
@@ -55,9 +55,9 @@ function ShowAccountsComponent(
             No accounts found
           </Typography>
           <Typography style={{ color: 'gray', margin: '20px' }}>
-            To add account to this list, click on "Remember me" checkbox
-            before login. Accounts do not know about your connection
-            preferences. Lite accounts are added automatically.
+            To add account to this list, click on "Remember me" checkbox before
+            login. Accounts do not know about your connection preferences. Lite
+            accounts are added automatically.
           </Typography>
         </>
       )}
@@ -82,11 +82,11 @@ function ShowAccountsComponent(
                 top: '1.6rem',
               }}
             >
-                      {account.userInfo.mnemonic !== undefined ||
-                      account.userInfo.mnemonic === ''
-                        ? 'lite'
-                        : 'portable'}
-                    </span>
+              {account.userInfo.mnemonic !== undefined ||
+              account.userInfo.mnemonic === ''
+                ? 'lite'
+                : 'portable'}
+            </span>
 
             <Tooltip title="Remove account" placement="top">
               <Typography
