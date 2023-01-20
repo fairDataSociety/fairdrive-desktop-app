@@ -51,6 +51,11 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
               onChange={updateUsername}
               autoComplete="off"
               autoFocus
+              onKeyDown={event => {
+                if (event.key === "Enter") {
+                  login();
+                }
+              }}
             />
             <TextField
               margin="normal"
@@ -61,6 +66,11 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
               onChange={updatePassword}
               autoComplete="off"
               type="password"
+              onKeyDown={event => {
+                if (event.key === "Enter") {
+                  login();
+                }
+              }}
             />
             <FormControlLabel
               control={
