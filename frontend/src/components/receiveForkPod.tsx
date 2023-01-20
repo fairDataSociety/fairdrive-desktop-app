@@ -96,14 +96,14 @@ function ReceiveForkPodComponent(props: PodOpsProps) {
         <Button
           onClick={props.onClose}
           disabled={props.isLoading}
-          variant="contained"
+          variant="outlined"
         >
           Close
         </Button>
         <Button
           onClick={handlePodForkReceive}
           disabled={props.isLoading}
-          variant="contained"
+          variant="outlined"
         >
           Import
         </Button>

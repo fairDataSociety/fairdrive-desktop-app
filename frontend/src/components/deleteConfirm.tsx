@@ -33,10 +33,10 @@ function DeleteConfirmComponent(props: DeleteProps) {
         <Typography>This action is irreversible. Are you Sure? </Typography>
       </DialogContent>
       <DialogActions>
-        <Button autoFocus onClick={props.onClose} disabled={props.isLoading}>
+        <Button autoFocus onClick={props.onClose} disabled={props.isLoading} variant="outlined">
           Cancel
         </Button>
-        <Button onClick={deletePod} disabled={props.isLoading}>Ok</Button>
+        <Button onClick={deletePod} disabled={props.isLoading} variant="outlined">Ok</Button>
       </DialogActions>
     </Dialog>
   );

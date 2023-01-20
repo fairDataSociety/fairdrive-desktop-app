@@ -76,14 +76,14 @@ function NewPodComponent(props: PodOpsProps) {
         <Button
           onClick={props.onClose}
           disabled={props.isLoading}
-          variant="contained"
+          variant="outlined"
         >
           Close
         </Button>
         <Button
           onClick={handlePodNew}
           disabled={props.isLoading}
-          variant="contained"
+          variant="outlined"
         >
           Create
         </Button>

@@ -60,7 +60,7 @@ function SharedReferenceComponent(props: SharedReferenceProps) {
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button autoFocus onClick={props.onClose}>
+        <Button autoFocus onClick={props.onClose} variant="outlined">
           Close
         </Button>
       </DialogActions>

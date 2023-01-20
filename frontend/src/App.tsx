@@ -741,14 +741,14 @@ function App() {
                 </Box>
                 <Stack mt={3} mb={3} spacing={2} direction="row">
                   <Tooltip title="Closes this dialog without saving">
-                    <Button fullWidth variant="contained" onClick={closeSettings}>
+                    <Button fullWidth variant="outlined" onClick={closeSettings}>
                       Close
                     </Button>
                   </Tooltip>
                   <Tooltip title="Save settings and connect">
                     <Button
                       fullWidth
-                      variant="contained"
+                      variant="outlined"
                       sx={{ mt: 3, mb: 2 }}
                       onClick={initFairOs}
                       disabled={isLoading}
@@ -913,14 +913,14 @@ function App() {
                 </Box>
                 <Stack mt={3} mb={3} spacing={2} direction="row">
                   <Tooltip title="Closes this dialog without saving">
-                    <Button fullWidth variant="contained" onClick={closeSettings}>
+                    <Button fullWidth variant="outlined" onClick={closeSettings}>
                       Close
                     </Button>
                   </Tooltip>
                   <Tooltip title="Save settings and connect">
                     <Button
                       fullWidth
-                      variant="contained"
+                      variant="outlined"
                       sx={{ mt: 3, mb: 2 }}
                       onClick={initFairOs}
                       disabled={isLoading}

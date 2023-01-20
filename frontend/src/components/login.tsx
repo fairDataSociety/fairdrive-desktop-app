@@ -78,7 +78,7 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
             <Tooltip title="This app supports Lite and Portable FDS accounts. Enter your credentials and login">
               <Button
                 fullWidth
-                variant="contained"
+                variant="outlined"
                 sx={{ mt: 3, mb: 2 }}
                 onClick={login}
                 disabled={isLoading}
@@ -118,8 +118,6 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
                   </Link>
                 </Tooltip>
               </Typography>
-
-
             </>
           </FormGroup>
         </Box>

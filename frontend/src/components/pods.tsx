@@ -67,7 +67,6 @@ function PodsComponent(
     showLoader(true)
     try {
       let ref = await SharePod(podName)
-      console.log(ref)
       setSharedReference(ref)
       setSharedPodName(podName)
       setShowSharedReference(true)

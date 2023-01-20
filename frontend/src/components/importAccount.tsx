@@ -84,7 +84,7 @@ function ImportAccountComponent(
               <Tooltip title="Closes this dialog">
                 <Button
                   fullWidth
-                  variant="contained"
+                  variant="outlined"
                   onClick={onClose}
                 >
                   Close
@@ -93,7 +93,7 @@ function ImportAccountComponent(
               <Tooltip title="Import account, logs in and stores account to accounts list">
                 <Button
                   fullWidth
-                  variant="contained"
+                  variant="outlined"
                   onClick={() => importAccount()}
                 >
                   Import

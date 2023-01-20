@@ -111,7 +111,7 @@ function ShowAccountsComponent(
         <Button
           onClick={onClose}
           disabled={isLoading}
-          variant="contained"
+          variant="outlined"
           style={{
             width: '100%',
           }}

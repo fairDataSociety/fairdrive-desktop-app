@@ -49,32 +49,32 @@ function AccountDetailsComponent(
       <DialogContent dividers>
         {username === '' ? (
           <Tooltip title="Seems like there is no account information">
-            <Typography style={{ color: 'black' }}>No account info</Typography>
+            <Typography>No account info</Typography>
           </Tooltip>
         ) : (
           <>
-            <Typography style={{ color: 'black' }}>
+            <Typography>
               <strong>{username}</strong>
             </Typography>
-            <Typography style={{ color: 'black' }}>Password</Typography>
+            <Typography>Password</Typography>
             <span style={{ color: 'transparent', textShadow: '0 0 15px #000' }}>
                   <strong>{password}</strong>
                 </span>
             <br />
             {mnemonic != '' ? (
               <>
-                <Typography style={{ color: 'black' }}>
+                <Typography>
                   This is Lite account
                 </Typography>
                 <br />
-                <Typography style={{ color: 'black' }}>Mnemonic</Typography>
+                <Typography>Mnemonic</Typography>
                 <span
                   style={{ color: 'transparent', textShadow: '0 0 15px #000' }}
                 >
                       <strong>{mnemonic}</strong>
                     </span>
 
-                <Typography style={{ color: 'black' }}>Private Key</Typography>
+                <Typography>Private Key</Typography>
                 <span
                   style={{ color: 'transparent', textShadow: '0 0 15px #000' }}
                 >
@@ -82,7 +82,7 @@ function AccountDetailsComponent(
                     </span>
               </>
             ) : (
-              <Typography style={{ color: 'black' }}>
+              <Typography>
                 This is Portable account
               </Typography>
             )}
@@ -94,7 +94,7 @@ function AccountDetailsComponent(
             <Tooltip title="Closes this dialog">
               <Button
                 fullWidth
-                variant="contained"
+                variant="outlined"
                 onClick={onClose}
               >
                 Close

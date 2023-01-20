@@ -59,7 +59,7 @@ function EmptyPodsComponent({username, mnemonic, isLoading, setShowAccounts}: Em
 
         <Button
           fullWidth
-          variant="contained"
+          variant="outlined"
           sx={{ mt: 3, mb: 2 }}
           onClick={() => EventsEmit('disableMenus')}
           disabled={isLoading}

@@ -82,14 +82,14 @@ function ForkPodComponent(props: ForkPodOpsProps) {
         <Button
           onClick={props.onClose}
           disabled={props.isLoading}
-          variant="contained"
+          variant="outlined"
         >
           Close
         </Button>
         <Button
           onClick={handlePodFork}
           disabled={props.isLoading}
-          variant="contained"
+          variant="outlined"
         >
           Fork
         </Button>
