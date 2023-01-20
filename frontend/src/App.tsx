@@ -13,7 +13,6 @@ import {
   Logout,
   GetCashedPods,
   Load,
-  Sync,
 } from '../wailsjs/go/handler/Handler'
 import {
   SetupConfig,
@@ -95,7 +94,9 @@ function App() {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
 
   const theme = createTheme({
-    palette: darkPalette,
+    palette: prefersDarkMode ? darkPalette : {
+      mode: "light"
+    },
     typography: {
       fontFamily: `"WorkSans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
     "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
@@ -106,13 +107,6 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [openError, setOpenError] = useState(false)
   const [openInfo, setOpenInfo] = useState(false)
-
-  const handleCloseError = (event?: SyntheticEvent | Event, reason?: string) => {
-    if (reason === 'clickaway') {
-      return
-    }
-    setOpenError(false)
-  }
 
   const handleCloseInfo = (event?: SyntheticEvent | Event, reason?: string) => {
     if (reason === 'clickaway') {
@@ -183,8 +177,6 @@ function App() {
     const html = document.querySelector('html');
     const body = document.querySelector('body');
     if (html && body) {
-      console.log(JSON.stringify(theme.palette))
-
       html.style.setProperty('--background-color', theme.palette.background.default);
       body.style.setProperty('--background-color', theme.palette.background.default);
 
@@ -208,7 +200,6 @@ function App() {
       setShowAccounts(true)
     })
     EventsOn('podNew', () => {
-      console.log(theme)
       setShowPodNew(true)
     })
     EventsOn('podReceive', () => {
@@ -317,7 +308,7 @@ function App() {
       showInfoMessage('Account added to account list')
       return newAccountInfo
     }
-    // TDOD update pod info
+    // TODO update pod info
     return account
   }
   const removeAccount = async (account: AccountInfo) => {
@@ -326,16 +317,6 @@ function App() {
     })
     setAccounts(newAccounts)
     localStorage.setItem('accounts', JSON.stringify(newAccounts))
-  }
-
-  const sync = async (podName: string) => {
-    try {
-      setIsLoading(true)
-      await Sync(podName)
-    } catch (e) {
-      showError(e)
-    }
-    setIsLoading(false)
   }
 
   const mount = async (e: any) => {
@@ -352,7 +333,6 @@ function App() {
         if (batch === '') {
           readOnly = true
         }
-        console.log(readOnly)
         await Mount(podName, mountPoint, readOnly)
         EventsEmit('Mount')
       } catch (e: any) {
@@ -556,7 +536,7 @@ function App() {
       setShowPods(true)
       EventsEmit('enableMenus')
       showInfoMessage('Lite account logged in. See Details for account info.')
-      addAccount(user, pass, mnem, pods)
+      await addAccount(user, pass, mnem, pods)
       setOpenError(false) // close error if it was open before
       setShowAccountImport(false)
 
@@ -569,13 +549,11 @@ function App() {
   async function login() {
     setIsLoading(true)
     try {
-      console.log('login', username, password, mnemonic)
       let { p, m } = await doLogin(username, password, mnemonic)
 
-      console.log('got login', p, m)
       if (remember) {
         await RememberPassword(username, password)
-        addAccount(username, password, m.mnemonic, p) // add only if remember is checked and login is successful
+        await addAccount(username, password, m.mnemonic, p) // add only if remember is checked and login is successful
       } else {
         await ForgetPassword()
       }
@@ -667,7 +645,7 @@ function App() {
             </div>
 
             {/* Advanced configuration */}
-            {toggleConfigAdvanced === true && (
+            {toggleConfigAdvanced && (
               <FormGroup>
                 <Tooltip
                   title="Usually bee nodes and gateways are not behind proxy. Please check before connecting via proxy."
@@ -782,7 +760,7 @@ function App() {
               </FormGroup>
             )}
             {/* Simple configuration */}
-            {toggleConfigAdvanced === false && (
+            {!toggleConfigAdvanced && (
               <FormGroup>
                 <Tooltip
                   title="Toggle between bee location or gateway bee."
