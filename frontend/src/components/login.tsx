@@ -42,7 +42,12 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
             onClick={() => EventsEmit('showAccounts')}
             style={{ height: '100%', cursor: 'pointer' }}
           />
-          <h2>Enter credentials</h2>
+          <Tooltip
+            title="You can use Fair Data Society Portable account if you have one, or create Lite account by simply entering username/password and new account will be auto-magically created for you."
+            placement="top"
+          >
+            <h2>Fairdrive login</h2>
+          </Tooltip>
           <FormGroup sx={{ marginBottom: '50px' }}>
             <TextField
               margin="normal"
