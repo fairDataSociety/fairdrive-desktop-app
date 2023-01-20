@@ -43,7 +43,7 @@ function NewPodComponent(props: PodOpsProps) {
     props.showLoader(false)
   }
   return (
-    <Dialog open={props.isOpen} onClose={props.onClose}>
+    <Dialog open={props.isOpen} onClose={props.onClose} fullWidth>
       <Tooltip title="Imagine POD is one of your drives">
         <DialogTitle>
           Create new Pod
@@ -57,7 +57,7 @@ function NewPodComponent(props: PodOpsProps) {
               color: (theme) => theme.palette.grey[500],
             }}
           >
-            <CloseIcon/>
+            <CloseIcon />
           </IconButton>
         </DialogTitle>
       </Tooltip>
@@ -80,11 +80,7 @@ function NewPodComponent(props: PodOpsProps) {
         >
           Close
         </Button>
-        <Button
-          onClick={handlePodNew}
-          disabled={props.isLoading}
-          variant="outlined"
-        >
+        <Button onClick={handlePodNew} disabled={props.isLoading} variant="outlined">
           Create
         </Button>
       </DialogActions>

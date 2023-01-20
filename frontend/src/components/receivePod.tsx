@@ -49,7 +49,7 @@ function ReceivePodComponent(props: PodOpsProps) {
     props.showLoader(false)
   }
   return (
-    <Dialog open={props.isOpen} onClose={props.onClose}>
+    <Dialog open={props.isOpen} onClose={props.onClose} fullWidth>
       <Tooltip title="Imagine POD is one of your drives">
         <DialogTitle>
           Receive/Import Pod
@@ -63,7 +63,7 @@ function ReceivePodComponent(props: PodOpsProps) {
               color: (theme) => theme.palette.grey[500],
             }}
           >
-            <CloseIcon/>
+            <CloseIcon />
           </IconButton>
         </DialogTitle>
       </Tooltip>
