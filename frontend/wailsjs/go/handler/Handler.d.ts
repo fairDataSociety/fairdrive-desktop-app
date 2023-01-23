@@ -9,6 +9,12 @@ export function Close():Promise<void>;
 
 export function CreatePod(arg1:string):Promise<pod.Info>;
 
+export function DeletePod(arg1:string):Promise<void>;
+
+export function Fork(arg1:string,arg2:string):Promise<void>;
+
+export function ForkFromReference(arg1:string,arg2:string):Promise<void>;
+
 export function GetCashedPods():Promise<Array<handler.PodMountedInfo>>;
 
 export function GetPodsList():Promise<Array<handler.PodMountedInfo>>;

@@ -4,8 +4,8 @@ release:
   prerelease: auto
   extra_files:
     - glob: ./build/bin/fairdrive_linux
-    - glob: ./build/bin/fairdrive_darwin_amd64.dmg
-    - glob: ./build/bin/fairdrive_darwin_arm64.dmg
+    - glob: ./build/bin/fairdrive_darwin_intel.dmg
+    - glob: ./build/bin/fairdrive_darwin_silicon.dmg
     - glob: ./build/bin/fairdrive_windows.exe
 builds:
   - skip: true
