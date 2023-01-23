@@ -1,10 +1,8 @@
-import { forwardRef, SyntheticEvent, useEffect, useState } from 'react'
+import React, { forwardRef, SyntheticEvent, useEffect, useState } from 'react'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
-import logo from './assets/images/fairdata.svg'
-import dfLogo from './assets/images/datafund.svg'
-import backgroundImage from './assets/images/sculptures_of_data_s.jpg'
-
+import { DialogContent, DialogTitle, useMediaQuery } from '@mui/material';
 import './App.css'
+
 import {
   Login,
   Mount,
@@ -13,10 +11,8 @@ import {
   Start,
   Close,
   Logout,
-  CreatePod,
   GetCashedPods,
   Load,
-  Sync,
 } from '../wailsjs/go/handler/Handler'
 import {
   SetupConfig,
@@ -35,59 +31,39 @@ import {
 import {
   TextField,
   Button,
-  Checkbox,
   FormGroup,
-  FormControlLabel,
   FormLabel,
-  RadioGroup,
-  Radio,
   MenuItem,
   Select,
-  Container,
   Box,
-  Grid,
-  Link,
-  Modal,
   Tooltip,
   IconButton,
   Stack,
   Snackbar,
   AlertProps,
   Dialog,
-  DialogTitle,
-  DialogContent,
-  Typography,
-  styled,
-  DialogActions,
-  LinearProgress,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
   Switch,
-  Slide,
+  CircularProgress, Backdrop,
 } from '@mui/material'
 import MuiAlert from '@mui/material/Alert'
-import ContentCopyIcon from '@mui/icons-material/ContentCopy'
-import CachedIcon from '@mui/icons-material/Cached';
 import { api, handler } from '../wailsjs/go/models'
-import { BrowserOpenURL, EventsEmit, EventsOn } from '../wailsjs/runtime'
-import { Folder } from '@mui/icons-material'
-import CloseIcon from '@mui/icons-material/Close'
-import { BuildTime, Version } from '../wailsjs/go/main/about'
+import { EventsEmit, EventsOn } from '../wailsjs/runtime'
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import PodMountedInfo = handler.PodMountedInfo
-
-interface UserInfo {
-  username: string | any
-  password: string | any
-  mnemonic: string | any
-}
-
-interface AccountInfo {
-  userInfo: UserInfo[] | any
-  pods: PodMountedInfo[] | any
-}
+import AboutComponent from "./components/about";
+import NewPodComponent from "./components/newPod";
+import { ErrorSnack } from "./components/error";
+import ReceivePodComponent from "./components/receivePod";
+import ReceiveForkPodComponent from "./components/receiveForkPod";
+import LoginComponent from "./components/login";
+import PodsComponent from "./components/pods";
+import EmptyPodsComponent from "./components/empty";
+import CloseIcon from "@mui/icons-material/Close";
+import { darkPalette } from "./utils/theme";
+import ImportAccountComponent from "./components/importAccount";
+import AccountDetailsComponent from "./components/accountDetails";
+import { AccountInfo, UserInfo } from "./types/info";
+import ShowAccountsComponent from "./components/showAccounts";
 
 function createUserInfo(
   username: string,
@@ -110,38 +86,27 @@ function createAccountInfo(
   return { userInfo: createUserInfo(username, password, mnemonic), pods }
 }
 
-const theme = createTheme({
-  typography: {
-    fontFamily: `"WorkSans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif`,
-  },
-})
 const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />
 })
 
-const AboutDialog = styled(Dialog)(({ theme }) => ({
-  '& .MuiDialogContent-root': {
-    padding: theme.spacing(2),
-  },
-  '& .MuiDialogActions-root': {
-    padding: theme.spacing(1),
-  },
-}))
-
 function App() {
+  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+
+  const theme = createTheme({
+    palette: prefersDarkMode ? darkPalette : {
+      mode: "light"
+    },
+    typography: {
+      fontFamily: `"WorkSans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif`,
+    },
+  })
+
   const [isLoading, setIsLoading] = useState(false)
   const [openError, setOpenError] = useState(false)
   const [openInfo, setOpenInfo] = useState(false)
-  const [openDisclaimer, setOpenDisclaimer] = useState(true)
-
-  const handleCloseError = (event?: SyntheticEvent | Event, reason?: string) => {
-    if (reason === 'clickaway') {
-      return
-    }
-    setOpenError(false)
-  }
 
   const handleCloseInfo = (event?: SyntheticEvent | Event, reason?: string) => {
     if (reason === 'clickaway') {
@@ -155,31 +120,26 @@ function App() {
     setShowAbout(false)
   }
 
-  const [showPodNew, setPodNew] = useState<boolean>(false)
+  async function loadPodsAndResetAll() {
+    let p = await GetPodsList()
+    setPods(p)
+  }
+
+  const [showPodNew, setShowPodNew] = useState<boolean>(false)
   const handlePodNewClose = () => {
-    setPodNew(false)
-  }
-  const [newPodName, setNewPodName] = useState('')
-
-  const handlePodNew = async () => {
-    setIsLoading(true)
-    try {
-      if (newPodName !== '') {
-        await CreatePod(newPodName)
-        setPodNew(false)
-        setNewPodName('')
-        let p = await GetPodsList()
-        setPods(p)
-        setShowPods(true)
-      }
-    } catch (e: any) {
-      showError(e)
-    }
-    setIsLoading(false)
+    setShowPodNew(false)
   }
 
-  const [version, setVersion] = useState('')
-  const [buildTime, setTime] = useState('')
+  const [showPodReceive, setShowPodReceive] = useState<boolean>(false)
+  const handlePodReceiveClose = () => {
+    setShowPodReceive(false)
+  }
+
+  const [showPodReceiveFork, setShowPodReceiveFork] = useState<boolean>(false)
+  const handlePodReceiveForkClose = () => {
+    setShowPodReceiveFork(false)
+  }
+
 
   const [showConfig, setShowConfig] = useState<boolean>(false)
   const [showAccountDetails, setShowAccountDetails] = useState<boolean>(false)
@@ -214,6 +174,15 @@ function App() {
   }
 
   useEffect(() => {
+    const html = document.querySelector('html');
+    const body = document.querySelector('body');
+    if (html && body) {
+      html.style.setProperty('--background-color', theme.palette.background.default);
+      body.style.setProperty('--background-color', theme.palette.background.default);
+
+      html.style.setProperty('--color', theme.palette.text.primary);
+      body.style.setProperty('--color', theme.palette.text.primary);
+    }
     LoadStoredAccounts()
     EventsOn('preferences', () => {
       setShowConfig(true)
@@ -231,7 +200,13 @@ function App() {
       setShowAccounts(true)
     })
     EventsOn('podNew', () => {
-      setPodNew(true)
+      setShowPodNew(true)
+    })
+    EventsOn('podReceive', () => {
+      setShowPodReceive(true)
+    })
+    EventsOn('podReceiveFork', () => {
+      setShowPodReceiveFork(true)
     })
     EventsOn('about', () => {
       setShowAbout(true)
@@ -255,12 +230,6 @@ function App() {
       setIsLoading(false)
     })
 
-    Version().then((res) => {
-      setVersion(res)
-    })
-    BuildTime().then((res) => {
-      setTime(res)
-    })
     IsSet().then(async (isSet) => {
       if (!isSet) {
         setShowConfig(true)
@@ -339,7 +308,7 @@ function App() {
       showInfoMessage('Account added to account list')
       return newAccountInfo
     }
-    // TDOD update pod info
+    // TODO update pod info
     return account
   }
   const removeAccount = async (account: AccountInfo) => {
@@ -350,21 +319,21 @@ function App() {
     localStorage.setItem('accounts', JSON.stringify(newAccounts))
   }
 
-  const sync = async (podName: string) => {
-    try {
-      setIsLoading(true)
-      await Sync(podName)
-    } catch (e) {
-      showError(e)
-    }
-    setIsLoading(false)
-  }
-
   const mount = async (e: any) => {
     setIsLoading(true)
+    let podName = e.target.value
     if (e.target.checked) {
       try {
-        await Mount(e.target.value, mountPoint, batch === '')
+        let readOnly = false
+        pods.map(pod => {
+          if (pod.podName === podName) {
+            readOnly = pod.isShared
+          }
+        })
+        if (batch === '') {
+          readOnly = true
+        }
+        await Mount(podName, mountPoint, readOnly)
         EventsEmit('Mount')
       } catch (e: any) {
         showError(e)
@@ -373,7 +342,7 @@ function App() {
       }
     } else {
       try {
-        await Unmount(e.target.value)
+        await Unmount(podName)
         EventsEmit('Mount')
       } catch (e: any) {
         showError(e)
@@ -381,8 +350,8 @@ function App() {
         return
       }
     }
-    let pods = await GetCashedPods()
-    setPods(pods)
+    let cachedPods = await GetCashedPods()
+    setPods(cachedPods)
     setIsLoading(false)
   }
   const [mountPoint, setMountPoint] = useState('')
@@ -410,10 +379,6 @@ function App() {
   }
   const updateNetwork = (e: any) => {
     setNetwork(e.target.value)
-    setPreferencesUpdated(true)
-  }
-  const updateNewPodName = (e: any) => {
-    setNewPodName(e.target.value)
     setPreferencesUpdated(true)
   }
 
@@ -463,32 +428,6 @@ function App() {
     setIsLoading(false)
   }
 
-  async function openSignUp() {
-    BrowserOpenURL('https://create.fairdatasociety.org/#/register')
-  }
-
-  async function openBrowserLicense() {
-    BrowserOpenURL('https://github.com/datafund/fairos-fuse/blob/master/LICENSE')
-  }
-  async function openBrowserFairOS() {
-    BrowserOpenURL(
-      'https://docs.fairos.fairdatasociety.org/docs/fairos-dfs/api-reference',
-    )
-  }
-  async function openBrowserFDPprotocol() {
-    BrowserOpenURL('https://fdp.fairdatasociety.org/')
-  }
-
-  async function openBrowserFairDataSociety() {
-    BrowserOpenURL('https://fairdatasociety.org/')
-  }
-
-  async function openBrowserDatafund() {
-    BrowserOpenURL('https://datafund.io/')
-  }
-
-  async function openCreateLightAccount() {}
-
   async function handleAccountSwitch(account: AccountInfo) {
     setIsLoading(true)
     try {
@@ -497,7 +436,7 @@ function App() {
       setName(account.userInfo.username)
       setPassword(account.userInfo.password)
       setMnemonic(account.userInfo.mnemonic)
-      doLogin(
+      await doLogin(
         account.userInfo.username,
         account.userInfo.password,
         account.userInfo.mnemonic,
@@ -511,7 +450,7 @@ function App() {
   }
   async function handleAccountRemove(account: AccountInfo) {
     setIsLoading(true)
-    removeAccount(account)
+    await removeAccount(account)
     setInfoMessage('Account removed.')
     setIsLoading(false)
   }
@@ -559,6 +498,7 @@ function App() {
         setMnemonic('')
         setShowLogin(false)
         setPods(p)
+        console.log(p)
         setShowPods(true)
         EventsEmit('enableMenus')
         setOpenError(false) // close error if it was open before
@@ -596,7 +536,7 @@ function App() {
       setShowPods(true)
       EventsEmit('enableMenus')
       showInfoMessage('Lite account logged in. See Details for account info.')
-      addAccount(user, pass, mnem, pods)
+      await addAccount(user, pass, mnem, pods)
       setOpenError(false) // close error if it was open before
       setShowAccountImport(false)
 
@@ -609,13 +549,11 @@ function App() {
   async function login() {
     setIsLoading(true)
     try {
-      console.log('login', username, password, mnemonic)
       let { p, m } = await doLogin(username, password, mnemonic)
 
-      console.log('got login', p, m)
       if (remember) {
         await RememberPassword(username, password)
-        addAccount(username, password, m.mnemonic, p) // add only if remember is checked and login is successful
+        await addAccount(username, password, m.mnemonic, p) // add only if remember is checked and login is successful
       } else {
         await ForgetPassword()
       }
@@ -630,31 +568,16 @@ function App() {
   }
 
   function showError(error: any) {
-    if (typeof error === 'string') {
-      setErrorMessage(error.toUpperCase())
-      if (error === 'user not logged in') {
-        setShowLogin(true)
-        setShowPods(false)
-        debugger
-      }
-    } else if (error instanceof Error) {
-      setErrorMessage(error.message) // works, `e` narrowed to Error
-    }
     setOpenError(true)
+    setErrorMessage(error.toUpperCase())
+    if (error === 'user not logged in') {
+      setShowLogin(true) // THIS HAS TO BE IN !
+    }
   }
+
   function showInfoMessage(message: any) {
     setInfoMessage(message)
     setOpenInfo(true)
-  }
-
-  function copyUrlToClipboard(location: string) {
-    try {
-      navigator.clipboard.writeText(location).catch((err) => {
-        showError(`Unable to copy to the clipboard: ${err}`)
-      })
-    } catch (err) {
-      showError(`Unable to copy to the clipboard (in try/catch): ${err}`)
-    }
   }
 
   return (
@@ -674,55 +597,35 @@ function App() {
           </Alert>
         </Snackbar>
         {/*shows error*/}
-        <Snackbar
+        <ErrorSnack
+          errorMessage={errorMessage}
           open={openError}
-          onClose={handleCloseError}
-          autoHideDuration={7000}
-        >
-          <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
-            {errorMessage}
-          </Alert>
-        </Snackbar>
-
-        <Snackbar
-          open={openDisclaimer}
-          onClose={() => setOpenDisclaimer(false)}
-          autoHideDuration={15000}
-        >
-          <Alert onClose={() => setOpenDisclaimer(false)}>
-            ⚠ Fairdrive is in Beta and provided for evaluation only! File integrity
-            persistence and security are not assured! Expect that data in Fairdrive
-            can be deleted at any time.
-          </Alert>
-        </Snackbar>
+          show={setOpenError}
+        />
 
         {/*logo*/}
         {/* <img src={logo} id="logo" alt="logo" className="logo-icon" /> */}
 
         {/*settings modal*/}
-        <Modal
-          open={showConfig}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-        >
-          <Box
-            sx={{
-              margin: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              boxShadow: 24,
-              bgcolor: 'white',
-              p: 2,
-            }}
-          >
+        <Dialog open={showConfig} aria-labelledby="settings" fullWidth fullScreen>
+          <DialogTitle>
+            Preferences
+            <IconButton
+              aria-label="close"
+              onClick={closeSettings}
+              sx={{
+                position: 'absolute',
+                right: 8,
+                top: 8,
+                color: (theme) => theme.palette.grey[500],
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers>
             {/* Preferences switch */}
-            <div style={{ marginTop: '-5px' }}>
-              <div
-                style={{ color: 'black', fontWeight: 'bolder', marginBottom: '5px' }}
-              >
-                Preferences
-              </div>
+            <div style={{ marginTop: '-15px' }}>
               <span
                 style={{
                   color: toggleConfigAdvanced ? 'gray' : 'black',
@@ -746,16 +649,17 @@ function App() {
             </div>
 
             {/* Advanced configuration */}
-            {toggleConfigAdvanced === true && (
+            {toggleConfigAdvanced && (
               <FormGroup>
-                <Tooltip
+                {/* Did we loose proxy switch ? */}
+                {/* <Tooltip
                   title="Usually bee nodes and gateways are not behind proxy. Please check before connecting via proxy."
                   placement="bottom"
                 >
                   <FormLabel id="demo-controlled-radio-buttons-group">
                     Is Bee running behind proxy?
                   </FormLabel>
-                </Tooltip>
+                </Tooltip> */}
                 <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
                   <Tooltip title="Bee API endpoint, recommended http://localhost:1633">
                     <TextField
@@ -815,7 +719,7 @@ function App() {
                       value={network}
                       style={{ color: 'black' }}
                     >
-                      <MenuItem value={'testnet'}>Testnet</MenuItem>
+                      <MenuItem value={'testnet'}>Goerli Testnet</MenuItem>
                       <MenuItem value={'play'}>FDP play</MenuItem>
                     </Select>
                   </Tooltip>
@@ -836,20 +740,20 @@ function App() {
 
                   <Tooltip title="Select mounting point location">
                     <IconButton onClick={showMountPointSelector}>
-                      <Folder />
+                      <OpenInNewIcon />
                     </IconButton>
                   </Tooltip>
                 </Box>
                 <Stack mt={3} mb={3} spacing={2} direction="row">
                   <Tooltip title="Closes this dialog without saving">
-                    <Button fullWidth variant="contained" onClick={closeSettings}>
+                    <Button fullWidth variant="outlined" onClick={closeSettings}>
                       Close
                     </Button>
                   </Tooltip>
                   <Tooltip title="Save settings and connect">
                     <Button
                       fullWidth
-                      variant="contained"
+                      variant="outlined"
                       sx={{ mt: 3, mb: 2 }}
                       onClick={initFairOs}
                       disabled={isLoading}
@@ -861,7 +765,7 @@ function App() {
               </FormGroup>
             )}
             {/* Simple configuration */}
-            {toggleConfigAdvanced === false && (
+            {!toggleConfigAdvanced && (
               <FormGroup>
                 <Tooltip
                   title="Toggle between bee location or gateway bee."
@@ -1008,20 +912,20 @@ function App() {
 
                   <Tooltip title="Select mounting point location">
                     <IconButton onClick={showMountPointSelector}>
-                      <Folder />
+                      <OpenInNewIcon />
                     </IconButton>
                   </Tooltip>
                 </Box>
                 <Stack mt={3} mb={3} spacing={2} direction="row">
                   <Tooltip title="Closes this dialog without saving">
-                    <Button fullWidth variant="contained" onClick={closeSettings}>
+                    <Button fullWidth variant="outlined" onClick={closeSettings}>
                       Close
                     </Button>
                   </Tooltip>
                   <Tooltip title="Save settings and connect">
                     <Button
                       fullWidth
-                      variant="contained"
+                      variant="outlined"
                       sx={{ mt: 3, mb: 2 }}
                       onClick={initFairOs}
                       disabled={isLoading}
@@ -1032,729 +936,133 @@ function App() {
                 </Stack>
               </FormGroup>
             )}
-          </Box>
-        </Modal>
+          </DialogContent>
+        </Dialog>
 
         {/* Account Import */}
-        <Modal
-          open={showAccountImport}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-        >
-          <Box
-            sx={{
-              margin: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              boxShadow: 24,
-              bgcolor: 'white',
-              p: 2,
-            }}
-          >
-            <div
-              style={{
-                marginTop: '-5px',
-                color: 'black',
-                fontWeight: 'bolder',
-                marginBottom: '15px',
-              }}
-            >
-              Import Account
-            </div>
-            <FormGroup>
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="username"
-                label="Username"
-                onChange={updateImportName}
-                autoComplete="off"
-                autoFocus
-              />
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="password"
-                label="Password"
-                onChange={updateImportPassword}
-                autoComplete="off"
-                type="password"
-              />
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                multiline
-                id="mnemonic"
-                label="12-word mnemonic"
-                onChange={updateImportMnemonic}
-                autoComplete="off"
-                type="password"
-              />
-              <Stack mt={3} mb={3} spacing={2} direction="row">
-                <Tooltip title="Closes this dialog">
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    onClick={() => setShowAccountImport(false)}
-                  >
-                    Close
-                  </Button>
-                </Tooltip>
-                <Tooltip title="Import account, logs in and stores account to accounts list">
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    onClick={() => importAccount()}
-                  >
-                    Import
-                  </Button>
-                </Tooltip>
-              </Stack>
-            </FormGroup>
-          </Box>
-        </Modal>
+        <ImportAccountComponent
+          isOpen={showAccountImport}
+          onClose={() => setShowAccountImport(false)}
+          updateImportName={updateImportName}
+          updateImportPassword={updateImportPassword}
+          updateImportMnemonic={updateImportMnemonic}
+          importAccount={importAccount}
+        />
 
         {/* Account details*/}
-        <Modal
-          open={showAccountDetails}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-        >
-          <Box
+        <AccountDetailsComponent
+          isOpen={showAccountDetails}
+          onClose={() => setShowAccountDetails(false)}
+          username={username}
+          password={password}
+          mnemonic={mnemonic}
+          privateKey={privateKey}
+        />
+
+        {isLoading && (
+          <Backdrop
             sx={{
-              margin: 2,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              boxShadow: 24,
-              bgcolor: 'white',
-              p: 2,
+              color: '#fff',
+              zIndex: (theme) => theme.zIndex.drawer + 1000000000,
             }}
+            open={isLoading}
           >
-            <div
-              style={{
-                marginTop: '-5px',
-                color: 'black',
-                fontWeight: 'bolder',
-                marginBottom: '15px',
-              }}
-            >
-              Account Details
-            </div>
-            {username === '' ? (
-              <Tooltip title="Seems like there is no account information">
-                <Typography style={{ color: 'black' }}>No account info</Typography>
-              </Tooltip>
-            ) : (
-              <>
-                <Typography style={{ color: 'black' }}>
-                  <strong>{username}</strong>
-                </Typography>
-                <Typography style={{ color: 'black' }}>Password</Typography>
-                <span style={{ color: 'transparent', textShadow: '0 0 15px #000' }}>
-                  <strong>{password}</strong>
-                </span>
-                <br />
-                {mnemonic != '' ? (
-                  <>
-                    <Typography style={{ color: 'black' }}>
-                      This is Lite account
-                    </Typography>
-                    <br />
-                    <Typography style={{ color: 'black' }}>Mnemonic</Typography>
-                    <span
-                      style={{ color: 'transparent', textShadow: '0 0 15px #000' }}
-                    >
-                      <strong>{mnemonic}</strong>
-                    </span>
-
-                    <Typography style={{ color: 'black' }}>Private Key</Typography>
-                    <span
-                      style={{ color: 'transparent', textShadow: '0 0 15px #000' }}
-                    >
-                      <strong style={{ fontSize: '8px' }}>{privateKey}</strong>
-                    </span>
-                  </>
-                ) : (
-                  <Typography style={{ color: 'black' }}>
-                    This is Portable account
-                  </Typography>
-                )}
-                <br />
-              </>
-            )}
-            <FormGroup>
-              <Stack mt={3} mb={3} spacing={2} direction="row">
-                <Tooltip title="Closes this dialog">
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    onClick={() => setShowAccountDetails(false)}
-                  >
-                    Close
-                  </Button>
-                </Tooltip>
-              </Stack>
-            </FormGroup>
-          </Box>
-        </Modal>
-
-        <div
-          style={{
-            position: 'absolute',
-            top: '0px',
-            zIndex: '10000',
-            width: '100%',
-            height: '10px',
-          }}
-        >
-          {isLoading && (
-            <LinearProgress
-              sx={{
-                height: 10,
-              }}
-            />
-          )}
-        </div>
-
-        {showAccounts && (
-          <Box>
-            <Dialog open={showAccounts}>
-              <Tooltip
-                title="Your previously logged accounts. Click on account name to login."
-                placement="top"
-              >
-                <div
-                  style={{
-                    color: 'black',
-                    fontWeight: 'bolder',
-                    margin: '5px',
-                  }}
-                >
-                  Accounts
-                </div>
-              </Tooltip>
-
-              {accounts.length === 0 && (
-                <>
-                  <Typography style={{ color: 'black', margin: '20px' }}>
-                    No accounts found
-                  </Typography>
-                  <Typography style={{ color: 'gray', margin: '20px' }}>
-                    To add account to this list, click on "Remember me" checkbox
-                    before login. Accounts do not know about your connection
-                    preferences. Lite accounts are added automatically.
-                  </Typography>
-                </>
-              )}
-              <List>
-                {accounts.map((account) => (
-                  <ListItem key={account.userInfo.username} disabled={isLoading}>
-                    <Tooltip title="Click to switch" placement="left">
-                      <Typography
-                        onClick={() => handleAccountSwitch(account)}
-                        style={{ cursor: 'pointer' }}
-                        className="account-switch"
-                      >
-                        {account.userInfo.username}&nbsp;&nbsp;&nbsp;&nbsp;
-                        {/* {account.userInfo.mnemonic} */}
-                      </Typography>
-                    </Tooltip>
-                    <span
-                      style={{
-                        fontSize: '8px',
-                        position: 'absolute',
-                        left: '16px',
-                        top: '1.6rem',
-                      }}
-                    >
-                      {account.userInfo.mnemonic !== undefined ||
-                      account.userInfo.mnemonic === ''
-                        ? 'lite'
-                        : 'portable'}
-                    </span>
-
-                    <Tooltip title="Remove account" placement="top">
-                      <Typography
-                        onClick={() => handleAccountRemove(account)}
-                        style={{
-                          cursor: 'pointer',
-                          position: 'absolute',
-                          right: '5px',
-                          top: '6px',
-                        }}
-                      >
-                        x
-                      </Typography>
-                    </Tooltip>
-                  </ListItem>
-                ))}
-              </List>
-              {/* <ListItem key = {account.userInfo.username} onClick={() => handleAccountSwitch(account)}> */}
-              <DialogActions
-                style={{ justifyContent: 'space-between', alignItems: 'center' }}
-              >
-                <Button
-                  onClick={() => setShowAccounts(false)}
-                  disabled={isLoading}
-                  variant="contained"
-                  style={{
-                    width: '100%',
-                  }}
-                >
-                  Close
-                </Button>
-              </DialogActions>
-            </Dialog>
-            {/* <Slide
-              direction="up"
-              in={showAccounts}
-              mountOnEnter
-              unmountOnExit
-            ></Slide> */}
-          </Box>
+            <CircularProgress color="inherit" />
+          </Backdrop>
         )}
 
-        {/*about dialog*/}
+        <ShowAccountsComponent
+          isOpen={showAccounts}
+          isLoading={isLoading}
+          onClose={() => setShowAccounts(false)}
+          accounts={accounts}
+          handleAccountSwitch={handleAccountSwitch}
+          handleAccountRemove={handleAccountRemove}
+        />
+
         {(() => {
           if (showAbout) {
+            return <AboutComponent isOpen={showAbout} onClose={handleAboutClose} />
+          }
+
+          if (showPodNew) {
             return (
-              <AboutDialog aria-labelledby="about-title" open={showAbout}>
-                <DialogTitle>
-                  Fairdrive
-                  <IconButton
-                    aria-label="close"
-                    onClick={handleAboutClose}
-                    sx={{
-                      position: 'absolute',
-                      right: 8,
-                      top: 8,
-                      color: (theme) => theme.palette.grey[500],
-                    }}
-                  >
-                    <CloseIcon />
-                  </IconButton>
-                </DialogTitle>
-                <DialogContent dividers>
-                  <Typography gutterBottom align="center">
-                    Powered by&nbsp;
-                    <Link href="#" variant="body2" onClick={openBrowserFairOS}>
-                      FairOS
-                    </Link>
-                    &nbsp;
-                    <Link href="#" variant="body2" onClick={openBrowserFDPprotocol}>
-                      FairDataProtocol
-                    </Link>
-                  </Typography>
-
-                  <Typography gutterBottom align="center">
-                    <Link href="#" variant="body2" onClick={openBrowserLicense}>
-                      License
-                    </Link>
-                    &nbsp;
-                    <Link href="#" variant="body2" onClick={openBrowserLicense}>
-                      Source
-                    </Link>
-                  </Typography>
-                  <Typography
-                    align="center"
-                    sx={{ fontWeight: 'light', fontSize: '0.7rem' }}
-                  >
-                    Version <strong>{version}</strong> Built on{' '}
-                    <strong>{buildTime}</strong>
-                    <br />
-                    <span onClick={() => setOpenDisclaimer(true)}>Disclaimer</span>
-                  </Typography>
-
-                  <img
-                    src={logo}
-                    id="logo"
-                    alt="logo"
-                    className="logo-icon"
-                    onClick={openBrowserFairDataSociety}
-                  />
-                  <br />
-                  <Typography gutterBottom align="center">
-                    ©&nbsp;
-                    <Link
-                      href="#"
-                      variant="body2"
-                      onClick={openBrowserFairDataSociety}
-                    >
-                      FairDataSociety
-                    </Link>
-                    &nbsp;2022
-                  </Typography>
-
-                  <img
-                    src={dfLogo}
-                    id="logo"
-                    alt="logo"
-                    className="logo-icon-df"
-                    onClick={openBrowserDatafund}
-                  />
-                  {/* <Typography gutterBottom align="center">
-                    <Link href="#" variant="body2" onClick={openBrowserDatafund}>
-                      Initiative
-                    </Link>
-                  </Typography> */}
-                </DialogContent>
-              </AboutDialog>
+              <NewPodComponent
+                isOpen={showPodNew}
+                isLoading={isLoading}
+                onClose={handlePodNewClose}
+                showLoader={setIsLoading}
+                onError={showError}
+                onSuccess={loadPodsAndResetAll}
+              />
             )
           }
 
-          {
-            /*pod new dialog*/
-          }
-          if (showPodNew) {
+          if (showPodReceive) {
             return (
-              <Dialog open={showPodNew} onClose={handlePodNewClose}>
-                <Tooltip title="Imagine POD is one of your drives">
-                  <DialogTitle>Create new Pod</DialogTitle>
-                </Tooltip>
-                <DialogContent>
-                  <TextField
-                    autoFocus
-                    margin="dense"
-                    id="podName"
-                    label="Pod Name"
-                    fullWidth
-                    variant="standard"
-                    onChange={updateNewPodName}
-                  />
-                </DialogContent>
-                <DialogActions>
-                  <Button
-                    onClick={handlePodNewClose}
-                    disabled={isLoading}
-                    variant="contained"
-                  >
-                    Close
-                  </Button>
-                  <Button
-                    onClick={handlePodNew}
-                    disabled={isLoading}
-                    variant="contained"
-                  >
-                    Create
-                  </Button>
-                </DialogActions>
-              </Dialog>
+              <ReceivePodComponent
+                isOpen={showPodReceive}
+                isLoading={isLoading}
+                onClose={handlePodReceiveClose}
+                showLoader={setIsLoading}
+                onError={showError}
+                onSuccess={loadPodsAndResetAll}
+              />
+            )
+          }
+
+          if (showPodReceiveFork) {
+            return (
+              <ReceiveForkPodComponent
+                isOpen={showPodReceiveFork}
+                isLoading={isLoading}
+                onClose={handlePodReceiveForkClose}
+                showLoader={setIsLoading}
+                onError={showError}
+                onSuccess={loadPodsAndResetAll}
+              />
             )
           }
 
           if (showLogin) {
             return (
-              <>
-                <img
-                  src={logo}
-                  id="logo"
-                  alt="logo"
-                  className="logo-icon"
-                  onClick={() => setShowAccounts(true)}
-                />
-                <Container component="main" maxWidth="xs">
-                  <Box
-                    sx={{
-                      marginTop: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <FormGroup>
-                      <h2 style={{ color: 'black' }}>Fair Data Society Login</h2>
-                      <TextField
-                        margin="normal"
-                        required
-                        fullWidth
-                        id="username"
-                        label="Username"
-                        onChange={updateName}
-                        autoComplete="off"
-                        autoFocus
-                      />
-                      <TextField
-                        margin="normal"
-                        required
-                        fullWidth
-                        id="password"
-                        label="Password"
-                        onChange={updatePassword}
-                        autoComplete="off"
-                        type="password"
-                      />
-                      <FormControlLabel
-                        control={
-                          <Checkbox color="primary" onChange={updateRemember} />
-                        }
-                        label={
-                          <Tooltip
-                            title="This will also add information to a list of available accounts for faster switching"
-                            placement="top"
-                          >
-                            <Typography>Remember and keep me logged-in</Typography>
-                          </Tooltip>
-                        }
-                        style={{ color: 'black' }}
-                      />
-                      <Tooltip title="This app supports Lite and Portable FDS accounts. Enter your credentials and login">
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          sx={{ mt: 3, mb: 2 }}
-                          onClick={login}
-                          disabled={isLoading}
-                        >
-                          Login
-                        </Button>
-                      </Tooltip>
-                      <>
-                        <Tooltip
-                          title="Lite account exists on local machine only. You can upgrade it to Portable FDS account using mnemonic later. Just enter username/password and new account will be auto-magically created. When logged in see information about it in 'File -> Account details.' "
-                          placement="bottom"
-                        >
-                          <Typography
-                            // href="#"
-                            // variant="body2"
-                            // onClick={openCreateLightAccount}
-                            align="center"
-                            style={{ color: 'black' }}
-                          >
-                            What is Lite account?
-                          </Typography>
-                        </Tooltip>
-                      </>
-                      <>
-                        <br />
-                        <Tooltip title="Portable accounts can be used in web browsers, FairOS and in any app supporting FairDataProtocol with all the goodies provided by FDP. They require a balance.">
-                          <Typography style={{ color: 'black' }}>
-                            Need Advanced features ?
-                          </Typography>
-                        </Tooltip>
-                        <Tooltip
-                          title="Sign up for Portable FDS account."
-                          placement="bottom"
-                        >
-                          <Link
-                            href="#"
-                            variant="body2"
-                            onClick={openSignUp}
-                            align="center"
-                          >
-                            Sign Up
-                          </Link>
-                        </Tooltip>
-                      </>
-                    </FormGroup>
-                  </Box>
-                </Container>
-              </>
+              <LoginComponent
+                login={login}
+                isLoading={isLoading}
+                updateUsername={updateName}
+                updatePassword={updatePassword}
+                updateRemember={updateRemember}
+              />
             )
           }
 
           if (showPods) {
             if (pods != null && pods.length != 0) {
               return (
-                <Container component="main" maxWidth="xs">
-                  <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
-                    <h2 style={{ color: 'black', marginBottom: '0px' }}>Pods</h2>
-                  </Tooltip>
-                  <Tooltip
-                    title={
-                      "Currently logged in with account '" +
-                      username +
-                      "'. Click to display accounts."
-                    }
-                  >
-                    <Typography
-                      style={{ color: 'gray' }}
-                      onClick={() => setShowAccounts(true)}
-                    >
-                      {username}
-                    </Typography>
-                  </Tooltip>
-                  <Tooltip
-                    title={
-                      'This is ' +
-                      (mnemonic === '' || mnemonic === undefined
-                        ? 'portable'
-                        : 'lite') +
-                      ' account'
-                    }
-                  >
-                    <Typography style={{ color: 'gray', fontSize: '8px' }}>
-                      {mnemonic === '' || mnemonic === undefined
-                        ? 'portable'
-                        : 'lite'}
-                    </Typography>
-                  </Tooltip>
-
-                  <Box
-                    sx={{
-                      width: '100%',
-                      maxWidth: 360,
-                      bgcolor: 'background.paper',
-                    }}
-                  >
-                    <List>
-                      {pods.map((pod) =>
-                        pod.isMounted ? (
-                          <ListItem
-                            key={pod.podName}
-                            secondaryAction={
-                              <div>
-                                <Tooltip title="Sync contents">
-                                  <IconButton
-                                    onClick={() => sync(pod.podName)}
-                                    disabled={isLoading}
-                                  >
-                                    <CachedIcon />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title={pod.mountPoint}>
-                                  <IconButton
-                                    onClick={() =>
-                                      copyUrlToClipboard(pod.mountPoint)
-                                    }
-                                  >
-                                    <ContentCopyIcon />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Open">
-                                  <IconButton
-                                    onClick={() =>
-                                      EventsEmit('open', pod.mountPoint)
-                                    }
-                                  >
-                                    <Folder />
-                                  </IconButton>
-                                </Tooltip>
-                              </div>
-                            }
-                            disablePadding
-                          >
-                            <ListItemButton>
-                              <ListItemIcon>
-                                <Tooltip
-                                  title={
-                                    pod.isMounted
-                                      ? 'Unmount this pod'
-                                      : 'Mount this pod'
-                                  }
-                                >
-                                  <Checkbox
-                                    onChange={mount}
-                                    value={pod.podName}
-                                    color="primary"
-                                    disabled={isLoading}
-                                    checked={pod.isMounted}
-                                  />
-                                </Tooltip>
-                              </ListItemIcon>
-                              <ListItemText
-                                primary={pod.podName}
-                                style={{ color: 'black' }}
-                              />
-                            </ListItemButton>
-                          </ListItem>
-                        ) : (
-                          <ListItem key={pod.podName} disablePadding>
-                            <ListItemButton>
-                              <ListItemIcon>
-                                <Tooltip
-                                  title={
-                                    pod.isMounted
-                                      ? 'Unmount this pod'
-                                      : 'Mount this pod'
-                                  }
-                                >
-                                  <Checkbox
-                                    onChange={mount}
-                                    value={pod.podName}
-                                    color="primary"
-                                    disabled={isLoading}
-                                    checked={pod.isMounted}
-                                  />
-                                </Tooltip>
-                              </ListItemIcon>
-                              <ListItemText
-                                primary={pod.podName}
-                                style={{ color: 'black' }}
-                              />
-                            </ListItemButton>
-                          </ListItem>
-                        ),
-                      )}
-                    </List>
-                  </Box>
-                </Container>
+                <PodsComponent
+                  isLoading={isLoading}
+                  pods={pods}
+                  username={username}
+                  mnemonic={mnemonic}
+                  onError={showError}
+                  setShowAccounts={setShowAccounts}
+                  showLoader={setIsLoading}
+                  onSuccess={loadPodsAndResetAll}
+                  mount={mount}
+                />
               )
             } else {
               return (
-                <Container component="main" maxWidth="xs">
-                  <Tooltip title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
-                    <h2 style={{ color: 'black', marginBottom: '0px' }}>Pods</h2>
-                  </Tooltip>
-                  <Tooltip title="Current account name">
-                    <Typography
-                      style={{ color: 'gray' }}
-                      onClick={() => setShowAccounts(true)}
-                    >
-                      {username}
-                    </Typography>
-                  </Tooltip>
-
-                  <Box
-                    sx={{
-                      width: '100%',
-                      maxWidth: 360,
-                      bgcolor: 'background.paper',
-                    }}
-                  >
-                    <br />
-                    <Typography
-                      gutterBottom
-                      align="center"
-                      style={{ color: 'black' }}
-                    >
-                      Still do not have pods?
-                    </Typography>
-
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      sx={{ mt: 3, mb: 2 }}
-                      onClick={() => setPodNew(true)}
-                      disabled={isLoading}
-                    >
-                      Create Pod
-                    </Button>
-                  </Box>
-                </Container>
+                <EmptyPodsComponent
+                  isLoading={isLoading}
+                  username={username}
+                  mnemonic={mnemonic}
+                  setShowAccounts={setShowAccounts}
+                />
               )
             }
           }
         })()}
-
-        <img
-          src={backgroundImage}
-          id="background"
-          alt="background"
-          style={{
-            opacity: '0.1',
-            position: 'fixed',
-            top: '0',
-            left: '0',
-            width: '100%',
-            height: '100%',
-            pointerEvents: 'none',
-          }}
-        />
       </ThemeProvider>
     </div>
   )

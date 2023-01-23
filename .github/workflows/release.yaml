@@ -193,8 +193,8 @@ jobs:
         run: |
           mv build/bin/linux/FDA build/bin/fairdrive_linux
           mv build/bin/windows/FDA.exe build/bin/fairdrive_windows.exe
-          mv build/bin/mac_arm64/FDA.dmg build/bin/fairdrive_darwin_arm64.dmg
-          mv build/bin/mac_amd64/FDA.dmg build/bin/fairdrive_darwin_amd64.dmg
+          mv build/bin/mac_arm64/FDA.dmg build/bin/fairdrive_darwin_silicon.dmg
+          mv build/bin/mac_amd64/FDA.dmg build/bin/fairdrive_darwin_intel.dmg
 
       - name : Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
