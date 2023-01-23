@@ -91,5 +91,9 @@ This could be a problem to various reasons why your node,npm,nvm installation is
 - [wails.io](https://wails.io/)
 
 
+## Update Wails environment
+
+run `go install github.com/wailsapp/wails/v2/cmd/wails@latest` to install latest Wails CLI
+
 ## Thanks
 This project would not exist without [fairOS-dfs](https://github.com/fairdatasociety/fairOS-dfs) and [bee-afs](https://github.com/aloknerurkar/bee-afs).

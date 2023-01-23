@@ -10,6 +10,18 @@ export function CreatePod(arg1) {
   return window['go']['handler']['Handler']['CreatePod'](arg1);
 }
 
+export function DeletePod(arg1) {
+  return window['go']['handler']['Handler']['DeletePod'](arg1);
+}
+
+export function Fork(arg1, arg2) {
+  return window['go']['handler']['Handler']['Fork'](arg1, arg2);
+}
+
+export function ForkFromReference(arg1, arg2) {
+  return window['go']['handler']['Handler']['ForkFromReference'](arg1, arg2);
+}
+
 export function GetCashedPods() {
   return window['go']['handler']['Handler']['GetCashedPods']();
 }
@@ -34,8 +46,24 @@ export function Mount(arg1, arg2, arg3) {
   return window['go']['handler']['Handler']['Mount'](arg1, arg2, arg3);
 }
 
+export function ReceivePod(arg1, arg2) {
+  return window['go']['handler']['Handler']['ReceivePod'](arg1, arg2);
+}
+
+export function SharePod(arg1) {
+  return window['go']['handler']['Handler']['SharePod'](arg1);
+}
+
 export function Start(arg1) {
   return window['go']['handler']['Handler']['Start'](arg1);
+}
+
+export function StartCacheCleaner(arg1) {
+  return window['go']['handler']['Handler']['StartCacheCleaner'](arg1);
+}
+
+export function Sync(arg1) {
+  return window['go']['handler']['Handler']['Sync'](arg1);
 }
 
 export function Unmount(arg1) {

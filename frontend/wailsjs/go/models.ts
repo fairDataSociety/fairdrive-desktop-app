@@ -1,7 +1,6 @@
 export namespace api {
 	
 	export class FairOSConfig {
-	    isProxy: boolean;
 	    bee: string;
 	    batch: string;
 	    rpc: string;
@@ -13,7 +12,6 @@ export namespace api {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.isProxy = source["isProxy"];
 	        this.bee = source["bee"];
 	        this.batch = source["batch"];
 	        this.rpc = source["rpc"];
@@ -43,6 +41,7 @@ export namespace handler {
 	    podName: string;
 	    isMounted: boolean;
 	    mountPoint: string;
+	    isShared: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new PodMountedInfo(source);
@@ -53,6 +52,7 @@ export namespace handler {
 	        this.podName = source["podName"];
 	        this.isMounted = source["isMounted"];
 	        this.mountPoint = source["mountPoint"];
+	        this.isShared = source["isShared"];
 	    }
 	}
 

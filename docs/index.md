@@ -21,8 +21,9 @@ pod on your own user space and interact with your data.
 
 ## How do I install FDA?
 
-> **_IMPORTANT:_**  To use FDA on your system you need to install [fuse](https://www.kernel.org/doc/html/latest/filesystems/fuse.html) first.
-## Requirements
+> **_IMPORTANT:_**  To use FDA on your system you need to install system support for [FUSE](https://www.kernel.org/doc/html/latest/filesystems/fuse.html) first.
+
+## Prerequisites And Requirements
 
 ### FUSE
 
@@ -52,13 +53,13 @@ We encourage `Swarm Desktop` for setting up your bee node. Here is a [guide](htt
 Download FDA for your operating system
 from [Releases](https://github.com/fairDataSociety/fairdrive-desktop-app/releases) Page
 
-[MacOS (amd64)](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc13/fairdrive_darwin_amd64.dmg)
+[MacOS (intel/amd64)](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0/fairdrive_darwin_amd64.dmg)
 
-[MacOS (arm64)](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc13/fairdrive_darwin_arm64.dmg)
+[MacOS (arm64)](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0/fairdrive_darwin_arm64.dmg)
 
-[Linux](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc13/fairdrive_linux)
+[Linux](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0/fairdrive_linux)
 
-[Windows](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0-rc13/fairdrive_windows.exe)
+[Windows](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0/fairdrive_windows.exe)
 
 # How do I configure FDA to connect to a bee node?
 

@@ -9,6 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/api"
@@ -23,17 +25,23 @@ var (
 	root = "Fairdrive"
 )
 
+type CacheCleaner interface {
+	CacheClean()
+}
+
 type Handler struct {
-	lock           sync.Mutex
-	api            *api.DfsAPI
-	activeMounts   map[string]*hostMount
-	logger         logging.Logger
-	sessionID      string
-	lastLoadedPods []string
+	lock                 sync.Mutex
+	api                  *api.DfsAPI
+	activeMounts         map[string]*hostMount
+	logger               logging.Logger
+	sessionID            string
+	lastLoadedPods       []string
+	lastLoadedSharedPods []string
 }
 
 type hostMount struct {
 	h    *fuse.FileSystemHost
+	c    CacheCleaner
 	path string
 }
 
@@ -41,6 +49,7 @@ type PodMountedInfo struct {
 	PodName    string `json:"podName"`
 	IsMounted  bool   `json:"isMounted"`
 	MountPoint string `json:"mountPoint"`
+	IsShared   bool   `json:"isShared"`
 }
 
 type LiteUser struct {
@@ -110,6 +119,22 @@ func (h *Handler) Logout() error {
 	return h.api.LogoutUser(h.sessionID)
 }
 
+func (h *Handler) Fork(podName, forkName string) error {
+	if h.api == nil {
+		h.logger.Errorf("mount: fairos not initialised")
+		return ErrFairOsNotInitialised
+	}
+	return h.api.ForkPod(podName, forkName, h.sessionID)
+}
+
+func (h *Handler) ForkFromReference(forkName, reference string) error {
+	if h.api == nil {
+		h.logger.Errorf("mount: fairos not initialised")
+		return ErrFairOsNotInitialised
+	}
+	return h.api.ForkPodFromRef(forkName, reference, h.sessionID)
+}
+
 func (h *Handler) Mount(pod, location string, readOnly bool) error {
 	createPod := false
 	if h.api == nil {
@@ -139,7 +164,6 @@ func (h *Handler) Mount(pod, location string, readOnly bool) error {
 				return err
 			}
 		}
-
 	}
 	h.lock.Lock()
 	defer h.lock.Unlock()
@@ -157,25 +181,36 @@ func (h *Handler) Mount(pod, location string, readOnly bool) error {
 		return err
 	}
 
-	sig := make(chan int)
+	sig := make(chan string)
 	host := fuse.NewFileSystemHost(dfsFuse)
+
 	opts := mountOptions(pod)
 	if readOnly {
 		opts = append(opts, "-o", "ro")
 	}
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				sig <- fmt.Sprintf("%v", r)
+			}
+			defer close(sig)
+		}()
 		host.SetCapReaddirPlus(true)
 		host.Mount(mountPoint, opts)
-		close(sig)
+		sig <- ""
 	}()
 	select {
-	case <-time.After(time.Second * 1):
-		h.activeMounts[pod] = &hostMount{
-			h:    host,
-			path: mountPoint,
+	case <-time.After(time.Second * 2):
+	case e := <-sig:
+		if e == "" {
+			return fmt.Errorf("failed to mount")
 		}
-	case <-sig:
-		return fmt.Errorf("failed to mount")
+		return fmt.Errorf(e)
+	}
+	h.activeMounts[pod] = &hostMount{
+		h:    host,
+		c:    dfsFuse,
+		path: mountPoint,
 	}
 	h.logger.Infof("%s is mounted at %s", pod, mountPoint)
 	return nil
@@ -207,17 +242,30 @@ func (h *Handler) GetPodsList() ([]*PodMountedInfo, error) {
 	}
 	h.lock.Lock()
 	defer h.lock.Unlock()
-	pods, _, err := h.api.ListPods(h.sessionID)
+	pods, shared, err := h.api.ListPods(h.sessionID)
 	if err != nil {
 		return nil, err
 	}
 	h.lastLoadedPods = pods
+	h.lastLoadedSharedPods = shared
 	podsMounted := []*PodMountedInfo{}
 	for _, podName := range pods {
 		host, ok := h.activeMounts[podName]
 		podMounted := &PodMountedInfo{
 			PodName:   podName,
 			IsMounted: ok,
+		}
+		if ok {
+			podMounted.MountPoint = host.path
+		}
+		podsMounted = append(podsMounted, podMounted)
+	}
+	for _, podName := range shared {
+		host, ok := h.activeMounts[podName]
+		podMounted := &PodMountedInfo{
+			PodName:   podName,
+			IsMounted: ok,
+			IsShared:  true,
 		}
 		if ok {
 			podMounted.MountPoint = host.path
@@ -245,6 +293,18 @@ func (h *Handler) GetCashedPods() []*PodMountedInfo {
 		}
 		podsMounted = append(podsMounted, podMounted)
 	}
+	for _, podName := range h.lastLoadedSharedPods {
+		host, ok := h.activeMounts[podName]
+		podMounted := &PodMountedInfo{
+			PodName:   podName,
+			IsMounted: ok,
+			IsShared:  true,
+		}
+		if ok {
+			podMounted.MountPoint = host.path
+		}
+		podsMounted = append(podsMounted, podMounted)
+	}
 	return podsMounted
 }
 
@@ -254,6 +314,14 @@ func (h *Handler) CreatePod(podname string) (*pod.Info, error) {
 		return nil, ErrFairOsNotInitialised
 	}
 	return h.api.CreatePod(podname, h.sessionID)
+}
+
+func (h *Handler) DeletePod(podname string) error {
+	if h.api == nil {
+		h.logger.Errorf("delete pod: fairos not initialised")
+		return ErrFairOsNotInitialised
+	}
+	return h.api.DeletePod(podname, h.sessionID)
 }
 
 func (h *Handler) Close() error {
@@ -270,9 +338,69 @@ func (h *Handler) Close() error {
 	return h.api.Close()
 }
 
+func (h *Handler) Sync(podName string) {
+	if h.api == nil {
+		return
+	}
+	h.lock.Lock()
+	defer h.lock.Unlock()
+	host, ok := h.activeMounts[podName]
+	if ok {
+		err := h.api.SyncPodAsync(context.TODO(), podName, h.sessionID)
+		if err != nil {
+			h.logger.Errorf("%s pod sync failed: %s", podName, err.Error())
+		}
+		host.c.CacheClean()
+		h.logger.Infof("%s mount cache cleaned", podName)
+	}
+}
+
+func (h *Handler) SharePod(podName string) (string, error) {
+	if h.api == nil {
+		return "", ErrFairOsNotInitialised
+	}
+	return h.api.PodShare(podName, "", h.sessionID)
+}
+
+func (h *Handler) ReceivePod(podSharingReference, podName string) error {
+	if h.api == nil {
+		return ErrFairOsNotInitialised
+	}
+	ref, err := utils.ParseHexReference(podSharingReference)
+	if err != nil {
+		return err
+	}
+
+	_, err = h.api.PodReceive(h.sessionID, podName, ref)
+	return err
+}
+
+func (h *Handler) StartCacheCleaner(ctx context.Context) {
+	ticker := time.NewTicker(time.Minute * 30)
+	for {
+		select {
+		case <-ctx.Done():
+			ticker.Stop()
+			return
+		case <-ticker.C:
+			h.lock.Lock()
+			for podName, host := range h.activeMounts {
+				err := h.api.SyncPodAsync(ctx, podName, h.sessionID)
+				if err != nil {
+					h.logger.Errorf("%s pod sync failed: %s", podName, err.Error())
+				}
+				host.c.CacheClean()
+				h.logger.Infof("%s mount cache cleaned", podName)
+			}
+			h.lock.Unlock()
+		}
+	}
+}
+
 func mountOptions(pod string) (options []string) {
 	options = []string{}
 	//options = append(options, "-o", "debug")
+	options = append(options, "-o", "exec")
 
 	if runtime.GOOS == "windows" {
 		options = append(options, "--FileSystemName="+pod)

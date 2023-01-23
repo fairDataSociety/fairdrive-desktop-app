@@ -39,8 +39,8 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 	logger := logging.New(os.Stdout, 5)
 	ens := mock2.NewMockNamespaceManager()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
-	userObject := user.NewUsers("", mockClient, ens, logger)
-	password := "password1"
+	userObject := user.NewUsers(mockClient, ens, logger)
+	password := "1passwordpassword"
 	username := "fdfs"
 	_, _, _, _, ui, err := userObject.CreateNewUserV2(username, password, "", "", tm)
 	require.NoError(t, err)
@@ -77,7 +77,7 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 	err = dirObject.AddEntryToDir("/parentDir/subDir1", podPassword, "file1", true)
 	require.NoError(t, err)
 
-	mockDfs := dfs.NewMockDfsAPI(mockClient, userObject, logger, "/")
+	mockDfs := dfs.NewMockDfsAPI(mockClient, userObject, logger)
 	dfsApi, err := api.NewMockApi(logger, mockDfs)
 	require.NoError(t, err)
 	pi2, err := dfsApi.GetPodInfo(context.Background(), podName1, ui.GetSessionId(), false)
