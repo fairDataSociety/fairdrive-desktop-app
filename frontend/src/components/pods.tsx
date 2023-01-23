@@ -205,13 +205,20 @@ function PodsComponent(
                     </CardContent>
                     {pod.isMounted ? (
                       <CardActions sx={{ justifyContent: 'end' }}>
-                        <Tooltip title="Share pod">
+                        <Tooltip title="Open">
                           <IconButton
-                            onClick={() => share(pod.podName)}
-                            disabled={isLoading}
+                            onClick={() => EventsEmit('open', pod.mountPoint)}
                             sx={{ width: '20px', height: '20px', marginLeft: '5px' }}
                           >
-                            <ShareIcon sx={{ fontSize: '20px' }} />
+                            <OpenInNewIcon sx={{ fontSize: '20px' }} />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title={pod.mountPoint}>
+                          <IconButton
+                            onClick={() => copyUrlToClipboard(pod.mountPoint)}
+                            sx={{ width: '20px', height: '20px', marginLeft: '5px' }}
+                          >
+                            <ContentCopyIcon />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Sync contents">
@@ -223,20 +230,13 @@ function PodsComponent(
                             <CloudSyncIcon sx={{ fontSize: '20px' }} />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title={pod.mountPoint}>
+                        <Tooltip title="Share pod">
                           <IconButton
-                            onClick={() => copyUrlToClipboard(pod.mountPoint)}
+                            onClick={() => share(pod.podName)}
+                            disabled={isLoading}
                             sx={{ width: '20px', height: '20px', marginLeft: '5px' }}
                           >
-                            <ContentCopyIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Open">
-                          <IconButton
-                            onClick={() => EventsEmit('open', pod.mountPoint)}
-                            sx={{ width: '20px', height: '20px', marginLeft: '5px' }}
-                          >
-                            <OpenInNewIcon sx={{ fontSize: '20px' }} />
+                            <ShareIcon sx={{ fontSize: '20px' }} />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Fork">
@@ -296,13 +296,20 @@ function PodsComponent(
                     </CardContent>
                     {pod.isMounted ? (
                       <CardActions sx={{ justifyContent: 'end' }}>
-                        <Tooltip title="Share pod">
+                        <Tooltip title="Open">
                           <IconButton
-                            onClick={() => share(pod.podName)}
-                            disabled={isLoading}
+                            onClick={() => EventsEmit('open', pod.mountPoint)}
                             sx={{ width: '20px', height: '20px', marginLeft: '5px' }}
                           >
-                            <ShareIcon sx={{ fontSize: '20px' }} />
+                            <OpenInNewIcon sx={{ fontSize: '20px' }} />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title={pod.mountPoint}>
+                          <IconButton
+                            onClick={() => copyUrlToClipboard(pod.mountPoint)}
+                            sx={{ width: '20px', height: '20px', marginLeft: '5px' }}
+                          >
+                            <ContentCopyIcon />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Sync contents">
@@ -314,20 +321,13 @@ function PodsComponent(
                             <CloudSyncIcon sx={{ fontSize: '20px' }} />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title={pod.mountPoint}>
+                        <Tooltip title="Share pod">
                           <IconButton
-                            onClick={() => copyUrlToClipboard(pod.mountPoint)}
+                            onClick={() => share(pod.podName)}
+                            disabled={isLoading}
                             sx={{ width: '20px', height: '20px', marginLeft: '5px' }}
                           >
-                            <ContentCopyIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Open">
-                          <IconButton
-                            onClick={() => EventsEmit('open', pod.mountPoint)}
-                            sx={{ width: '20px', height: '20px', marginLeft: '5px' }}
-                          >
-                            <OpenInNewIcon sx={{ fontSize: '20px' }} />
+                            <ShareIcon sx={{ fontSize: '20px' }} />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Fork">
