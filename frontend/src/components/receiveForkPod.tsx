@@ -52,7 +52,7 @@ function ReceiveForkPodComponent(props: PodOpsProps) {
     <Dialog open={props.isOpen} onClose={props.onClose} fullWidth>
       <Tooltip title="Forking a pod from reference creates a new pod and copies content from shared pod reference. Forked pod becomes your private pod and can be written to, contents are synced only when forking is done.">
         <DialogTitle>
-          Fork from Reference
+          Duplicate from Reference
           <IconButton
             aria-label="close"
             onClick={props.onClose}
@@ -87,10 +87,11 @@ function ReceiveForkPodComponent(props: PodOpsProps) {
           onChange={updateReference}
         />
         <br />
+        <br />
         <Typography>
           <small>
-            Forking from reference will create a new pod from the given reference.
-            This process can take some based on the contents in the pod.
+            Duplicating from reference will create a new pod from the given
+            reference. This process can take some based on the contents in the pod.
           </small>
         </Typography>
         <br />

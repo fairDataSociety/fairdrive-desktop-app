@@ -239,7 +239,7 @@ function PodsComponent(
                             <ShareIcon sx={{ fontSize: '20px' }} />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Fork">
+                        <Tooltip title="Duplicate">
                           <IconButton
                             onClick={() => fork(pod.podName)}
                             sx={{ width: '20px', height: '20px', marginLeft: '5px' }}
