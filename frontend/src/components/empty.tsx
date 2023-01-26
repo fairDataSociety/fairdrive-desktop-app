@@ -14,7 +14,7 @@ function EmptyPodsComponent({username, mnemonic, isLoading, setShowAccounts}: Em
     <Container component="main" maxWidth="xs">
       <Tooltip
         title="Existing pods are listed here. You can mount and unmount them, and they will auto-magically appear in your filesystem at mount point.">
-        <h2 style={{ color: 'black', marginBottom: '0px' }}>Pods</h2>
+        <h2 style={{ marginBottom: '0px' }}>Pods</h2>
       </Tooltip>
       <Tooltip
         title={
@@ -47,13 +47,11 @@ function EmptyPodsComponent({username, mnemonic, isLoading, setShowAccounts}: Em
         sx={{
           width: '100%',
           maxWidth: 360,
-          bgcolor: 'background.paper',
         }}>
         <br/>
         <Typography
           gutterBottom
-          align="center"
-          style={{ color: 'black' }}>
+          align="center">
           Still do not have pods?
         </Typography>
 
