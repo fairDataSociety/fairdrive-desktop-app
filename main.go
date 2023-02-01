@@ -93,10 +93,10 @@ func main() {
 	podMenu.AddText("New", keys.CmdOrCtrl("n"), func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "podNew")
 	})
-	podMenu.AddText("Receive", keys.CmdOrCtrl("r"), func(_ *menu.CallbackData) {
+	podMenu.AddText("Receive/Import", keys.CmdOrCtrl("r"), func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "podReceive")
 	})
-	podMenu.AddText("Fork from reference", keys.CmdOrCtrl("r"), func(_ *menu.CallbackData) {
+	podMenu.AddText("Duplicate from reference", keys.CmdOrCtrl("r"), func(_ *menu.CallbackData) {
 		wRuntime.EventsEmit(startContext, "podReceiveFork")
 	})
 	//podMenu.AddSeparator()

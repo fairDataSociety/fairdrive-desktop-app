@@ -6,11 +6,12 @@ import {
   DialogTitle,
   IconButton,
   TextField,
-  Tooltip
-} from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import { useState } from "react";
-import { ReceivePod } from "../../wailsjs/go/handler/Handler";
+  Tooltip,
+  Typography,
+} from '@mui/material'
+import CloseIcon from '@mui/icons-material/Close'
+import { useState } from 'react'
+import { ReceivePod } from '../../wailsjs/go/handler/Handler'
 
 export interface PodOpsProps {
   isOpen: boolean
@@ -34,9 +35,9 @@ function ReceivePodComponent(props: PodOpsProps) {
     props.showLoader(true)
     try {
       if (newPodName === '') {
-        props.onError("pod name cannot be empty")
+        props.onError('pod name cannot be empty')
       } else if (reference === '') {
-        props.onError("reference cannot be empty")
+        props.onError('reference cannot be empty')
       } else {
         await ReceivePod(reference, newPodName)
         setNewPodName('')
@@ -86,6 +87,15 @@ function ReceivePodComponent(props: PodOpsProps) {
           variant="standard"
           onChange={updateReference}
         />
+        <br />
+        <br />
+        <Typography>
+          <small>
+            Import pod from reference will create a link to shared pod. User can not
+            write to pod, only view its data.
+          </small>
+        </Typography>
+        <br />
       </DialogContent>
       <DialogActions>
         <Button
