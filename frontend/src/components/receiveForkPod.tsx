@@ -91,7 +91,7 @@ function ReceiveForkPodComponent(props: PodOpsProps) {
         <Typography>
           <small>
             Duplicating from reference will create a new pod from the given
-            reference. This process can take some based on the contents in the pod.
+            reference. This process can take some time based on the contents in the pod.
           </small>
         </Typography>
         <br />
