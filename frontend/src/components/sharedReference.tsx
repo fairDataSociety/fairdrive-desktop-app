@@ -41,7 +41,8 @@ function SharedReferenceComponent(props: SharedReferenceProps) {
       </DialogTitle>
       <DialogContent dividers>
         <Typography>
-          <span>{props.reference.slice(0, 10)}.....{props.reference.slice(-10)}</span>
+          <Typography sx={{
+            wordWrap: 'break-word' }}>{props.reference}</Typography>
           <Tooltip title="Copy reference">
             <IconButton
               onClick={() =>
