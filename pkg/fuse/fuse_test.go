@@ -973,10 +973,10 @@ func readLocal(t *testing.T, dir dirMap, filePath string) {
 		if fi.IsDir() {
 			dir[name] = 0
 			readLocal(t, dir, name)
-			assert.Equal(t, os.FileMode(0777)&os.ModePerm, fileinfo.Mode().Perm())
+			assert.Equal(t, os.FileMode(0700)&os.ModePerm, fileinfo.Mode().Perm())
 		} else {
 			dir[name] = fileinfo.Size()
-			assert.Equal(t, os.FileMode(0666)&os.ModePerm, fileinfo.Mode().Perm())
+			assert.Equal(t, os.FileMode(0600)&os.ModePerm, fileinfo.Mode().Perm())
 		}
 	}
 }
