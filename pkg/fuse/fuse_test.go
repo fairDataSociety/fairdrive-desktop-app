@@ -173,9 +173,7 @@ func TestWrite(t *testing.T) {
 		require.NoError(t, err)
 
 		fd2.Close()
-		if string(data) != "asdasd" {
-			t.Fatal("truncate write failed")
-		}
+		assert.Equal(t, "asdasd", string(data))
 	})
 }
 
@@ -1043,7 +1041,7 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, podPassword, file
 	if err != nil {
 		t.Fatal(err)
 	}
-	return content, fileObject.Chmod(filepath.Join(filePath, fileName), podPassword, 0666)
+	return content, fileObject.Chmod(filePath+"/"+fileName, podPassword, 0666)
 }
 
 func writeFile(filename string, data []byte, perm os.FileMode) error {
