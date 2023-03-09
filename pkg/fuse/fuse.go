@@ -676,13 +676,14 @@ func (f *Ffdfs) makeNode(path string, mode uint32, dev uint64, data []byte) int 
 	if mode&fuse.S_IFDIR > 0 {
 		err := f.api.API.Mkdir(f.pod.GetPodName(), path, f.sessionId)
 		if err != nil {
-			f.log.Errorf("failed creating dir at %s: %v", path, err)
+			f.log.Errorf("fuse:failed creating dir at %s: %v", path, err)
 			return -fuse.EIO
 		}
 		prnt.dirs = append(prnt.dirs, filepath.Base(path))
 	} else {
 		err := f.api.API.UploadFile(f.pod.GetPodName(), flnm, f.sessionId, int64(len(data)), bytes.NewReader(data), prntPath, "", uint32(fdsBlockSize), false)
 		if err != nil {
+			f.log.Errorf("fuse: failed creating file at %s: %v", path, err)
 			return -fuse.EIO
 		}
 		node.stat.Size = int64(len(data))

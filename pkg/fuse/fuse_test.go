@@ -47,7 +47,7 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 
 	pod1 := ui.GetPod()
 	podName1 := "test1"
-	podPasswordBytes, _ := utils.GetRandBytes(pod.PodPasswordLength)
+	podPasswordBytes, _ := utils.GetRandBytes(pod.PasswordLength)
 	podPassword := hex.EncodeToString(podPasswordBytes)
 	pi, err := pod1.CreatePod(podName1, "", podPassword)
 	if err != nil {
