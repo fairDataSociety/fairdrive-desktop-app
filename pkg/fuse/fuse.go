@@ -184,7 +184,7 @@ func (f *Ffdfs) Mkdir(path string, mode uint32) int {
 	defer f.synchronize()()
 
 	f.log.Debugf("mkdir: creating directory: %s", path)
-	return f.makeNode(path, fuse.S_IFDIR|(mode&07700), 0, nil)
+	return f.makeNode(path, fuse.S_IFDIR|(mode&07777), 0, nil)
 }
 
 // Unlink removes a file.
@@ -297,7 +297,7 @@ func (f *Ffdfs) Chmod(path string, mode uint32) (errc int) {
 	}
 	defer node.Close()
 
-	node.stat.Mode = (node.stat.Mode & fuse.S_IFMT) | mode&07700
+	node.stat.Mode = (node.stat.Mode & fuse.S_IFMT) | mode&0777
 	node.stat.Ctim = fuse.Now()
 
 	if node.isDir() {
@@ -680,6 +680,11 @@ func (f *Ffdfs) makeNode(path string, mode uint32, dev uint64, data []byte) int 
 			return -fuse.EIO
 		}
 		prnt.dirs = append(prnt.dirs, filepath.Base(path))
+		err = f.api.API.ChmodDir(f.pod.GetPodName(), path, f.sessionId, mode)
+		if err != nil {
+			f.log.Errorf("fuse:failed creating dir at %s: %v", path, err)
+			return -fuse.EIO
+		}
 	} else {
 		err := f.api.API.UploadFile(f.pod.GetPodName(), flnm, f.sessionId, int64(len(data)), bytes.NewReader(data), prntPath, "", uint32(fdsBlockSize), false)
 		if err != nil {
@@ -688,6 +693,11 @@ func (f *Ffdfs) makeNode(path string, mode uint32, dev uint64, data []byte) int 
 		}
 		node.stat.Size = int64(len(data))
 		prnt.files = append(prnt.files, filepath.Base(path))
+		err = f.api.API.ChmodFile(f.pod.GetPodName(), path, f.sessionId, mode)
+		if err != nil {
+			f.log.Errorf("fuse:failed creating dir at %s: %v", path, err)
+			return -fuse.EIO
+		}
 	}
 
 	if err := node.Close(); err != nil {
@@ -842,7 +852,7 @@ func (f *Ffdfs) lookupNode(path string) (node *node_t) {
 
 		mode := dirInode.Meta.Mode
 		if mode == 0 {
-			mode = fuse.S_IFDIR | 0700
+			mode = fuse.S_IFDIR | 0777
 		}
 		node = &node_t{
 			id: path,
@@ -882,7 +892,7 @@ func (f *Ffdfs) lookupNode(path string) (node *node_t) {
 	f.ino++
 	mode := fStat.Mode
 	if mode == 0 {
-		mode = fuse.S_IFREG | 0600
+		mode = fuse.S_IFREG | 0666
 	}
 	node = &node_t{
 		id: path,
