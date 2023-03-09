@@ -39,7 +39,7 @@ func main() {
 	if err == nil {
 		file, err := os.Create(filepath.Join(home, log))
 		if err == nil {
-			logger = logging.New(file, logrus.ErrorLevel)
+			logger = logging.New(file, logrus.DebugLevel)
 			defer file.Close()
 		}
 	}

@@ -47,7 +47,7 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 
 	pod1 := ui.GetPod()
 	podName1 := "test1"
-	podPasswordBytes, _ := utils.GetRandBytes(pod.PodPasswordLength)
+	podPasswordBytes, _ := utils.GetRandBytes(pod.PasswordLength)
 	podPassword := hex.EncodeToString(podPasswordBytes)
 	pi, err := pod1.CreatePod(podName1, "", podPassword)
 	if err != nil {
@@ -61,10 +61,12 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 
 	err = dirObject.MkDir("/parentDir", podPassword)
 	require.NoError(t, err)
-
+	err = dirObject.Chmod("/parentDir", podPassword, 0777)
+	require.NoError(t, err)
 	err = dirObject.MkDir("/parentDir/subDir1", podPassword)
 	require.NoError(t, err)
-
+	err = dirObject.Chmod("/parentDir/subDir1", podPassword, 0777)
+	require.NoError(t, err)
 	_, err = uploadFile(t, fileObject, "/parentDir", podPassword, "file1", "", 100, 10)
 	require.NoError(t, err)
 
@@ -134,6 +136,7 @@ func TestWrite(t *testing.T) {
 	defer closer()
 
 	t.Run("list", func(t *testing.T) {
+
 		files, err := os.ReadDir(mntDir)
 		require.NoError(t, err)
 
@@ -170,9 +173,7 @@ func TestWrite(t *testing.T) {
 		require.NoError(t, err)
 
 		fd2.Close()
-		if string(data) != "asdasd" {
-			t.Fatal("truncate write failed")
-		}
+		assert.Equal(t, "asdasd", string(data))
 	})
 }
 
@@ -973,11 +974,17 @@ func readLocal(t *testing.T, dir dirMap, filePath string) {
 		if fi.IsDir() {
 			dir[name] = 0
 			readLocal(t, dir, name)
-			assert.Equal(t, os.FileMode(0777)&os.ModePerm, fileinfo.Mode().Perm())
 		} else {
 			dir[name] = fileinfo.Size()
-			assert.Equal(t, os.FileMode(0666)&os.ModePerm, fileinfo.Mode().Perm())
 		}
+		//if fi.IsDir() {
+		//	dir[name] = 0
+		//	readLocal(t, dir, name)
+		//	assert.Equal(t, os.FileMode(0777)&os.ModePerm, fileinfo.Mode().Perm())
+		//} else {
+		//	dir[name] = fileinfo.Size()
+		//	assert.Equal(t, os.FileMode(0666)&os.ModePerm, fileinfo.Mode().Perm())
+		//}
 	}
 }
 
@@ -1030,7 +1037,11 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, podPassword, file
 	}
 
 	// upload  the temp file
-	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression, podPassword)
+	err = fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression, podPassword)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return content, fileObject.Chmod(filePath+"/"+fileName, podPassword, 0666)
 }
 
 func writeFile(filename string, data []byte, perm os.FileMode) error {

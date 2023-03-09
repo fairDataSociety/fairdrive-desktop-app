@@ -297,7 +297,7 @@ func (f *Ffdfs) Chmod(path string, mode uint32) (errc int) {
 	}
 	defer node.Close()
 
-	node.stat.Mode = (node.stat.Mode & fuse.S_IFMT) | mode&07777
+	node.stat.Mode = (node.stat.Mode & fuse.S_IFMT) | mode&0777
 	node.stat.Ctim = fuse.Now()
 
 	if node.isDir() {
@@ -676,17 +676,28 @@ func (f *Ffdfs) makeNode(path string, mode uint32, dev uint64, data []byte) int 
 	if mode&fuse.S_IFDIR > 0 {
 		err := f.api.API.Mkdir(f.pod.GetPodName(), path, f.sessionId)
 		if err != nil {
-			f.log.Errorf("failed creating dir at %s: %v", path, err)
+			f.log.Errorf("fuse:failed creating dir at %s: %v", path, err)
 			return -fuse.EIO
 		}
 		prnt.dirs = append(prnt.dirs, filepath.Base(path))
+		err = f.api.API.ChmodDir(f.pod.GetPodName(), path, f.sessionId, mode)
+		if err != nil {
+			f.log.Errorf("fuse:failed creating dir at %s: %v", path, err)
+			return -fuse.EIO
+		}
 	} else {
 		err := f.api.API.UploadFile(f.pod.GetPodName(), flnm, f.sessionId, int64(len(data)), bytes.NewReader(data), prntPath, "", uint32(fdsBlockSize), false)
 		if err != nil {
+			f.log.Errorf("fuse: failed creating file at %s: %v", path, err)
 			return -fuse.EIO
 		}
 		node.stat.Size = int64(len(data))
 		prnt.files = append(prnt.files, filepath.Base(path))
+		err = f.api.API.ChmodFile(f.pod.GetPodName(), path, f.sessionId, mode)
+		if err != nil {
+			f.log.Errorf("fuse:failed creating dir at %s: %v", path, err)
+			return -fuse.EIO
+		}
 	}
 
 	if err := node.Close(); err != nil {
@@ -928,7 +939,7 @@ func (f *Ffdfs) lookup(path string, isDir bool) (node *node_t) {
 			id: path,
 			stat: fuse.Stat_t{
 				Ino:      f.ino,
-				Mode:     fuse.S_IFDIR | 0777,
+				Mode:     dirInode.Meta.Mode,
 				Nlink:    1,
 				Atim:     fuse.NewTimespec(time.Unix(dirInode.Meta.AccessTime, 0)),
 				Mtim:     fuse.NewTimespec(time.Unix(dirInode.Meta.ModificationTime, 0)),
@@ -970,7 +981,7 @@ func (f *Ffdfs) lookup(path string, isDir bool) (node *node_t) {
 		id: path,
 		stat: fuse.Stat_t{
 			Ino:      f.ino,
-			Mode:     fuse.S_IFREG | 0666,
+			Mode:     fStat.Mode,
 			Nlink:    1,
 			Atim:     fuse.NewTimespec(time.Unix(accTime, 0)),
 			Mtim:     fuse.NewTimespec(time.Unix(modTime, 0)),
