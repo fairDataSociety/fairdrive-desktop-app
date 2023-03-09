@@ -934,7 +934,7 @@ func TestRCloneTests(t *testing.T) {
 		fi, err := os.Lstat(mntDir)
 		require.NoError(t, err)
 		assert.True(t, fi.IsDir())
-		assert.Equal(t, os.FileMode(0777)&os.ModePerm, fi.Mode().Perm())
+		assert.Equal(t, os.FileMode(0700)&os.ModePerm, fi.Mode().Perm())
 	})
 }
 

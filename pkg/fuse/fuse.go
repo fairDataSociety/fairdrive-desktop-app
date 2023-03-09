@@ -184,7 +184,7 @@ func (f *Ffdfs) Mkdir(path string, mode uint32) int {
 	defer f.synchronize()()
 
 	f.log.Debugf("mkdir: creating directory: %s", path)
-	return f.makeNode(path, fuse.S_IFDIR|(mode&07777), 0, nil)
+	return f.makeNode(path, fuse.S_IFDIR|(mode&07700), 0, nil)
 }
 
 // Unlink removes a file.
@@ -297,7 +297,7 @@ func (f *Ffdfs) Chmod(path string, mode uint32) (errc int) {
 	}
 	defer node.Close()
 
-	node.stat.Mode = (node.stat.Mode & fuse.S_IFMT) | mode&07777
+	node.stat.Mode = (node.stat.Mode & fuse.S_IFMT) | mode&07700
 	node.stat.Ctim = fuse.Now()
 
 	if node.isDir() {
@@ -842,7 +842,7 @@ func (f *Ffdfs) lookupNode(path string) (node *node_t) {
 
 		mode := dirInode.Meta.Mode
 		if mode == 0 {
-			mode = fuse.S_IFDIR | 0777
+			mode = fuse.S_IFDIR | 0700
 		}
 		node = &node_t{
 			id: path,
@@ -882,7 +882,7 @@ func (f *Ffdfs) lookupNode(path string) (node *node_t) {
 	f.ino++
 	mode := fStat.Mode
 	if mode == 0 {
-		mode = fuse.S_IFREG | 0666
+		mode = fuse.S_IFREG | 0600
 	}
 	node = &node_t{
 		id: path,
@@ -929,7 +929,7 @@ func (f *Ffdfs) lookup(path string, isDir bool) (node *node_t) {
 			id: path,
 			stat: fuse.Stat_t{
 				Ino:      f.ino,
-				Mode:     fuse.S_IFDIR | 0777,
+				Mode:     dirInode.Meta.Mode,
 				Nlink:    1,
 				Atim:     fuse.NewTimespec(time.Unix(dirInode.Meta.AccessTime, 0)),
 				Mtim:     fuse.NewTimespec(time.Unix(dirInode.Meta.ModificationTime, 0)),
@@ -971,7 +971,7 @@ func (f *Ffdfs) lookup(path string, isDir bool) (node *node_t) {
 		id: path,
 		stat: fuse.Stat_t{
 			Ino:      f.ino,
-			Mode:     fuse.S_IFREG | 0666,
+			Mode:     fStat.Mode,
 			Nlink:    1,
 			Atim:     fuse.NewTimespec(time.Unix(accTime, 0)),
 			Mtim:     fuse.NewTimespec(time.Unix(modTime, 0)),
