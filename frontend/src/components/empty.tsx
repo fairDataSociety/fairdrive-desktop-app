@@ -59,7 +59,7 @@ function EmptyPodsComponent({username, mnemonic, isLoading, setShowAccounts}: Em
           fullWidth
           variant="outlined"
           sx={{ mt: 3, mb: 2 }}
-          onClick={() => EventsEmit('disableMenus')}
+          onClick={() => EventsEmit('podNew')}
           disabled={isLoading}
         >
           Create Pod
