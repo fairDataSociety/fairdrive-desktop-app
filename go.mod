@@ -13,6 +13,8 @@ require (
 	github.com/winfsp/cgofuse v1.5.0
 )
 
+replace github.com/fairdatasociety/fairOS-dfs => ../fairOS-dfs
+
 require (
 	github.com/bep/debounce v1.2.1 // indirect
 	github.com/btcsuite/btcd v0.22.3 // indirect

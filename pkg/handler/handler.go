@@ -171,8 +171,7 @@ func (h *Handler) Mount(pod, location string, readOnly bool) error {
 	if ok {
 		return fmt.Errorf("%s is already mounted", pod)
 	}
-	ctx := context.Background()
-	pi, err := h.api.GetPodInfo(ctx, pod, h.sessionID, createPod)
+	pi, err := h.api.GetPodInfo(pod, h.sessionID, createPod)
 	if err != nil {
 		return err
 	}
