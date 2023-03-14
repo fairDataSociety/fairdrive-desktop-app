@@ -6,6 +6,7 @@ import './App.css'
 import {
   Login,
   Mount,
+  MountSubscribedPod,
   GetPodsList,
   Unmount,
   Start,
@@ -13,6 +14,7 @@ import {
   Logout,
   GetCashedPods,
   Load,
+  SubscribedPods,
 } from '../wailsjs/go/handler/Handler'
 import {
   SetupConfig,
@@ -32,7 +34,6 @@ import {
   TextField,
   Button,
   FormGroup,
-  FormLabel,
   MenuItem,
   Select,
   Box,
@@ -123,6 +124,8 @@ function App() {
   async function loadPodsAndResetAll() {
     let p = await GetPodsList()
     setPods(p)
+    const subscribedPods = await SubscribedPods()
+    setSubscribedPods(subscribedPods)
   }
 
   const [showPodNew, setShowPodNew] = useState<boolean>(false)
@@ -263,7 +266,7 @@ function App() {
                 mountedPods.map(async (pod) => {
                   await Mount(pod, _mountPoint, batch === '')
                   let pods = await GetCashedPods()
-                  setPods(pods)
+                  setPods(pods.podsMounted)
                 })
               }
             }
@@ -281,6 +284,7 @@ function App() {
     })
   }, [])
   const [pods, setPods] = useState<PodMountedInfo[]>([])
+  const [subscribedPods, setSubscribedPods] = useState<handler.SubscriptionInfo[]>([])
   const updateName = (e: any) => setName(e.target.value)
   const updatePassword = (e: any) => setPassword(e.target.value)
   const updateRemember = (e: any) => setRemember(e.target.checked)
@@ -351,9 +355,38 @@ function App() {
       }
     }
     let cachedPods = await GetCashedPods()
-    setPods(cachedPods)
+    setPods(cachedPods.podsMounted)
     setIsLoading(false)
   }
+
+  const mountSubscribedPods = async (e: any) => {
+    setIsLoading(true)
+    let subHash = e.target.value
+    if (e.target.checked) {
+      try {
+        await MountSubscribedPod(subHash, mountPoint)
+        EventsEmit('Mount')
+      } catch (e: any) {
+        showError(e)
+        setIsLoading(false)
+        return
+      }
+    } else {
+      try {
+        await Unmount(subHash)
+        EventsEmit('Mount')
+      } catch (e: any) {
+        showError(e)
+        setIsLoading(false)
+        return
+      }
+    }
+    let cachedPods = await GetCashedPods()
+    console.log(cachedPods.subsMounted)
+    setSubscribedPods(cachedPods.subsMounted)
+    setIsLoading(false)
+  }
+
   const [mountPoint, setMountPoint] = useState('')
 
   const [toggleConfigAdvanced, setToggleConfigAdvanced] = useState<boolean>(false)
@@ -498,7 +531,11 @@ function App() {
         setMnemonic('')
         setShowLogin(false)
         setPods(p)
-        console.log(p)
+        console.log("pods",p)
+        const subscribedPods = await SubscribedPods()
+        setSubscribedPods(subscribedPods)
+        console.log("subscribedPods", subscribedPods)
+
         setShowPods(true)
         EventsEmit('enableMenus')
         setOpenError(false) // close error if it was open before
@@ -533,6 +570,8 @@ function App() {
       let p = await GetPodsList()
       setShowLogin(false)
       setPods(p)
+      const subscribedPods = await SubscribedPods()
+      setSubscribedPods(subscribedPods)
       setShowPods(true)
       EventsEmit('enableMenus')
       showInfoMessage('Lite account logged in. See Details for account info.')
@@ -1037,7 +1076,7 @@ function App() {
           }
 
           if (showPods) {
-            if (pods != null && pods.length != 0) {
+            if ((pods != null && pods.length != 0) || (subscribedPods != null && subscribedPods.length != 0)) {
               return (
                 <PodsComponent
                   isLoading={isLoading}
@@ -1049,6 +1088,9 @@ function App() {
                   showLoader={setIsLoading}
                   onSuccess={loadPodsAndResetAll}
                   mount={mount}
+                  mountSubscribedPods={mountSubscribedPods}
+                  subscribedPods={subscribedPods}
+                  initialTab={pods.length == 0 ? "3" : "1"}
                 />
               )
             } else {

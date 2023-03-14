@@ -46,6 +46,10 @@ export function Mount(arg1, arg2, arg3) {
   return window['go']['handler']['Handler']['Mount'](arg1, arg2, arg3);
 }
 
+export function MountSubscribedPod(arg1, arg2) {
+  return window['go']['handler']['Handler']['MountSubscribedPod'](arg1, arg2);
+}
+
 export function ReceivePod(arg1, arg2) {
   return window['go']['handler']['Handler']['ReceivePod'](arg1, arg2);
 }
@@ -60,6 +64,10 @@ export function Start(arg1) {
 
 export function StartCacheCleaner(arg1) {
   return window['go']['handler']['Handler']['StartCacheCleaner'](arg1);
+}
+
+export function SubscribedPods() {
+  return window['go']['handler']['Handler']['SubscribedPods']();
 }
 
 export function Sync(arg1) {

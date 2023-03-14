@@ -29,14 +29,20 @@ type CacheCleaner interface {
 	CacheClean()
 }
 
+type subscribedPod struct {
+	podName string
+	subHash string
+}
+
 type Handler struct {
-	lock                 sync.Mutex
-	api                  *api.DfsAPI
-	activeMounts         map[string]*hostMount
-	logger               logging.Logger
-	sessionID            string
-	lastLoadedPods       []string
-	lastLoadedSharedPods []string
+	lock                     sync.Mutex
+	api                      *api.DfsAPI
+	activeMounts             map[string]*hostMount
+	logger                   logging.Logger
+	sessionID                string
+	lastLoadedPods           []string
+	lastLoadedSharedPods     []string
+	lastLoadedSubscribedPods []subscribedPod
 }
 
 type hostMount struct {
@@ -52,9 +58,23 @@ type PodMountedInfo struct {
 	IsShared   bool   `json:"isShared"`
 }
 
+type SubscriptionInfo struct {
+	SubHash    string `json:"subHash"`
+	IsMounted  bool   `json:"isMounted"`
+	PodName    string `json:"podName"`
+	PodAddress string `json:"address"`
+	MountPoint string `json:"mountPoint"`
+	ValidTill  int64  `json:"validTill"`
+}
+
 type LiteUser struct {
 	Mnemonic   string `json:"mnemonic"`
 	PrivateKey string `json:"privateKey"`
+}
+
+type CachedPod struct {
+	PodsMounted []*PodMountedInfo   `json:"podsMounted"`
+	SubsMounted []*SubscriptionInfo `json:"subsMounted"`
 }
 
 func New(logger logging.Logger) (*Handler, error) {
@@ -215,6 +235,98 @@ func (h *Handler) Mount(pod, location string, readOnly bool) error {
 	return nil
 }
 
+func (h *Handler) MountSubscribedPod(subHash, location string) error {
+
+	if h.api == nil {
+		h.logger.Errorf("mount: fairos not initialised")
+		return ErrFairOsNotInitialised
+	}
+	if location == "" {
+		home, err := homedir.Dir()
+		if err != nil {
+			home = ""
+		}
+		location = home
+	}
+
+	h.lock.Lock()
+	defer h.lock.Unlock()
+	_, ok := h.activeMounts[subHash]
+	if ok {
+		return fmt.Errorf("subscribed pod is already mounted")
+	}
+
+	s, err := utils.Decode(subHash)
+	if err != nil {
+		return err
+	}
+
+	var subHashBytes [32]byte
+	copy(subHashBytes[:], s)
+
+	pi, err := h.api.OpenSubscribedPod(h.sessionID, subHashBytes)
+	if err != nil {
+		return err
+	}
+
+	mountName := fmt.Sprintf("%s-%s", pi.GetPodName(), subHash)
+	parent := filepath.Join(location, root)
+	mountPoint := filepath.Join(parent, mountName)
+	if runtime.GOOS == "linux" {
+		if _, err := os.Stat(mountPoint); err != nil {
+			err = os.MkdirAll(mountPoint, 0766)
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		if _, err := os.Stat(parent); err != nil {
+			err = os.MkdirAll(parent, 0700)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	dfsFuse, err := dfuse.New(h.sessionID, pi, h.api, h.logger)
+	if err != nil {
+		return err
+	}
+
+	sig := make(chan string)
+	host := fuse.NewFileSystemHost(dfsFuse)
+
+	opts := mountOptions(mountName)
+	opts = append(opts, "-o", "ro")
+
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				sig <- fmt.Sprintf("%v", r)
+			}
+			defer close(sig)
+		}()
+		host.SetCapReaddirPlus(true)
+		host.Mount(mountPoint, opts)
+		sig <- ""
+	}()
+	select {
+	case <-time.After(time.Second * 2):
+	case e := <-sig:
+		if e == "" {
+			return fmt.Errorf("failed to mount")
+		}
+		return fmt.Errorf(e)
+	}
+	h.activeMounts[subHash] = &hostMount{
+		h:    host,
+		c:    dfsFuse,
+		path: mountPoint,
+	}
+	h.logger.Infof("%s is mounted at %s", mountName, mountPoint)
+	return nil
+}
+
 func (h *Handler) Unmount(pod string) error {
 	if h.api == nil {
 		h.logger.Errorf("unmount: fairos not initialised")
@@ -274,13 +386,14 @@ func (h *Handler) GetPodsList() ([]*PodMountedInfo, error) {
 	return podsMounted, err
 }
 
-func (h *Handler) GetCashedPods() []*PodMountedInfo {
+func (h *Handler) GetCashedPods() *CachedPod {
 	if h.api == nil {
 		return nil
 	}
 	h.lock.Lock()
 	defer h.lock.Unlock()
 	podsMounted := []*PodMountedInfo{}
+	subsMounted := []*SubscriptionInfo{}
 	for _, podName := range h.lastLoadedPods {
 		host, ok := h.activeMounts[podName]
 		podMounted := &PodMountedInfo{
@@ -304,7 +417,20 @@ func (h *Handler) GetCashedPods() []*PodMountedInfo {
 		}
 		podsMounted = append(podsMounted, podMounted)
 	}
-	return podsMounted
+	for _, sp := range h.lastLoadedSubscribedPods {
+		host, ok := h.activeMounts[sp.subHash]
+		//subHash := filepath.Base(host.path)
+		podMounted := &SubscriptionInfo{
+			PodName:   sp.podName,
+			IsMounted: ok,
+			SubHash:   sp.subHash,
+		}
+		if ok {
+			podMounted.MountPoint = host.path
+		}
+		subsMounted = append(subsMounted, podMounted)
+	}
+	return &CachedPod{podsMounted, subsMounted}
 }
 
 func (h *Handler) CreatePod(podname string) (*pod.Info, error) {
@@ -359,6 +485,35 @@ func (h *Handler) SharePod(podName string) (string, error) {
 		return "", ErrFairOsNotInitialised
 	}
 	return h.api.PodShare(podName, "", h.sessionID)
+}
+
+func (h *Handler) SubscribedPods() ([]*SubscriptionInfo, error) {
+	if h.api == nil {
+		return nil, ErrFairOsNotInitialised
+	}
+	subs, err := h.api.GetSubscriptions(h.sessionID)
+	if err != nil {
+		return nil, err
+	}
+	res := []*SubscriptionInfo{}
+	subscribedPods := []subscribedPod{}
+	for _, sub := range subs {
+		s := subscribedPod{
+			podName: sub.PodName,
+			subHash: "0x" + utils.Encode(sub.SubHash[:]),
+		}
+		subscribedPods = append(subscribedPods, s)
+		res = append(res, &SubscriptionInfo{
+			SubHash:    "0x" + utils.Encode(sub.SubHash[:]),
+			PodName:    sub.PodName,
+			PodAddress: sub.PodAddress,
+			ValidTill:  sub.ValidTill,
+		})
+	}
+	h.lock.Lock()
+	defer h.lock.Unlock()
+	h.lastLoadedSubscribedPods = subscribedPods
+	return res, nil
 }
 
 func (h *Handler) ReceivePod(podSharingReference, podName string) error {

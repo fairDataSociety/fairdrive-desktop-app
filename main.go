@@ -215,9 +215,9 @@ func main() {
 				wRuntime.EventsEmit(startContext, "mountPointSelected", location)
 			})
 			wRuntime.EventsOn(startContext, "Mount", func(...interface{}) {
-				allPods := dfsHandler.GetCashedPods()
+				cachedPods := dfsHandler.GetCashedPods()
 				podsToSave := []string{}
-				for _, podItem := range allPods {
+				for _, podItem := range cachedPods.PodsMounted {
 					if podItem.IsMounted {
 						podsToSave = append(podsToSave, podItem.PodName)
 					}
