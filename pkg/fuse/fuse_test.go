@@ -2,7 +2,6 @@ package fuse
 
 import (
 	"bytes"
-	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"io"
@@ -22,6 +21,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	mock3 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/api"
@@ -39,10 +39,11 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 	logger := logging.New(os.Stdout, 5)
 	ens := mock2.NewMockNamespaceManager()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	sm := mock3.NewMockSubscriptionManager()
 	userObject := user.NewUsers(mockClient, ens, logger)
 	password := "1passwordpassword"
 	username := "fdfs"
-	_, _, _, _, ui, err := userObject.CreateNewUserV2(username, password, "", "", tm)
+	_, _, _, _, ui, err := userObject.CreateNewUserV2(username, password, "", "", tm, sm)
 	require.NoError(t, err)
 
 	pod1 := ui.GetPod()
@@ -82,7 +83,7 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 	mockDfs := dfs.NewMockDfsAPI(mockClient, userObject, logger)
 	dfsApi, err := api.NewMockApi(logger, mockDfs)
 	require.NoError(t, err)
-	pi2, err := dfsApi.GetPodInfo(context.Background(), podName1, ui.GetSessionId(), false)
+	pi2, err := dfsApi.GetPodInfo(podName1, ui.GetSessionId(), false)
 	require.NoError(t, err)
 
 	return dfsApi, pi2, ui.GetSessionId()
