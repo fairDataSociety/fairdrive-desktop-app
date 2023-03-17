@@ -27,6 +27,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/api"
 	"github.com/plexsysio/taskmanager"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/winfsp/cgofuse/fuse"
@@ -36,7 +37,7 @@ type dirMap map[string]int64
 
 func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(os.Stdout, 5)
+	logger := logging.New(os.Stdout, logrus.ErrorLevel)
 	ens := mock2.NewMockNamespaceManager()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	sm := mock3.NewMockSubscriptionManager()
@@ -84,7 +85,7 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 }
 
 func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string) (*Ffdfs, string, func()) {
-	logger := logging.New(os.Stdout, 5)
+	logger := logging.New(os.Stdout, logrus.ErrorLevel)
 
 	var (
 		err    error
