@@ -15,6 +15,8 @@ import (
 	"testing/iotest"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
@@ -35,7 +37,7 @@ type dirMap map[string]int64
 
 func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(os.Stdout, 5)
+	logger := logging.New(os.Stdout, logrus.ErrorLevel)
 	ens := mock2.NewMockNamespaceManager()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	sm := mock3.NewMockSubscriptionManager()
@@ -83,7 +85,7 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 }
 
 func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string) (*Ffdfs, string, func()) {
-	logger := logging.New(os.Stdout, 5)
+	logger := logging.New(os.Stdout, logrus.ErrorLevel)
 
 	var (
 		err    error
