@@ -347,6 +347,8 @@ func TestRCloneTests(t *testing.T) {
 		defer func() {
 			err = os.RemoveAll(runDir)
 			fmt.Println("touch and delete removing runDir", runDir, err)
+			fStat, err := os.Lstat(runDir)
+			fmt.Println("touch and delete lstat after removing runDir", runDir, fStat, err)
 			require.NoError(t, err)
 		}()
 
