@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -343,7 +344,11 @@ func TestRCloneTests(t *testing.T) {
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer os.RemoveAll(runDir)
+		defer func() {
+			err = os.RemoveAll(runDir)
+			fmt.Println("touch and delete removing runDir", runDir, err)
+			require.NoError(t, err)
+		}()
 
 		path := filepath.Join(runDir, "touched")
 		err = writeFile(path, []byte(""), 0600)
@@ -375,7 +380,10 @@ func TestRCloneTests(t *testing.T) {
 
 	t.Run("rename and open", func(t *testing.T) {
 		runDir := filepath.Join(mntDir, "runDir")
-		err := os.Mkdir(runDir, 0777)
+
+		fStat, err := os.Lstat(runDir)
+		fmt.Println("rename and open", runDir, fStat, err)
+		err = os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
 		defer os.RemoveAll(runDir)
