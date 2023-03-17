@@ -624,26 +624,20 @@ func (f *Ffdfs) getNode(path string, fh uint64) *node_t {
 func (f *Ffdfs) makeNode(path string, mode uint32, dev uint64, data []byte) int {
 	prntPath := filepath.Dir(path)
 	flnm := filepath.Base(path)
-
-	var prnt *node_t
-	// check openmap
-	for _, node := range f.openmap {
-		if node.id == prntPath {
-			prnt = node
-		}
+	prnt := f.lookupNode(filepath.Dir(path))
+	if nil == prnt {
+		return -fuse.ENOENT
 	}
+	defer prnt.Close()
 
-	if prnt == nil {
-		prnt = f.lookupNode(prntPath)
-		if nil == prnt {
-			return -fuse.ENOENT
-		}
-		defer prnt.Close()
+	node := f.lookupNode(path)
+	if nil != node {
+		return -fuse.EEXIST
 	}
 
 	f.ino++
 	uid, gid, _ := fuse.Getcontext()
-	node := newNode(path, dev, f.ino, mode, uid, gid)
+	node = newNode(path, dev, f.ino, mode, uid, gid)
 	if nil == data {
 		data = []byte{}
 	}
