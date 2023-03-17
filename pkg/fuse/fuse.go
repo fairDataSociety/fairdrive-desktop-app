@@ -17,7 +17,7 @@ import (
 
 const (
 	sysBlockSize uint64 = 4096
-	fdsBlockSize uint64 = 8388608     // ~ 8MB 8388608
+	fdsBlockSize uint64 = 1048576     // ~ 1MB
 	free         uint64 = 21474836480 // ~ 20GB
 )
 
