@@ -164,8 +164,8 @@ github.com/ethersphere/bee v1.12.0 h1:dKtaKQXYFSnjB/8g0qlhIc1BVVvKJ1DCTL5NuOtz2m
 github.com/ethersphere/bee v1.12.0/go.mod h1:rm4lICvmvSMQ4EnrPYxZsWFkzMh66XqNOKpj1HSJnA4=
 github.com/ethersphere/bmt v0.1.4 h1:+rkWYNtMgDx6bkNqGdWu+U9DgGI1rRZplpSW3YhBr1Q=
 github.com/ethersphere/bmt v0.1.4/go.mod h1:Yd8ft1U69WDuHevZc/rwPxUv1rzPSMpMnS6xbU53aY8=
-github.com/fairdatasociety/fairOS-dfs v0.9.2-rc4.0.20230317094141-3c04a34c0bfe h1:nNsHPB1EBpxxrxQc01o9m4aADwZ9wHY3kiZSHH2IxVc=
-github.com/fairdatasociety/fairOS-dfs v0.9.2-rc4.0.20230317094141-3c04a34c0bfe/go.mod h1:7IsX5qaGN2j5RChTgFdF0l8ZdFwKOVrgGxxkyWLYwCE=
+github.com/fairdatasociety/fairOS-dfs v0.9.2-rc4.0.20230317131107-676cc591486e h1:GF19eLoSwLGdd+Jk53liWNsTXJHSz9LzC0X3tAfWDng=
+github.com/fairdatasociety/fairOS-dfs v0.9.2-rc4.0.20230317131107-676cc591486e/go.mod h1:7IsX5qaGN2j5RChTgFdF0l8ZdFwKOVrgGxxkyWLYwCE=
 github.com/fairdatasociety/fairOS-dfs-utils v0.0.0-20221230123929-aec4ed8b854d h1:4QgyFcv+J02YdPZ92oiCjjQ8QtGl/UbLTAypKb+WfZc=
 github.com/fairdatasociety/fairOS-dfs-utils v0.0.0-20221230123929-aec4ed8b854d/go.mod h1:f4lfxKoK1n4S+2II4lyVmuvWISAMThqH+uc/XL62tzU=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
