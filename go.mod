@@ -3,7 +3,7 @@ module github.com/fairdatasociety/fairdrive-desktop-app
 go 1.18
 
 require (
-	github.com/fairdatasociety/fairOS-dfs v0.9.2
+	github.com/fairdatasociety/fairOS-dfs v0.9.2-rc4.0.20230317070924-3cd151c422db
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/plexsysio/taskmanager v0.0.0-20211220123746-de5ebdd49ae2
 	github.com/sirupsen/logrus v1.9.0
@@ -12,8 +12,6 @@ require (
 	github.com/wailsapp/wails/v2 v2.2.0
 	github.com/winfsp/cgofuse v1.5.0
 )
-
-replace github.com/fairdatasociety/fairOS-dfs => ../fairOS-dfs
 
 require (
 	github.com/bep/debounce v1.2.1 // indirect

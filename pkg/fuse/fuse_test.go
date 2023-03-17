@@ -26,7 +26,6 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/api"
 	"github.com/plexsysio/taskmanager"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/winfsp/cgofuse/fuse"
@@ -41,6 +40,10 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	sm := mock3.NewMockSubscriptionManager()
 	userObject := user.NewUsers(mockClient, ens, logger)
+	mockDfs := dfs.NewMockDfsAPI(mockClient, userObject, logger)
+	dfsApi, err := api.NewMockApi(logger, mockDfs)
+	require.NoError(t, err)
+
 	password := "1passwordpassword"
 	username := "fdfs"
 	_, _, _, _, ui, err := userObject.CreateNewUserV2(username, password, "", "", tm, sm)
@@ -60,13 +63,9 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 	err = dirObject.MkRootDir(podName1, podPassword, pi.GetPodAddress(), pi.GetFeed())
 	require.NoError(t, err)
 
-	err = dirObject.MkDir("/parentDir", podPassword)
+	err = dirObject.MkDir("/parentDir", podPassword, fuse.S_IFDIR|0777)
 	require.NoError(t, err)
-	err = dirObject.Chmod("/parentDir", podPassword, 0777)
-	require.NoError(t, err)
-	err = dirObject.MkDir("/parentDir/subDir1", podPassword)
-	require.NoError(t, err)
-	err = dirObject.Chmod("/parentDir/subDir1", podPassword, 0777)
+	err = dirObject.MkDir("/parentDir/subDir1", podPassword, fuse.S_IFDIR|0777)
 	require.NoError(t, err)
 	_, err = uploadFile(t, fileObject, "/parentDir", podPassword, "file1", "", 100, 10)
 	require.NoError(t, err)
@@ -80,17 +79,11 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 	err = dirObject.AddEntryToDir("/parentDir/subDir1", podPassword, "file1", true)
 	require.NoError(t, err)
 
-	mockDfs := dfs.NewMockDfsAPI(mockClient, userObject, logger)
-	dfsApi, err := api.NewMockApi(logger, mockDfs)
-	require.NoError(t, err)
-	pi2, err := dfsApi.GetPodInfo(podName1, ui.GetSessionId(), false)
-	require.NoError(t, err)
-
-	return dfsApi, pi2, ui.GetSessionId()
+	return dfsApi, pi, ui.GetSessionId()
 }
 
 func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string) (*Ffdfs, string, func()) {
-	logger := logging.New(os.Stdout, logrus.ErrorLevel)
+	logger := logging.New(os.Stdout, 5)
 
 	var (
 		err    error
@@ -102,6 +95,7 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string)
 		mntDir, err = os.MkdirTemp("", "tmpfuse")
 		require.NoError(t, err)
 	}
+
 	f, err := New(sessionId, pi, dfsApi, logger)
 	require.NoError(t, err)
 	f.openmap = map[uint64]*node_t{}
@@ -135,7 +129,6 @@ func TestWrite(t *testing.T) {
 	dfsApi, pi, sessionId := setupFairosWithFs(t)
 	_, mntDir, closer := newTestFs(t, dfsApi, pi, sessionId)
 	defer closer()
-
 	t.Run("list", func(t *testing.T) {
 
 		files, err := os.ReadDir(mntDir)
@@ -1038,11 +1031,7 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, podPassword, file
 	}
 
 	// upload  the temp file
-	err = fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression, podPassword)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return content, fileObject.Chmod(filePath+"/"+fileName, podPassword, 0666)
+	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, fuse.S_IFREG|0666, filePath, compression, podPassword)
 }
 
 func writeFile(filename string, data []byte, perm os.FileMode) error {
