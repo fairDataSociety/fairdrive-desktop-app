@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -14,8 +15,6 @@ import (
 	"testing/fstest"
 	"testing/iotest"
 	"time"
-
-	"github.com/sirupsen/logrus"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
@@ -28,6 +27,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/api"
 	"github.com/plexsysio/taskmanager"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/winfsp/cgofuse/fuse"
@@ -326,7 +326,6 @@ func TestMultiDirWithFiles(t *testing.T) {
 
 					err = iotest.TestReader(f, v.content)
 					require.NoError(t, err)
-
 				}
 			}
 		})
@@ -375,7 +374,10 @@ func TestRCloneTests(t *testing.T) {
 
 	t.Run("rename and open", func(t *testing.T) {
 		runDir := filepath.Join(mntDir, "runDir")
-		err := os.Mkdir(runDir, 0777)
+
+		fStat, err := os.Lstat(runDir)
+		fmt.Println("rename and open", runDir, fStat, err)
+		err = os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
 		defer os.RemoveAll(runDir)
