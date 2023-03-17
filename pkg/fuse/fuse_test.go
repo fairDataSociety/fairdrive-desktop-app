@@ -16,8 +16,6 @@ import (
 	"testing/iotest"
 	"time"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
@@ -38,7 +36,7 @@ type dirMap map[string]int64
 
 func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(os.Stdout, logrus.ErrorLevel)
+	logger := logging.New(os.Stdout, 5)
 	ens := mock2.NewMockNamespaceManager()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	sm := mock3.NewMockSubscriptionManager()
@@ -86,7 +84,7 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 }
 
 func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string) (*Ffdfs, string, func()) {
-	logger := logging.New(os.Stdout, logrus.ErrorLevel)
+	logger := logging.New(os.Stdout, 5)
 
 	var (
 		err    error
@@ -327,7 +325,6 @@ func TestMultiDirWithFiles(t *testing.T) {
 
 					err = iotest.TestReader(f, v.content)
 					require.NoError(t, err)
-
 				}
 			}
 		})
@@ -344,13 +341,7 @@ func TestRCloneTests(t *testing.T) {
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer func() {
-			err = os.RemoveAll(runDir)
-			fmt.Println("touch and delete removing runDir", runDir, err)
-			require.NoError(t, err)
-			fStat, err := os.Lstat(runDir)
-			fmt.Println("touch and delete lstat after removing runDir", runDir, fStat, err)
-		}()
+		defer os.RemoveAll(runDir)
 
 		path := filepath.Join(runDir, "touched")
 		err = writeFile(path, []byte(""), 0600)
