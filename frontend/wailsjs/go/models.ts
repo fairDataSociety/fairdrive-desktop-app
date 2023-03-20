@@ -30,6 +30,7 @@ export namespace handler {
 	    address: string;
 	    mountPoint: string;
 	    validTill: number;
+	    category: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new SubscriptionInfo(source);
@@ -43,6 +44,7 @@ export namespace handler {
 	        this.address = source["address"];
 	        this.mountPoint = source["mountPoint"];
 	        this.validTill = source["validTill"];
+	        this.category = source["category"];
 	    }
 	}
 	export class PodMountedInfo {

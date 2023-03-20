@@ -30,8 +30,9 @@ type CacheCleaner interface {
 }
 
 type subscribedPod struct {
-	podName string
-	subHash string
+	podName  string
+	subHash  string
+	category string
 }
 
 type Handler struct {
@@ -65,6 +66,7 @@ type SubscriptionInfo struct {
 	PodAddress string `json:"address"`
 	MountPoint string `json:"mountPoint"`
 	ValidTill  int64  `json:"validTill"`
+	Category   string `json:"category"`
 }
 
 type LiteUser struct {
@@ -424,6 +426,7 @@ func (h *Handler) GetCashedPods() *CachedPod {
 			PodName:   sp.podName,
 			IsMounted: ok,
 			SubHash:   sp.subHash,
+			Category:  sp.category,
 		}
 		if ok {
 			podMounted.MountPoint = host.path
@@ -499,8 +502,9 @@ func (h *Handler) SubscribedPods() ([]*SubscriptionInfo, error) {
 	subscribedPods := []subscribedPod{}
 	for _, sub := range subs {
 		s := subscribedPod{
-			podName: sub.PodName,
-			subHash: "0x" + utils.Encode(sub.SubHash[:]),
+			podName:  sub.PodName,
+			subHash:  "0x" + utils.Encode(sub.SubHash[:]),
+			category: "0x" + sub.Category,
 		}
 		subscribedPods = append(subscribedPods, s)
 		res = append(res, &SubscriptionInfo{
@@ -508,6 +512,7 @@ func (h *Handler) SubscribedPods() ([]*SubscriptionInfo, error) {
 			PodName:    sub.PodName,
 			PodAddress: sub.PodAddress,
 			ValidTill:  sub.ValidTill,
+			Category:   "0x" + sub.Category,
 		})
 	}
 	h.lock.Lock()

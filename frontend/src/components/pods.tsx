@@ -25,6 +25,7 @@ import PodMountedInfo = handler.PodMountedInfo;
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
+import { categoriesMap } from "../utils/categories";
 
 interface PodProps {
   pods: PodMountedInfo[]
@@ -413,6 +414,7 @@ function PodsComponent(
                             '....' +
                             pod.podName.slice(-12)
                             : pod.podName}
+                          <p>{categoriesMap[pod.category]}</p>
                         </Typography>
                       </CardContent>
                       {pod.isMounted ? (
