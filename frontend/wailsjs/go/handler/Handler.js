@@ -46,8 +46,8 @@ export function Mount(arg1, arg2, arg3) {
   return window['go']['handler']['Handler']['Mount'](arg1, arg2, arg3);
 }
 
-export function MountSubscribedPod(arg1, arg2) {
-  return window['go']['handler']['Handler']['MountSubscribedPod'](arg1, arg2);
+export function MountSubscribedPod(arg1, arg2, arg3) {
+  return window['go']['handler']['Handler']['MountSubscribedPod'](arg1, arg2, arg3);
 }
 
 export function ReceivePod(arg1, arg2) {
@@ -76,4 +76,8 @@ export function Sync(arg1) {
 
 export function Unmount(arg1) {
   return window['go']['handler']['Handler']['Unmount'](arg1);
+}
+
+export function UnmountSubscribedPod(arg1) {
+  return window['go']['handler']['Handler']['UnmountSubscribedPod'](arg1);
 }

@@ -14,7 +14,7 @@ import {
   Logout,
   GetCashedPods,
   Load,
-  SubscribedPods,
+  SubscribedPods, UnmountSubscribedPod,
 } from '../wailsjs/go/handler/Handler'
 import {
   SetupConfig,
@@ -361,10 +361,11 @@ function App() {
 
   const mountSubscribedPods = async (e: any) => {
     setIsLoading(true)
-    let subHash = e.target.value
+    let subHashInfo = e.target.value
     if (e.target.checked) {
       try {
-        await MountSubscribedPod(subHash, mountPoint)
+        const i = subHashInfo.split(":");
+        await MountSubscribedPod(i[0], mountPoint, i[1])
         EventsEmit('Mount')
       } catch (e: any) {
         showError(e)
@@ -373,7 +374,8 @@ function App() {
       }
     } else {
       try {
-        await Unmount(subHash)
+        const i = subHashInfo.split(":");
+        await UnmountSubscribedPod(i[0])
         EventsEmit('Mount')
       } catch (e: any) {
         showError(e)

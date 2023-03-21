@@ -27,7 +27,7 @@ export function Logout():Promise<Error>;
 
 export function Mount(arg1:string,arg2:string,arg3:boolean):Promise<Error>;
 
-export function MountSubscribedPod(arg1:string,arg2:string):Promise<Error>;
+export function MountSubscribedPod(arg1:string,arg2:string,arg3:string):Promise<Error>;
 
 export function ReceivePod(arg1:string,arg2:string):Promise<Error>;
 
@@ -42,3 +42,5 @@ export function SubscribedPods():Promise<Array<handler.SubscriptionInfo>>;
 export function Sync(arg1:string):Promise<void>;
 
 export function Unmount(arg1:string):Promise<Error>;
+
+export function UnmountSubscribedPod(arg1:string):Promise<Error>;

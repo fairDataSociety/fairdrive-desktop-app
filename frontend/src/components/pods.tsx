@@ -403,7 +403,7 @@ function PodsComponent(
                           >
                             <Checkbox
                               onChange={mountSubscribedPods}
-                              value={pod.subHash}
+                              value={pod.subHash+":"+pod.infoLocation}
                               color="primary"
                               disabled={isLoading}
                               checked={pod.isMounted}

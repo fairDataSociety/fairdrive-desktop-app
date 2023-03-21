@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,10 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/api"
 	dfuse "github.com/fairdatasociety/fairdrive-desktop-app/pkg/fuse"
 	"github.com/mitchellh/go-homedir"
@@ -30,9 +30,10 @@ type CacheCleaner interface {
 }
 
 type subscribedPod struct {
-	podName  string
-	subHash  string
-	category string
+	podName      string
+	subHash      string
+	infoLocation string
+	category     string
 }
 
 type Handler struct {
@@ -60,13 +61,14 @@ type PodMountedInfo struct {
 }
 
 type SubscriptionInfo struct {
-	SubHash    string `json:"subHash"`
-	IsMounted  bool   `json:"isMounted"`
-	PodName    string `json:"podName"`
-	PodAddress string `json:"address"`
-	MountPoint string `json:"mountPoint"`
-	ValidTill  int64  `json:"validTill"`
-	Category   string `json:"category"`
+	SubHash      string `json:"subHash"`
+	IsMounted    bool   `json:"isMounted"`
+	PodName      string `json:"podName"`
+	PodAddress   string `json:"address"`
+	MountPoint   string `json:"mountPoint"`
+	ValidTill    int64  `json:"validTill"`
+	Category     string `json:"category"`
+	InfoLocation string `json:"infoLocation"`
 }
 
 type LiteUser struct {
@@ -237,7 +239,7 @@ func (h *Handler) Mount(pod, location string, readOnly bool) error {
 	return nil
 }
 
-func (h *Handler) MountSubscribedPod(subHash, location string) error {
+func (h *Handler) MountSubscribedPod(subHash, location, infoLocation string) error {
 
 	if h.api == nil {
 		h.logger.Errorf("mount: fairos not initialised")
@@ -266,7 +268,7 @@ func (h *Handler) MountSubscribedPod(subHash, location string) error {
 	var subHashBytes [32]byte
 	copy(subHashBytes[:], s)
 
-	pi, err := h.api.OpenSubscribedPod(h.sessionID, subHashBytes)
+	pi, err := h.api.OpenSubscribedPod(h.sessionID, subHashBytes, infoLocation)
 	if err != nil {
 		return err
 	}
@@ -330,6 +332,18 @@ func (h *Handler) MountSubscribedPod(subHash, location string) error {
 }
 
 func (h *Handler) Unmount(pod string) error {
+	err := h.unmount(pod)
+	if err != nil {
+		return err
+	}
+	return h.api.ClosePod(pod, h.sessionID)
+}
+
+func (h *Handler) UnmountSubscribedPod(pod string) error {
+	return h.unmount(pod)
+}
+
+func (h *Handler) unmount(pod string) error {
 	if h.api == nil {
 		h.logger.Errorf("unmount: fairos not initialised")
 		return ErrFairOsNotInitialised
@@ -345,7 +359,7 @@ func (h *Handler) Unmount(pod string) error {
 		return fmt.Errorf("unmount failed")
 	}
 	delete(h.activeMounts, pod)
-	return h.api.ClosePod(pod, h.sessionID)
+	return nil
 }
 
 func (h *Handler) GetPodsList() ([]*PodMountedInfo, error) {
@@ -423,10 +437,11 @@ func (h *Handler) GetCashedPods() *CachedPod {
 		host, ok := h.activeMounts[sp.subHash]
 		//subHash := filepath.Base(host.path)
 		podMounted := &SubscriptionInfo{
-			PodName:   sp.podName,
-			IsMounted: ok,
-			SubHash:   sp.subHash,
-			Category:  sp.category,
+			PodName:      sp.podName,
+			IsMounted:    ok,
+			SubHash:      sp.subHash,
+			Category:     sp.category,
+			InfoLocation: sp.infoLocation,
 		}
 		if ok {
 			podMounted.MountPoint = host.path
@@ -502,17 +517,19 @@ func (h *Handler) SubscribedPods() ([]*SubscriptionInfo, error) {
 	subscribedPods := []subscribedPod{}
 	for _, sub := range subs {
 		s := subscribedPod{
-			podName:  sub.PodName,
-			subHash:  "0x" + utils.Encode(sub.SubHash[:]),
-			category: "0x" + sub.Category,
+			podName:      sub.PodName,
+			subHash:      "0x" + utils.Encode(sub.SubHash[:]),
+			category:     "0x" + sub.Category,
+			infoLocation: hex.EncodeToString(sub.InfoLocation),
 		}
 		subscribedPods = append(subscribedPods, s)
 		res = append(res, &SubscriptionInfo{
-			SubHash:    "0x" + utils.Encode(sub.SubHash[:]),
-			PodName:    sub.PodName,
-			PodAddress: sub.PodAddress,
-			ValidTill:  sub.ValidTill,
-			Category:   "0x" + sub.Category,
+			SubHash:      "0x" + utils.Encode(sub.SubHash[:]),
+			PodName:      sub.PodName,
+			PodAddress:   sub.PodAddress,
+			ValidTill:    sub.ValidTill,
+			Category:     "0x" + sub.Category,
+			InfoLocation: hex.EncodeToString(sub.InfoLocation),
 		})
 	}
 	h.lock.Lock()
