@@ -3,7 +3,7 @@ module github.com/fairdatasociety/fairdrive-desktop-app
 go 1.18
 
 require (
-	github.com/fairdatasociety/fairOS-dfs v0.9.3-rc1.0.20230321042035-3ad99d005791
+	github.com/fairdatasociety/fairOS-dfs v0.9.3-rc1.0.20230322090803-caf254d28995
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/plexsysio/taskmanager v0.0.0-20211220123746-de5ebdd49ae2
 	github.com/sirupsen/logrus v1.9.0
