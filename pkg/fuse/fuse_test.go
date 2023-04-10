@@ -69,13 +69,13 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 	require.NoError(t, err)
 	err = dirObject.MkDir("/parentDir/subDir1", podPassword, fuse.S_IFDIR|0777)
 	require.NoError(t, err)
-	_, err = uploadFile(t, fileObject, "/parentDir", podPassword, "file1", "", 100, 10)
+	_, err = uploadFile(t, fileObject, "/parentDir", podPassword, "file1", "", 100, file.MinBlockSize)
 	require.NoError(t, err)
 
 	err = dirObject.AddEntryToDir("/parentDir", podPassword, "file1", true)
 	require.NoError(t, err)
 
-	_, err = uploadFile(t, fileObject, "/parentDir/subDir1", podPassword, "file1", "", 100, 10)
+	_, err = uploadFile(t, fileObject, "/parentDir/subDir1", podPassword, "file1", "", 100, file.MinBlockSize)
 	require.NoError(t, err)
 
 	err = dirObject.AddEntryToDir("/parentDir/subDir1", podPassword, "file1", true)
