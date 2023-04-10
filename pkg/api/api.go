@@ -24,25 +24,25 @@ type FairOSConfig struct {
 
 func New(logger logging.Logger, fc *FairOSConfig) (*DfsAPI, error) {
 	var (
-		ensConfig *contracts.ENSConfig
-		subConfig *contracts.SubscriptionConfig
+		ensConfig     *contracts.ENSConfig
+		datahubConfig *contracts.SubscriptionConfig
 	)
 	switch v := strings.ToLower(fc.Network); v {
 	case "mainnet":
 		return nil, fmt.Errorf("ens is not available for mainnet yet")
 	case "testnet":
-		ensConfig, subConfig = contracts.TestnetConfig()
+		ensConfig, datahubConfig = contracts.TestnetConfig()
+		datahubConfig.RPC = fc.RPC
 	case "play":
-		ensConfig, subConfig = contracts.PlayConfig()
+		ensConfig, _ = contracts.PlayConfig()
 	}
 
 	ensConfig.ProviderBackend = fc.RPC
-	subConfig.RPC = fc.RPC
 	api, err := dfs.NewDfsAPI(
 		fc.Bee,
 		fc.Batch,
 		ensConfig,
-		subConfig,
+		datahubConfig,
 		logger,
 	)
 	if err != nil {

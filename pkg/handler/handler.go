@@ -199,6 +199,12 @@ func (h *Handler) Mount(pod, location string, readOnly bool) error {
 	if err != nil {
 		return err
 	}
+	go func() {
+		err := h.api.SyncPodAsync(context.Background(), pod, h.sessionID)
+		if err != nil {
+			h.logger.Errorf("mount: failed to sync pod %s: %s", pod, err.Error())
+		}
+	}()
 	dfsFuse, err := dfuse.New(h.sessionID, pi, h.api, h.logger)
 	if err != nil {
 		return err
@@ -511,8 +517,9 @@ func (h *Handler) SubscribedPods() ([]*SubscriptionInfo, error) {
 	}
 	subs, err := h.api.GetSubscriptions(h.sessionID)
 	if err != nil {
-		return nil, err
+		return nil, nil
 	}
+
 	res := []*SubscriptionInfo{}
 	subscribedPods := []subscribedPod{}
 	for _, sub := range subs {
