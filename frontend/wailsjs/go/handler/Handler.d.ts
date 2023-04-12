@@ -5,36 +5,42 @@ import {handler} from '../models';
 import {api} from '../models';
 import {context} from '../models';
 
-export function Close():Promise<void>;
+export function Close():Promise<Error>;
 
 export function CreatePod(arg1:string):Promise<pod.Info>;
 
-export function DeletePod(arg1:string):Promise<void>;
+export function DeletePod(arg1:string):Promise<Error>;
 
-export function Fork(arg1:string,arg2:string):Promise<void>;
+export function Fork(arg1:string,arg2:string):Promise<Error>;
 
-export function ForkFromReference(arg1:string,arg2:string):Promise<void>;
+export function ForkFromReference(arg1:string,arg2:string):Promise<Error>;
 
-export function GetCashedPods():Promise<Array<handler.PodMountedInfo>>;
+export function GetCashedPods():Promise<handler.CachedPod>;
 
 export function GetPodsList():Promise<Array<handler.PodMountedInfo>>;
 
 export function Load(arg1:string,arg2:string,arg3:string):Promise<handler.LiteUser>;
 
-export function Login(arg1:string,arg2:string):Promise<void>;
+export function Login(arg1:string,arg2:string):Promise<Error>;
 
-export function Logout():Promise<void>;
+export function Logout():Promise<Error>;
 
-export function Mount(arg1:string,arg2:string,arg3:boolean):Promise<void>;
+export function Mount(arg1:string,arg2:string,arg3:boolean):Promise<Error>;
 
-export function ReceivePod(arg1:string,arg2:string):Promise<void>;
+export function MountSubscribedPod(arg1:string,arg2:string,arg3:string):Promise<Error>;
+
+export function ReceivePod(arg1:string,arg2:string):Promise<Error>;
 
 export function SharePod(arg1:string):Promise<string>;
 
-export function Start(arg1:api.FairOSConfig):Promise<void>;
+export function Start(arg1:api.FairOSConfig):Promise<Error>;
 
 export function StartCacheCleaner(arg1:context.Context):Promise<void>;
 
+export function SubscribedPods():Promise<Array<handler.SubscriptionInfo>>;
+
 export function Sync(arg1:string):Promise<void>;
 
-export function Unmount(arg1:string):Promise<void>;
+export function Unmount(arg1:string):Promise<Error>;
+
+export function UnmountSubscribedPod(arg1:string):Promise<Error>;

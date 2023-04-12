@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -24,14 +23,18 @@ type FairOSConfig struct {
 }
 
 func New(logger logging.Logger, fc *FairOSConfig) (*DfsAPI, error) {
-	ensConfig := &contracts.Config{}
+	var (
+		ensConfig     *contracts.ENSConfig
+		datahubConfig *contracts.SubscriptionConfig
+	)
 	switch v := strings.ToLower(fc.Network); v {
 	case "mainnet":
 		return nil, fmt.Errorf("ens is not available for mainnet yet")
 	case "testnet":
-		ensConfig = contracts.TestnetConfig()
+		ensConfig, datahubConfig = contracts.TestnetConfig()
+		datahubConfig.RPC = fc.RPC
 	case "play":
-		ensConfig = contracts.PlayConfig()
+		ensConfig, _ = contracts.PlayConfig()
 	}
 
 	ensConfig.ProviderBackend = fc.RPC
@@ -39,6 +42,7 @@ func New(logger logging.Logger, fc *FairOSConfig) (*DfsAPI, error) {
 		fc.Bee,
 		fc.Batch,
 		ensConfig,
+		datahubConfig,
 		logger,
 	)
 	if err != nil {
@@ -78,9 +82,9 @@ func (d *DfsAPI) Load(username, password, mnemonic string) (string, string, stri
 	return mnemonic, privateKey, ui.GetSessionId(), nil
 }
 
-func (d *DfsAPI) GetPodInfo(ctx context.Context, podname, sessionId string, createPod bool) (*pod.Info, error) {
+func (d *DfsAPI) GetPodInfo(podname, sessionId string, createPod bool) (*pod.Info, error) {
 	if createPod {
 		return d.API.CreatePod(podname, sessionId)
 	}
-	return d.API.OpenPodAsync(ctx, podname, sessionId)
+	return d.API.OpenPod(podname, sessionId)
 }
