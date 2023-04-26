@@ -18,6 +18,9 @@
 Fairdrive Desktop App is a FUSE client for fairOS-dfs. It lets you mount your
 pod on your own user space and interact with your data.
 
+### User documentation
+See [DOCS](https://fairdatasociety.github.io/fairdrive-desktop-app/) for detailed installation instructions and requirements.
+
 ## Requirements
 
 #### FUSE
