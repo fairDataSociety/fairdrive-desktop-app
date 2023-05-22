@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -31,7 +32,7 @@ func New(logger logging.Logger, fc *FairOSConfig) (*DfsAPI, error) {
 	case "mainnet":
 		return nil, fmt.Errorf("ens is not available for mainnet yet")
 	case "testnet":
-		ensConfig, datahubConfig = contracts.TestnetConfig()
+		ensConfig, datahubConfig = contracts.TestnetConfig(contracts.Sepolia)
 		datahubConfig.RPC = fc.RPC
 	case "play":
 		ensConfig, _ = contracts.PlayConfig()
@@ -39,6 +40,7 @@ func New(logger logging.Logger, fc *FairOSConfig) (*DfsAPI, error) {
 
 	ensConfig.ProviderBackend = fc.RPC
 	api, err := dfs.NewDfsAPI(
+		context.TODO(),
 		fc.Bee,
 		fc.Batch,
 		ensConfig,
@@ -65,12 +67,12 @@ func NewMockApi(logger logging.Logger, api *dfs.API) (*DfsAPI, error) {
 }
 
 func (d *DfsAPI) Login(username, password string) (string, error) {
-	ui, _, _, err := d.API.LoginUserV2(username, password, "")
+	lr, err := d.API.LoginUserV2(username, password, "")
 	if err != nil {
 		return "", err
 	}
 	d.logger.Debugf("user %s logged in", username)
-	return ui.GetSessionId(), nil
+	return lr.UserInfo.GetSessionId(), nil
 }
 
 func (d *DfsAPI) Load(username, password, mnemonic string) (string, string, string, error) {
