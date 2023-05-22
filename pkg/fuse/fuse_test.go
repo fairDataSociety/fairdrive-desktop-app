@@ -48,9 +48,9 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 
 	password := "1passwordpassword"
 	username := "fdfs"
-	_, _, _, _, ui, err := userObject.CreateNewUserV2(username, password, "", "", tm, sm)
+	cr, err := userObject.CreateNewUserV2(username, password, "", "", tm, sm)
 	require.NoError(t, err)
-
+	ui := cr.UserInfo
 	pod1 := ui.GetPod()
 	podName1 := "test1"
 	podPasswordBytes, _ := utils.GetRandBytes(pod.PasswordLength)
