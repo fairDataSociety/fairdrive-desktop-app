@@ -1,6 +1,6 @@
 module github.com/fairdatasociety/fairdrive-desktop-app
 
-go 1.18
+go 1.20
 
 require (
 	github.com/fairdatasociety/fairOS-dfs v0.9.4-rc4
@@ -9,7 +9,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.2
-	github.com/wailsapp/wails/v2 v2.2.0
+	github.com/wailsapp/wails/v2 v2.4.1
 	github.com/winfsp/cgofuse v1.5.0
 )
 
@@ -36,7 +36,6 @@ require (
 	github.com/hashicorp/golang-lru v0.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/holiman/uint256 v1.2.0 // indirect
-	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/ipfs/go-cid v0.3.2 // indirect
 	github.com/jchv/go-winloader v0.0.0-20210711035445-715c2860da7e // indirect
 	github.com/klauspost/compress v1.15.15 // indirect
