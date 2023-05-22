@@ -5,10 +5,11 @@ import {
   openBrowserFairDataSociety,
   openBrowserFairOS,
   openBrowserFDPprotocol,
-  openBrowserLicense
+  openBrowserLicense, openBrowserMyData
 } from "../utils/openBrowser"
 import logo from "../assets/images/fairdata.svg"
 import dfLogo from "../assets/images/datafund.svg"
+import myDataLogo from "../assets/images/mydata23v3.png"
 import { useEffect, useState } from "react";
 import { BuildTime, Version } from "../../wailsjs/go/main/about";
 import Disclaimer from "./disclaimer";
@@ -110,6 +111,13 @@ function AboutComponent(props: AlertProps) {
             alt="logo"
             className="logo-icon-df"
             onClick={openBrowserDatafund}
+          />
+          <img
+            src={myDataLogo}
+            id="logo"
+            alt="logo"
+            className="logo-icon-df"
+            onClick={openBrowserMyData}
           />
           {/* <Typography gutterBottom align="center">
                     <Link href="#" variant="body2" onClick={openBrowserDatafund}>
