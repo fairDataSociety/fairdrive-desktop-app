@@ -9,7 +9,7 @@ LDFLAGS ?= -s -w -X main.commit="$(COMMIT)" -X main.version="$(VERSION)" -X main
 
 .PHONY: lint
 lint: linter
-	$(GOLANGCI_LINT) run --skip-dirs frontend/dist
+	$(GOLANGCI_LINT) run --skip-dirs frontend/dist --timeout 5m
 
 .PHONY: linter
 linter:
