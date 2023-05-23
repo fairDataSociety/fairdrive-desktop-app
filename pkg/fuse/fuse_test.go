@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -137,7 +136,7 @@ func TestWrite(t *testing.T) {
 		require.NoError(t, err)
 
 		if len(files) != 1 {
-			t.Fatal("list failed on root")
+			t.Fatal("list failed on root", files, len(files))
 		}
 		if files[0].Name() != "parentDir" && !files[0].IsDir() {
 			t.Fatal("parentDir not fount")
@@ -375,9 +374,7 @@ func TestRCloneTests(t *testing.T) {
 	t.Run("rename and open", func(t *testing.T) {
 		runDir := filepath.Join(mntDir, "runDir")
 
-		fStat, err := os.Lstat(runDir)
-		fmt.Println("rename and open", runDir, fStat, err)
-		err = os.Mkdir(runDir, 0777)
+		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
 		defer os.RemoveAll(runDir)
