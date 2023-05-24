@@ -23,3 +23,7 @@ export function openBrowserFairDataSociety() {
 export function openBrowserDatafund() {
   BrowserOpenURL('https://datafund.io/')
 }
+
+export function openBrowserMyData() {
+  BrowserOpenURL('https://www.mydata.org/participate/awards/')
+}
