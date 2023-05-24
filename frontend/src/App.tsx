@@ -760,7 +760,7 @@ function App() {
                       value={network}
                       style={{ color: 'black' }}
                     >
-                      <MenuItem value={'testnet'}>Goerli Testnet</MenuItem>
+                      <MenuItem value={'testnet'}>Sepolia Testnet</MenuItem>
                       <MenuItem value={'play'}>FDP play</MenuItem>
                     </Select>
                   </Tooltip>

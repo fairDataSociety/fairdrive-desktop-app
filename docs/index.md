@@ -94,7 +94,7 @@ from [Releases](https://github.com/fairDataSociety/fairdrive-desktop-app/release
 #### What is "Network"? Why does it have "Testnet" and "Play"? What is "Play"?
 
 - Choosing this network determines the Ethereum network that will be used for ENS based portable accounts.
-- Currently, we only have ENS contract deployed on Goerli Blockchain. That is why "Testnet".
+- Currently, we have ENS contracts deployed on Goerli and Sepolia "Testnet" Blockchain. But we will officially support sepolia from now on.
 - We have a small play environment for the whole FDP architecture, called [fdp-play](https://github.com/fairDataSociety/fdp-play). If you want to use fdp-play behind FDA, this option is for you.
 
 #### What is "Mount Location"?
