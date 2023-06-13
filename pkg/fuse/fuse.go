@@ -17,8 +17,8 @@ import (
 
 const (
 	sysBlockSize uint64 = 4096
-	fdsBlockSize uint64 = 1048576     // ~ 1MB
-	free         uint64 = 21474836480 // ~ 20GB
+	fdsBlockSize uint64 = 1048576       // ~ 1MB
+	free         uint64 = 1099511627776 // ~ 1024GB
 )
 
 type ops struct {
