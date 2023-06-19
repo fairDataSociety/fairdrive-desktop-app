@@ -27,11 +27,10 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
       <Container component="main" maxWidth="xs">
         <Box
           sx={{
-            marginTop: 1,
+            marginTop: 0,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            height: '98vh',
           }}
         >
           <img
@@ -40,7 +39,7 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
             alt="logo"
             className="logo-icon"
             onClick={() => EventsEmit('showAccounts')}
-            style={{ height: '100%', cursor: 'pointer' }}
+            style={{ height: '80%', cursor: 'pointer' }}
           />
           <Tooltip
             title="You can use Fair Data Society Portable account if you have one, or create Lite account by simply entering username/password and new account will be auto-magically created for you."
@@ -86,7 +85,7 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
                   title="This will also add information to a list of available accounts for faster switching"
                   placement="top"
                 >
-                  <Typography>Remember and keep me logged-in</Typography>
+                  <Typography>Remember my login</Typography>
                 </Tooltip>
               }
             />
