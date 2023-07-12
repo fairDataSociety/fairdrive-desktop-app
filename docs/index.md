@@ -53,13 +53,13 @@ We encourage `Swarm Desktop` for setting up your bee node. Here is a [guide](htt
 Download FDA for your operating system
 from [Releases](https://github.com/fairDataSociety/fairdrive-desktop-app/releases) Page
 
-[MacOS (intel/amd64)](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0/fairdrive_darwin_intel.dmg)
+[MacOS (intel/amd64)](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.7/fairdrive_darwin_intel.dmg)
 
-[MacOS (arm64)](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0/fairdrive_darwin_silicon.dmg)
+[MacOS (arm64)](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.7/fairdrive_darwin_silicon.dmg)
 
-[Linux](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0/fairdrive_linux)
+[Linux](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.7/fairdrive_linux)
 
-[Windows](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.0/fairdrive_windows.exe)
+[Windows](https://github.com/fairDataSociety/fairdrive-desktop-app/releases/download/v0.1.7/fairdrive_windows.exe)
 
 # How do I configure FDA to connect to a bee node?
 
