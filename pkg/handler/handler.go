@@ -183,7 +183,7 @@ func (h *Handler) Mount(pod, location string, readOnly bool) error {
 		}
 	} else {
 		if _, err := os.Stat(parent); err != nil {
-			err = os.MkdirAll(parent, 0700)
+			err = os.MkdirAll(parent, 0766)
 			if err != nil {
 				return err
 			}

@@ -2,6 +2,7 @@ package fuse
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"path/filepath"
 	"strconv"
@@ -819,10 +820,11 @@ func (f *Ffdfs) lookupNode(path string) (node *node_t) {
 				return
 			}
 			f.ino++
-			mode := fStat.Mode
-			if mode == 0 {
-				mode = fuse.S_IFREG | 0666
-			}
+			//mode := fStat.Mode
+			//if mode == 0 {
+			//	mode = fuse.S_IFREG | 0o755
+			//}
+			mode := uint32(fuse.S_IFREG | 0o755)
 			node = &node_t{
 				id: path,
 				stat: fuse.Stat_t{
@@ -863,8 +865,9 @@ func (f *Ffdfs) lookupNode(path string) (node *node_t) {
 
 	mode := dirInode.Meta.Mode
 	if mode == 0 {
-		mode = fuse.S_IFDIR | 0777
+		mode = fuse.S_IFDIR | 07777
 	}
+
 	node = &node_t{
 		id: path,
 		stat: fuse.Stat_t{
@@ -912,6 +915,7 @@ func (f *Ffdfs) lookup(path string, isDir bool) (node *node_t) {
 		if mode == 0 {
 			mode = fuse.S_IFDIR | 0777
 		}
+		fmt.Println("lookup mode dir", mode)
 
 		node = &node_t{
 			id: path,
@@ -954,10 +958,12 @@ func (f *Ffdfs) lookup(path string, isDir bool) (node *node_t) {
 		return
 	}
 	f.ino++
-	mode := fStat.Mode
-	if mode == 0 {
-		mode = fuse.S_IFREG | 0666
-	}
+	//mode := fStat.Mode
+	//if mode == 0 {
+	//	mode = fuse.S_IFREG | 0o755
+	//}
+	mode := uint32(fuse.S_IFREG | 0o755)
+
 	node = &node_t{
 		id: path,
 		stat: fuse.Stat_t{

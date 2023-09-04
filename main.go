@@ -8,18 +8,16 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/mitchellh/go-homedir"
-
-	"github.com/wailsapp/wails/v2/pkg/options/mac"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairdrive-desktop-app/pkg/handler"
+	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"github.com/wailsapp/wails/v2/pkg/application"
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/options/mac"
 	wRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
