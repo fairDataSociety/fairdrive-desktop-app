@@ -396,7 +396,7 @@ function App() {
 
   const [bee, setBee] = useState('http://localhost:1633') // should be localhost as default, as per swarm web3 PC, previously https://bee-1.dev.fairdatasociety.org // TODO check in go code
   const [batch, setBatch] = useState('')
-  const [rpc, setRPC] = useState('https://rpc.sepolia.org/')
+  const [rpc, setRPC] = useState('https://sepolia.dev.fairdatasociety.org')
   const [network, setNetwork] = useState('testnet')
   const [preferencesUpdated, setPreferencesUpdated] = useState(false)
 
@@ -838,8 +838,8 @@ function App() {
                           updateRPC({
                             target: {
                               value: switchLocalGateway
-                                ? 'https://rpc.sepolia.org/' // NOT SURE WHAT TO PUT HERE
-                                : 'https://rpc.sepolia.org/',
+                                ? 'https://sepolia.dev.fairdatasociety.org' // NOT SURE WHAT TO PUT HERE
+                                : 'https://sepolia.dev.fairdatasociety.org',
                             },
                           })
                           updateBatch({

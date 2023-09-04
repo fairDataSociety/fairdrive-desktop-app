@@ -102,7 +102,7 @@ function AboutComponent(props: AlertProps) {
             >
               FairDataSociety
             </Link>
-            &nbsp;2022
+            &nbsp;2023
           </Typography>
 
           <img
