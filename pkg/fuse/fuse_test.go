@@ -64,9 +64,9 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 	err = dirObject.MkRootDir(podName1, podPassword, pi.GetPodAddress(), pi.GetFeed())
 	require.NoError(t, err)
 
-	err = dirObject.MkDir("/parentDir", podPassword, fuse.S_IFDIR|07777)
+	err = dirObject.MkDir("/parentDir", podPassword, 0)
 	require.NoError(t, err)
-	err = dirObject.MkDir("/parentDir/subDir1", podPassword, fuse.S_IFDIR|07777)
+	err = dirObject.MkDir("/parentDir/subDir1", podPassword, 0)
 	require.NoError(t, err)
 	_, err = uploadFile(t, fileObject, "/parentDir", podPassword, "file1", "", 100, file.MinBlockSize)
 	require.NoError(t, err)
@@ -138,10 +138,6 @@ func TestWrite(t *testing.T) {
 		assert.Equal(t, 1, len(files))
 		assert.Equal(t, "parentDir", files[0].Name())
 		assert.Equal(t, true, files[0].IsDir())
-
-		if files[0].Name() != "parentDir" && !files[0].IsDir() {
-			t.Fatal("parentDir not fount")
-		}
 
 		entries := "parentDir/|parentDir/subDir1/|parentDir/file1:100|parentDir/subDir1/file1:100"
 		checkDir(t, mntDir, entries)
