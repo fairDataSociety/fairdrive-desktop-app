@@ -2,7 +2,6 @@ package fuse
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"path/filepath"
 	"strconv"
@@ -915,7 +914,6 @@ func (f *Ffdfs) lookup(path string, isDir bool) (node *node_t) {
 		if mode == 0 {
 			mode = fuse.S_IFDIR | 0777
 		}
-		fmt.Println("lookup mode dir", mode)
 
 		node = &node_t{
 			id: path,

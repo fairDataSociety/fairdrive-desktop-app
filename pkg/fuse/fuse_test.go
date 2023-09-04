@@ -135,12 +135,9 @@ func TestWrite(t *testing.T) {
 		files, err := os.ReadDir(mntDir)
 		require.NoError(t, err)
 
-		if len(files) != 1 {
-			t.Fatal("list failed on root", files, len(files))
-		}
-		if files[0].Name() != "parentDir" && !files[0].IsDir() {
-			t.Fatal("parentDir not fount")
-		}
+		assert.Equal(t, 1, len(files))
+		assert.Equal(t, "parentDir", files[0].Name())
+		assert.Equal(t, false, files[0].IsDir())
 
 		entries := "parentDir/|parentDir/subDir1/|parentDir/file1:100|parentDir/subDir1/file1:100"
 		checkDir(t, mntDir, entries)
