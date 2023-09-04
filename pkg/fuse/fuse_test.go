@@ -64,9 +64,9 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 	err = dirObject.MkRootDir(podName1, podPassword, pi.GetPodAddress(), pi.GetFeed())
 	require.NoError(t, err)
 
-	err = dirObject.MkDir("/parentDir", podPassword, fuse.S_IFDIR|0777)
+	err = dirObject.MkDir("/parentDir", podPassword, fuse.S_IFDIR|07777)
 	require.NoError(t, err)
-	err = dirObject.MkDir("/parentDir/subDir1", podPassword, fuse.S_IFDIR|0777)
+	err = dirObject.MkDir("/parentDir/subDir1", podPassword, fuse.S_IFDIR|07777)
 	require.NoError(t, err)
 	_, err = uploadFile(t, fileObject, "/parentDir", podPassword, "file1", "", 100, file.MinBlockSize)
 	require.NoError(t, err)
@@ -1032,7 +1032,7 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, podPassword, file
 	}
 
 	// upload  the temp file
-	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, fuse.S_IFREG|0666, filePath, compression, podPassword)
+	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, fuse.S_IFREG|0o755, filePath, compression, podPassword)
 }
 
 func writeFile(filename string, data []byte, perm os.FileMode) error {
