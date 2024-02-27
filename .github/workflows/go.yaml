@@ -16,7 +16,6 @@ jobs:
       GOARCH: ${{ matrix.arch }}
       CGO_ENABLED: ${{ matrix.cgo }}
       CPATH: ${{ matrix.cpath }}
-      GODEBUG: cgocheck=2
     strategy:
       matrix:
         include:
