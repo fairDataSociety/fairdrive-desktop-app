@@ -39,13 +39,16 @@ func New(logger logging.Logger, fc *FairOSConfig) (*DfsAPI, error) {
 	}
 
 	ensConfig.ProviderBackend = fc.RPC
+
 	api, err := dfs.NewDfsAPI(
 		context.TODO(),
-		fc.Bee,
-		fc.Batch,
-		ensConfig,
-		datahubConfig,
-		logger,
+		&dfs.Options{
+			BeeApiEndpoint:     fc.Bee,
+			Stamp:              fc.Batch,
+			EnsConfig:          ensConfig,
+			SubscriptionConfig: datahubConfig,
+			Logger:             logger,
+		},
 	)
 	if err != nil {
 		return nil, err
