@@ -2,8 +2,6 @@ module github.com/fairdatasociety/fairdrive-desktop-app
 
 go 1.21
 
-toolchain go1.22.0
-
 require (
 	github.com/fairdatasociety/fairOS-dfs v0.10.0
 	github.com/mitchellh/go-homedir v1.1.0
