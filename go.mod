@@ -1,6 +1,6 @@
 module github.com/fairdatasociety/fairdrive-desktop-app
 
-go 1.21
+go 1.22
 
 require (
 	github.com/fairdatasociety/fairOS-dfs v0.10.0

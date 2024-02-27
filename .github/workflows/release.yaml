@@ -21,7 +21,7 @@ jobs:
         include:
           - job_name: linux
             os: ubuntu-20.04
-            go: '1.21'
+            go: '1.22'
             build_flags: '-include "^linux/"'
             check: true
             quicktest: true
