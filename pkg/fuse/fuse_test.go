@@ -51,7 +51,7 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 	ens := mock2.NewMockNamespaceManager()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	sm := mock3.NewMockSubscriptionManager()
-	userObject := user.NewUsers(mockClient, ens, 0, -1, logger)
+	userObject := user.NewUsers(mockClient, ens, -1, 0, logger)
 	mockDfs := dfs.NewMockDfsAPI(mockClient, userObject, logger)
 	dfsApi, err := api.NewMockApi(logger, mockDfs)
 	require.NoError(t, err)
