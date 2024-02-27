@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"io"
 	"os"
 	"path/filepath"
@@ -15,6 +18,7 @@ import (
 	"testing/iotest"
 	"time"
 
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
@@ -35,12 +39,19 @@ import (
 type dirMap map[string]int64
 
 func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
-	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(os.Stdout, logrus.ErrorLevel)
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+	fmt.Println("Bee running at: ", beeUrl)
+	logger := logging.New(os.Stdout, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	ens := mock2.NewMockNamespaceManager()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	sm := mock3.NewMockSubscriptionManager()
-	userObject := user.NewUsers(mockClient, ens, logger)
+	userObject := user.NewUsers(mockClient, ens, 0, -1, logger)
 	mockDfs := dfs.NewMockDfsAPI(mockClient, userObject, logger)
 	dfsApi, err := api.NewMockApi(logger, mockDfs)
 	require.NoError(t, err)
