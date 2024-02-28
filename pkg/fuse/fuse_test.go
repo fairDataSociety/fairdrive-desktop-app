@@ -129,7 +129,7 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string)
 	}()
 	<-sched
 	// wait for the mount to be ready
-	<-time.After(time.Second * 30)
+	<-time.After(time.Minute)
 
 	return f, mntDir, func() {
 		srv.Unmount()
