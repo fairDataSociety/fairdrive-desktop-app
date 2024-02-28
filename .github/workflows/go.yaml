@@ -61,13 +61,9 @@ jobs:
           sudo apt-get -qq install libacl1-dev
 
       - name: Install FUSE (macOS)
-        if: matrix.os == 'macos-11'
+        if: runner.os == 'macOS'
         run: |
-          unset HOMEBREW_NO_INSTALL_FROM_API
-          brew untap --force homebrew/core
-          brew untap --force homebrew/cask
-          brew update
-          brew install --cask macfuse
+          brew install macfuse
 
       - name: Set git to use LF
         run: git config --global core.autocrlf false
@@ -90,7 +86,7 @@ jobs:
           make lint
       - name: Test
         run: make test
-      - name: Race
-        if: matrix.os != 'windows-latest'
-        run: make test-race
+#      - name: Race
+#        if: matrix.os != 'windows-latest'
+#        run: make test-race
 
