@@ -123,14 +123,18 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string)
 	t.Log("Mount at: ", mntDir)
 	go func() {
 		close(sched)
+		fmt.Println("mounting")
+		<-time.After(time.Second * 5)
 		if !srv.Mount(mntDir, fuseArgs) {
 			panic("mount returned false")
 		}
 	}()
+	fmt.Println(1)
 	<-sched
+	fmt.Println(2)
 	// wait for the mount to be ready
-	<-time.After(time.Minute)
-
+	//<-time.After(time.Minute)
+	//fmt.Println(3)
 	return f, mntDir, func() {
 		srv.Unmount()
 		time.Sleep(time.Second)
@@ -142,12 +146,22 @@ func TestWrite(t *testing.T) {
 	dfsApi, pi, sessionId := setupFairosWithFs(t)
 	_, mntDir, closer := newTestFs(t, dfsApi, pi, sessionId)
 	fmt.Println(mntDir)
+	retryCount := 1
+retryy:
+	files, err := os.ReadDir(mntDir)
+	require.NoError(t, err)
+	fmt.Println("retrying", files)
+	if len(files) == 0 && retryCount <= 10 {
+		<-time.After(time.Second * 20 * time.Duration(retryCount))
+		retryCount++
+		goto retryy
+	}
 	defer closer()
 	t.Run("list", func(t *testing.T) {
 
 		files, err := os.ReadDir(mntDir)
 		require.NoError(t, err)
-		fmt.Println(files)
+
 		assert.Equal(t, 1, len(files))
 		assert.Equal(t, "parentDir", files[0].Name())
 		assert.Equal(t, true, files[0].IsDir())
