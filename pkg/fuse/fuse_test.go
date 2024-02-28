@@ -104,7 +104,7 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string)
 	if runtime.GOOS == "windows" {
 		mntDir = "X:"
 	} else {
-		mntDir, err = os.MkdirTemp("", "*")
+		mntDir, err = os.MkdirTemp("", "tempDir")
 		require.NoError(t, err)
 	}
 
@@ -353,7 +353,7 @@ func TestRCloneTests(t *testing.T) {
 	defer closer()
 
 	t.Run("touch and delete", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir1")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
@@ -388,7 +388,7 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("rename and open", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir2")
 
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
@@ -448,7 +448,7 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("dir ls", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir3")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
@@ -467,7 +467,7 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("dir create and remove", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir4")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
@@ -486,7 +486,7 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("dir create and remove file", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir5")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
@@ -505,7 +505,7 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("dir rename file", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir6")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
@@ -538,7 +538,7 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("rename empty dir", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir7")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
@@ -577,7 +577,7 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("rename full dir", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir8")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
@@ -656,7 +656,7 @@ func TestRCloneTests(t *testing.T) {
 	//})
 
 	t.Run("read by byte", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir9")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
@@ -686,7 +686,7 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("read checksum", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir10")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
