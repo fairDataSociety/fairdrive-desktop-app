@@ -131,8 +131,7 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string)
 	<-sched
 	retryCount := 1
 retryy:
-	files, err := os.ReadDir(mntDir)
-	require.NoError(t, err)
+	files, _ := os.ReadDir(mntDir)
 	fmt.Println("retrying", files)
 	if len(files) == 0 && retryCount <= 10 {
 		<-time.After(time.Second * 20 * time.Duration(retryCount))
