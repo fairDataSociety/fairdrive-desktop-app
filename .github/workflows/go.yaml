@@ -63,7 +63,7 @@ jobs:
       - name: Install FUSE (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install macfuse@4.5.0
+          brew install --cask macfuse@4.5.0
 
       - name: Set git to use LF
         run: git config --global core.autocrlf false
