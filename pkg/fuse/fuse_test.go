@@ -104,7 +104,7 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string)
 	if runtime.GOOS == "windows" {
 		mntDir = "X:"
 	} else {
-		mntDir, err = os.MkdirTemp("", "tmpfuse")
+		mntDir, err = os.MkdirTemp("", "*")
 		require.NoError(t, err)
 	}
 
@@ -128,7 +128,8 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string)
 		}
 	}()
 	<-sched
-	time.Sleep(time.Second)
+	// wait for the mount to be ready
+	<-time.After(time.Second * 30)
 
 	return f, mntDir, func() {
 		srv.Unmount()
@@ -140,12 +141,13 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string)
 func TestWrite(t *testing.T) {
 	dfsApi, pi, sessionId := setupFairosWithFs(t)
 	_, mntDir, closer := newTestFs(t, dfsApi, pi, sessionId)
+	fmt.Println(mntDir)
 	defer closer()
 	t.Run("list", func(t *testing.T) {
 
 		files, err := os.ReadDir(mntDir)
 		require.NoError(t, err)
-
+		fmt.Println(files)
 		assert.Equal(t, 1, len(files))
 		assert.Equal(t, "parentDir", files[0].Name())
 		assert.Equal(t, true, files[0].IsDir())
