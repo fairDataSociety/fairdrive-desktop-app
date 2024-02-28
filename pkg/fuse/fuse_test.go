@@ -148,8 +148,6 @@ retryy:
 func TestWrite(t *testing.T) {
 	dfsApi, pi, sessionId := setupFairosWithFs(t)
 	_, mntDir, closer := newTestFs(t, dfsApi, pi, sessionId)
-	fmt.Println("mntDir", mntDir)
-	<-time.After(time.Hour)
 	defer closer()
 	t.Run("list", func(t *testing.T) {
 
