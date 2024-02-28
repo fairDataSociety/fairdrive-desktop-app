@@ -46,7 +46,7 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 		Post:            mockpost.New(mockpost.WithAcceptAll()),
 	})
 	fmt.Println("Bee running at: ", beeUrl)
-	logger := logging.New(os.Stdout, logrus.DebugLevel)
+	logger := logging.New(os.Stdout, logrus.ErrorLevel)
 	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	ens := mock2.NewMockNamespaceManager()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
@@ -123,29 +123,12 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string)
 	t.Log("Mount at: ", mntDir)
 	go func() {
 		close(sched)
-		fmt.Println("mounting")
 		<-time.After(time.Second * 5)
 		if !srv.Mount(mntDir, fuseArgs) {
 			panic("mount returned false")
 		}
 	}()
-	fmt.Println(1)
 	<-sched
-	fmt.Println(2)
-	// wait for the mount to be ready
-	//<-time.After(time.Minute)
-	//fmt.Println(3)
-	return f, mntDir, func() {
-		srv.Unmount()
-		time.Sleep(time.Second)
-		os.RemoveAll(mntDir)
-	}
-}
-
-func TestWrite(t *testing.T) {
-	dfsApi, pi, sessionId := setupFairosWithFs(t)
-	_, mntDir, closer := newTestFs(t, dfsApi, pi, sessionId)
-	fmt.Println(mntDir)
 	retryCount := 1
 retryy:
 	files, err := os.ReadDir(mntDir)
@@ -156,6 +139,16 @@ retryy:
 		retryCount++
 		goto retryy
 	}
+	return f, mntDir, func() {
+		srv.Unmount()
+		time.Sleep(time.Second)
+		os.RemoveAll(mntDir)
+	}
+}
+
+func TestWrite(t *testing.T) {
+	dfsApi, pi, sessionId := setupFairosWithFs(t)
+	_, mntDir, closer := newTestFs(t, dfsApi, pi, sessionId)
 	defer closer()
 	t.Run("list", func(t *testing.T) {
 
