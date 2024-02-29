@@ -469,10 +469,7 @@ func TestRCloneTests(t *testing.T) {
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer func() {
-			fmt.Println("test done. removing", runDir)
-			os.RemoveAll(runDir)
-		}()
+		//defer os.RemoveAll(runDir)
 
 		dirPath := filepath.Join(runDir, "dir")
 		err = os.Mkdir(dirPath, 0777)
