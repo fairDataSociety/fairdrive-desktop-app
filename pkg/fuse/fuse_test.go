@@ -46,7 +46,7 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 		Post:            mockpost.New(mockpost.WithAcceptAll()),
 	})
 	fmt.Println("Bee running at: ", beeUrl)
-	logger := logging.New(os.Stdout, logrus.ErrorLevel)
+	logger := logging.New(os.Stdout, logrus.PanicLevel)
 	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	ens := mock2.NewMockNamespaceManager()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
@@ -347,607 +347,607 @@ func TestMultiDirWithFiles(t *testing.T) {
 	}
 }
 
-//func TestRCloneTests(t *testing.T) {
-//	dfsApi, pi, sessionId := setupFairosWithFs(t)
-//	_, mntDir, closer := newTestFs(t, dfsApi, pi, sessionId)
-//	defer closer()
-//
-//	t.Run("touch and delete", func(t *testing.T) {
-//		runDir := filepath.Join(mntDir, "runDir1")
-//		err := os.Mkdir(runDir, 0777)
-//		require.NoError(t, err)
-//
-//		defer os.RemoveAll(runDir)
-//
-//		path := filepath.Join(runDir, "touched")
-//		err = writeFile(path, []byte(""), 0600)
-//		require.NoError(t, err)
-//
-//		err = os.Remove(path)
-//		require.NoError(t, err)
-//
-//		// Wait for file to disappear from listing
-//		deleted := false
-//		for i := 0; i < 100; i++ {
-//			_, err := os.Stat(path)
-//			if os.IsNotExist(err) {
-//				deleted = true
-//				break
-//			}
-//			time.Sleep(100 * time.Millisecond)
-//		}
-//		if !deleted {
-//			t.Fatal("failed to delete file")
-//		}
-//
-//		localDm := make(dirMap)
-//		readLocal(t, localDm, runDir)
-//		if len(localDm) != 0 {
-//			t.Fatal("delete failed")
-//		}
-//	})
-//
-//	t.Run("rename and open", func(t *testing.T) {
-//		runDir := filepath.Join(mntDir, "runDir2")
-//
-//		err := os.Mkdir(runDir, 0777)
-//		require.NoError(t, err)
-//
-//		defer os.RemoveAll(runDir)
-//
-//		example := []byte("Some Data")
-//		path := filepath.Join(runDir, "rename")
-//		f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
-//		require.NoError(t, err)
-//
-//		_, err = f.Write(example)
-//		require.NoError(t, err)
-//
-//		err = f.Close()
-//		require.NoError(t, err)
-//
-//		err = os.Rename(path, path+"ble")
-//		require.NoError(t, err)
-//
-//		localDm := make(dirMap)
-//		readLocal(t, localDm, runDir)
-//
-//		if len(localDm) != 1 {
-//			t.Fatal("rename failed")
-//		}
-//		size, ok := localDm[path+"ble"]
-//		if !ok {
-//			t.Fatal("rename failed")
-//		}
-//		if size != int64(len(example)) {
-//			t.Fatal("content mismatch")
-//		}
-//
-//		err = os.Remove(path + "ble")
-//		require.NoError(t, err)
-//
-//		// Wait for file to disappear from listing
-//		deleted := false
-//		for i := 0; i < 100; i++ {
-//			_, err := os.Stat(filepath.Join(runDir, "renameble"))
-//			if os.IsNotExist(err) {
-//				deleted = true
-//				break
-//			}
-//			time.Sleep(100 * time.Millisecond)
-//		}
-//		if !deleted {
-//			t.Fatal("failed to delete file")
-//		}
-//
-//		localDm = make(dirMap)
-//		readLocal(t, localDm, runDir)
-//		if len(localDm) != 0 {
-//			t.Fatal("delete failed")
-//		}
-//	})
-//
-//	t.Run("dir ls", func(t *testing.T) {
-//		runDir := filepath.Join(mntDir, "runDir3")
-//		err := os.Mkdir(runDir, 0777)
-//		require.NoError(t, err)
-//
-//		defer os.RemoveAll(runDir)
-//
-//		dirPath := filepath.Join(runDir, "a directory")
-//		err = os.Mkdir(dirPath, 0777)
-//		require.NoError(t, err)
-//
-//		path := filepath.Join(runDir, "a file")
-//		err = writeFile(path, []byte("hello"), 0600)
-//		require.NoError(t, err)
-//
-//		entries := "a directory/|a file:5"
-//		checkDir(t, runDir, entries)
-//	})
-//
-//	t.Run("dir create and remove", func(t *testing.T) {
-//		runDir := filepath.Join(mntDir, "runDir4")
-//		err := os.Mkdir(runDir, 0777)
-//		require.NoError(t, err)
-//
-//		defer os.RemoveAll(runDir)
-//
-//		dirPath := filepath.Join(runDir, "dir")
-//		err = os.Mkdir(dirPath, 0777)
-//		require.NoError(t, err)
-//
-//		subDir := filepath.Join(dirPath, "subdir")
-//		err = os.Mkdir(subDir, 0777)
-//		require.NoError(t, err)
-//
-//		entries := "dir/|dir/subdir/"
-//		checkDir(t, runDir, entries)
-//	})
-//
-//	t.Run("dir create and remove file", func(t *testing.T) {
-//		runDir := filepath.Join(mntDir, "runDir5")
-//		err := os.Mkdir(runDir, 0777)
-//		require.NoError(t, err)
-//
-//		defer os.RemoveAll(runDir)
-//
-//		dirPath := filepath.Join(runDir, "dir")
-//		err = os.Mkdir(dirPath, 0777)
-//		require.NoError(t, err)
-//
-//		path := filepath.Join(dirPath, "file")
-//		err = writeFile(path, []byte("potato"), 0600)
-//		require.NoError(t, err)
-//
-//		entries := "dir/|dir/file:6"
-//		checkDir(t, runDir, entries)
-//	})
-//
-//	t.Run("dir rename file", func(t *testing.T) {
-//		runDir := filepath.Join(mntDir, "runDir6")
-//		err := os.Mkdir(runDir, 0777)
-//		require.NoError(t, err)
-//
-//		defer os.RemoveAll(runDir)
-//
-//		dirPath := filepath.Join(runDir, "dir")
-//		err = os.Mkdir(dirPath, 0777)
-//		require.NoError(t, err)
-//
-//		path := filepath.Join(dirPath, "file")
-//		err = writeFile(path, []byte("potato"), 0600)
-//		require.NoError(t, err)
-//
-//		entries := "dir/|dir/file:6"
-//		checkDir(t, runDir, entries)
-//		path2 := path + "2"
-//		err = os.Rename(path, path2)
-//		if err != nil {
-//			t.Fatal(err)
-//		}
-//
-//		entries = "dir/|dir/file2:6"
-//		checkDir(t, runDir, entries)
-//		path3 := path + "3"
-//		err = os.Rename(path2, path3)
-//		require.NoError(t, err)
-//
-//		entries = "dir/|dir/file3:6"
-//		checkDir(t, runDir, entries)
-//	})
-//
-//	t.Run("rename empty dir", func(t *testing.T) {
-//		runDir := filepath.Join(mntDir, "runDir7")
-//		err := os.Mkdir(runDir, 0777)
-//		require.NoError(t, err)
-//
-//		defer os.RemoveAll(runDir)
-//
-//		dirPath := filepath.Join(runDir, "dir")
-//		err = os.Mkdir(dirPath, 0777)
-//		require.NoError(t, err)
-//
-//		dirPath1 := filepath.Join(runDir, "dir1")
-//		err = os.Mkdir(dirPath1, 0777)
-//		if err != nil {
-//			t.Fatal(err)
-//		}
-//
-//		path := filepath.Join(dirPath1, "potato.txt")
-//		err = writeFile(path, []byte("maris piper"), 0600)
-//		require.NoError(t, err)
-//
-//		entries := "dir/|dir1/|dir1/potato.txt:11"
-//		checkDir(t, runDir, entries)
-//
-//		path2 := filepath.Join(runDir, "dir/dir2")
-//		err = os.Rename(dirPath1, path2)
-//		require.NoError(t, err)
-//
-//		entries = "dir/|dir/dir2/|dir/dir2/potato.txt:11"
-//		checkDir(t, runDir, entries)
-//
-//		path3 := filepath.Join(runDir, "dir/dir3")
-//		err = os.Rename(path2, path3)
-//		require.NoError(t, err)
-//
-//		entries = "dir/|dir/dir3/|dir/dir3/potato.txt:11"
-//		checkDir(t, runDir, entries)
-//	})
-//
-//	t.Run("rename full dir", func(t *testing.T) {
-//		runDir := filepath.Join(mntDir, "runDir8")
-//		err := os.Mkdir(runDir, 0777)
-//		require.NoError(t, err)
-//
-//		defer os.RemoveAll(runDir)
-//
-//		dirPath := filepath.Join(runDir, "dir")
-//		err = os.Mkdir(dirPath, 0777)
-//		require.NoError(t, err)
-//
-//		dirPath1 := filepath.Join(runDir, "dir1")
-//		err = os.Mkdir(dirPath1, 0777)
-//		require.NoError(t, err)
-//
-//		entries := "dir/|dir1/"
-//		checkDir(t, runDir, entries)
-//
-//		path2 := filepath.Join(runDir, "dir/dir2")
-//		err = os.Rename(dirPath1, path2)
-//		require.NoError(t, err)
-//
-//		entries = "dir/|dir/dir2/"
-//		checkDir(t, runDir, entries)
-//
-//		path3 := filepath.Join(runDir, "dir/dir3")
-//		err = os.Rename(path2, path3)
-//		require.NoError(t, err)
-//
-//		entries = "dir/|dir/dir3/"
-//		checkDir(t, runDir, entries)
-//	})
-//
-//	// TODO fix Chtimes
-//	//t.Run("dir mod time", func(t *testing.T) {
-//	//	runDir := filepath.Join(mntDir, "runDir")
-//	//	err := os.Mkdir(runDir, 0777)
-//	//	require.NoError(t, err)
-//	//
-//	//	defer os.RemoveAll(runDir)
-//	//
-//	//	dirPath := filepath.Join(runDir, "dir")
-//	//	err = os.Mkdir(dirPath, 0777)
-//	//	require.NoError(t, err)
-//	//
-//	//	mtime := time.Date(2012, time.November, 18, 17, 32, 31, 0, time.UTC)
-//	//	err = os.Chtimes(dirPath, mtime, mtime)
-//	//	require.NoError(t, err)
-//	//
-//	//	info, err := os.Stat(dirPath)
-//	//	require.NoError(t, err)
-//	//	// avoid errors because of timezone differences
-//	//	assert.Equal(t, info.ModTime().Unix(), mtime.Unix())
-//	//})
-//
-//	// TODO fix Chtimes
-//	//t.Run("file mod time", func(t *testing.T) {
-//	//	runDir := filepath.Join(mntDir, "runDir")
-//	//	err := os.Mkdir(runDir, 0777)
-//	//	require.NoError(t, err)
-//	//
-//	//	defer os.RemoveAll(runDir)
-//	//
-//	//	path := filepath.Join(runDir, "potato.txt")
-//	//	err = writeFile(path, []byte("123"), 0600)
-//	//	if err != nil {
-//	//		t.Fatal(err)
-//	//	}
-//	//
-//	//	mtime := time.Date(2012, time.November, 18, 17, 32, 31, 0, time.UTC)
-//	//	err = os.Chtimes(path, mtime, mtime)
-//	//	require.NoError(t, err)
-//	//
-//	//	info, err := os.Stat(path)
-//	//	require.NoError(t, err)
-//	//	// avoid errors because of timezone differences
-//	//	assert.Equal(t, info.ModTime().Unix(), mtime.Unix())
-//	//})
-//
-//	t.Run("read by byte", func(t *testing.T) {
-//		runDir := filepath.Join(mntDir, "runDir9")
-//		err := os.Mkdir(runDir, 0777)
-//		require.NoError(t, err)
-//
-//		defer os.RemoveAll(runDir)
-//
-//		var data = []byte("hellohello")
-//		path := filepath.Join(runDir, "testfile")
-//		err = writeFile(path, data, 0600)
-//		require.NoError(t, err)
-//
-//		entries := "testfile:10"
-//		checkDir(t, runDir, entries)
-//
-//		for i := 0; i < len(data); i++ {
-//			fd, err := os.Open(path)
-//			assert.NoError(t, err)
-//			for j := 0; j < i; j++ {
-//				buf := make([]byte, 1)
-//				n, err := io.ReadFull(fd, buf)
-//				assert.NoError(t, err)
-//				assert.Equal(t, 1, n)
-//				assert.Equal(t, buf[0], data[j])
-//			}
-//			err = fd.Close()
-//			assert.NoError(t, err)
-//		}
-//	})
-//
-//	t.Run("read checksum", func(t *testing.T) {
-//		runDir := filepath.Join(mntDir, "runDir10")
-//		err := os.Mkdir(runDir, 0777)
-//		require.NoError(t, err)
-//
-//		defer os.RemoveAll(runDir)
-//
-//		b := make([]rune, 3*128*1024)
-//		for i := range b {
-//			b[i] = 'r'
-//		}
-//
-//		path := filepath.Join(runDir, "bigfile")
-//		err = writeFile(path, []byte(string(b)), 0600)
-//		require.NoError(t, err)
-//
-//		// The hash comparison would fail in Flush, if we did not
-//		// ensure we read the whole file
-//		fd, err := os.Open(path)
-//		assert.NoError(t, err)
-//		buf := make([]byte, 10)
-//		_, err = io.ReadFull(fd, buf)
-//		assert.NoError(t, err)
-//		err = fd.Close()
-//		assert.NoError(t, err)
-//
-//		// The hash comparison would fail, because we only read parts
-//		// of the file
-//		fd, err = os.Open(path)
-//		assert.NoError(t, err)
-//		// read at start
-//		_, err = io.ReadFull(fd, buf)
-//		assert.NoError(t, err)
-//		// read at end
-//		_, err = fd.Seek(int64(len(b)-len(buf)), io.SeekStart)
-//		assert.NoError(t, err)
-//		_, err = io.ReadFull(fd, buf)
-//		assert.NoError(t, err)
-//		// ensure we don't compare hashes
-//		err = fd.Close()
-//		assert.NoError(t, err)
-//	})
-//
-//	// TODO not run on windows
-//	//t.Run("read double close", func(t *testing.T) {
-//	//	runDir := filepath.Join(mntDir, "runDir")
-//	//	err := os.Mkdir(runDir, 0777)
-//	//	require.NoError(t, err)
-//	//
-//	//	defer os.RemoveAll(runDir)
-//	//
-//	//	path := filepath.Join(runDir, "testdoubleclose")
-//	//	err = writeFile(path, []byte("hello"), 0600)
-//	//	require.NoError(t, err)
-//	//
-//	//	in, err := os.Open(path)
-//	//	assert.NoError(t, err)
-//	//	fd := in.Fd()
-//	//
-//	//	fd1, err := syscall.Dup(int(fd))
-//	//	assert.NoError(t, err)
-//	//
-//	//	fd2, err := syscall.Dup(int(fd))
-//	//	assert.NoError(t, err)
-//	//
-//	//	// close one of the dups - should produce no error
-//	//	err = syscall.Close(fd1)
-//	//	assert.NoError(t, err)
-//	//
-//	//	// read from the file
-//	//	buf := make([]byte, 1)
-//	//	_, err = in.Read(buf)
-//	//	assert.NoError(t, err)
-//	//
-//	//	// close it
-//	//	err = in.Close()
-//	//	assert.NoError(t, err)
-//	//
-//	//	// read from the other dup - should produce no error as this
-//	//	// file is now buffered
-//	//	n, err := syscall.Read(fd2, buf)
-//	//	assert.NoError(t, err)
-//	//	assert.Equal(t, 1, n)
-//	//
-//	//	// close the dup - should not produce an error
-//	//	err = syscall.Close(fd2)
-//	//	assert.NoError(t, err, "input/output error")
-//	//})
-//
-//	//t.Run("read seek", func(t *testing.T) {
-//	//	runDir := filepath.Join(mntDir, "runDir")
-//	//	err := os.Mkdir(runDir, 0777)
-//	//	require.NoError(t, err)
-//	//
-//	//	defer os.RemoveAll(runDir)
-//	//
-//	//	path := filepath.Join(runDir, "testfile")
-//	//	err = writeFile(path, []byte("helloHELLO"), 0600)
-//	//	require.NoError(t, err)
-//	//
-//	//	entries := "testfile:10"
-//	//	checkDir(t, runDir, entries)
-//	//
-//	//	fd, err := os.Open(path)
-//	//	assert.NoError(t, err)
-//	//
-//	//	// Seek to half way
-//	//	_, err = fd.Seek(5, io.SeekStart)
-//	//	assert.NoError(t, err)
-//	//
-//	//	buf, err := ioutil.ReadAll(fd)
-//	//	assert.NoError(t, err)
-//	//	assert.Equal(t, buf, []byte("HELLO"))
-//	//
-//	//	// Test seeking to the end
-//	//	_, err = fd.Seek(10, io.SeekStart)
-//	//	assert.NoError(t, err)
-//	//
-//	//	buf, err = ioutil.ReadAll(fd)
-//	//	assert.NoError(t, err)
-//	//	assert.Equal(t, buf, []byte(""))
-//	//
-//	//	// Test seeking beyond the end
-//	//	_, err = fd.Seek(1000000, io.SeekStart)
-//	//	assert.NoError(t, err)
-//	//
-//	//	buf, err = ioutil.ReadAll(fd)
-//	//	assert.NoError(t, err)
-//	//	assert.Equal(t, buf, []byte(""))
-//	//
-//	//	// Now back to the start
-//	//	_, err = fd.Seek(0, io.SeekStart)
-//	//	assert.NoError(t, err)
-//	//
-//	//	buf, err = ioutil.ReadAll(fd)
-//	//	assert.NoError(t, err)
-//	//	assert.Equal(t, buf, []byte("helloHELLO"))
-//	//
-//	//	err = fd.Close()
-//	//	assert.NoError(t, err)
-//	//})
-//
-//	t.Run("file empty", func(t *testing.T) {
-//		runDir := filepath.Join(mntDir, "runDir11")
-//		err := os.Mkdir(runDir, 0777)
-//		require.NoError(t, err)
-//
-//		defer os.RemoveAll(runDir)
-//
-//		path := filepath.Join(runDir, "testnowrite")
-//		fd, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
-//		assert.NoError(t, err)
-//
-//		err = fd.Close()
-//		assert.NoError(t, err)
-//
-//		entries := "testnowrite:0"
-//		checkDir(t, runDir, entries)
-//	})
-//
-//	t.Run("file write", func(t *testing.T) {
-//		runDir := filepath.Join(mntDir, "runDir12")
-//		err := os.Mkdir(runDir, 0777)
-//		require.NoError(t, err)
-//
-//		defer os.RemoveAll(runDir)
-//
-//		path := filepath.Join(runDir, "testwrite")
-//		err = writeFile(path, []byte("data"), 0600)
-//		assert.NoError(t, err)
-//
-//		entries := "testwrite:4"
-//		checkDir(t, runDir, entries)
-//
-//		contents, err := os.ReadFile(path)
-//		assert.NoError(t, err)
-//
-//		assert.Equal(t, "data", string(contents))
-//	})
-//
-//	t.Run("file overwrite", func(t *testing.T) {
-//		runDir := filepath.Join(mntDir, "runDir13")
-//		err := os.Mkdir(runDir, 0777)
-//		require.NoError(t, err)
-//
-//		defer os.RemoveAll(runDir)
-//
-//		path := filepath.Join(runDir, "testwrite")
-//		err = writeFile(path, []byte("data"), 0600)
-//		assert.NoError(t, err)
-//
-//		entries := "testwrite:4"
-//		checkDir(t, runDir, entries)
-//
-//		err = writeFile(path, []byte("potato"), 0600)
-//		assert.NoError(t, err)
-//
-//		contents, err := os.ReadFile(path)
-//		assert.NoError(t, err)
-//
-//		assert.Equal(t, "potato", string(contents))
-//	})
-//
-//	t.Run("file fsync", func(t *testing.T) {
-//		runDir := filepath.Join(mntDir, "runDir14")
-//		err := os.Mkdir(runDir, 0777)
-//		require.NoError(t, err)
-//
-//		defer os.RemoveAll(runDir)
-//
-//		path := filepath.Join(runDir, "to be synced")
-//		fd, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
-//		assert.NoError(t, err)
-//		require.NoError(t, err)
-//		_, err = fd.Write([]byte("hello"))
-//		require.NoError(t, err)
-//		err = fd.Sync()
-//		require.NoError(t, err)
-//		err = fd.Close()
-//		require.NoError(t, err)
-//	})
-//
-//	t.Run("file append", func(t *testing.T) {
-//		runDir := filepath.Join(mntDir, "runDir15")
-//		err := os.Mkdir(runDir, 0777)
-//		require.NoError(t, err)
-//
-//		defer os.RemoveAll(runDir)
-//
-//		path := filepath.Join(runDir, "to be synced")
-//		fh, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
-//		assert.NoError(t, err)
-//		require.NoError(t, err)
-//
-//		testData := []byte("0123456789")
-//		appendData := []byte("10")
-//
-//		_, err = fh.Write(testData)
-//		require.NoError(t, err)
-//
-//		err = fh.Close()
-//		require.NoError(t, err)
-//
-//		fh1, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND, 0666)
-//		require.NoError(t, err)
-//
-//		_, err = fh1.Write(appendData)
-//		require.NoError(t, err)
-//
-//		err = fh1.Close()
-//		require.NoError(t, err)
-//
-//		info, err := os.Stat(path)
-//		require.NoError(t, err)
-//		require.EqualValues(t, len(testData)+len(appendData), info.Size())
-//	})
-//
-//	t.Run("test root", func(t *testing.T) {
-//		fi, err := os.Lstat(mntDir)
-//		require.NoError(t, err)
-//		assert.True(t, fi.IsDir())
-//	})
-//}
+func TestRCloneTests(t *testing.T) {
+	dfsApi, pi, sessionId := setupFairosWithFs(t)
+	_, mntDir, closer := newTestFs(t, dfsApi, pi, sessionId)
+	defer closer()
+
+	t.Run("touch and delete", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir1")
+		err := os.Mkdir(runDir, 0777)
+		require.NoError(t, err)
+
+		defer os.RemoveAll(runDir)
+
+		path := filepath.Join(runDir, "touched")
+		err = writeFile(path, []byte(""), 0600)
+		require.NoError(t, err)
+
+		err = os.Remove(path)
+		require.NoError(t, err)
+
+		// Wait for file to disappear from listing
+		deleted := false
+		for i := 0; i < 100; i++ {
+			_, err := os.Stat(path)
+			if os.IsNotExist(err) {
+				deleted = true
+				break
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+		if !deleted {
+			t.Fatal("failed to delete file")
+		}
+
+		localDm := make(dirMap)
+		readLocal(t, localDm, runDir)
+		if len(localDm) != 0 {
+			t.Fatal("delete failed")
+		}
+	})
+
+	t.Run("rename and open", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir2")
+
+		err := os.Mkdir(runDir, 0777)
+		require.NoError(t, err)
+
+		defer os.RemoveAll(runDir)
+
+		example := []byte("Some Data")
+		path := filepath.Join(runDir, "rename")
+		f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+		require.NoError(t, err)
+
+		_, err = f.Write(example)
+		require.NoError(t, err)
+
+		err = f.Close()
+		require.NoError(t, err)
+
+		err = os.Rename(path, path+"ble")
+		require.NoError(t, err)
+
+		localDm := make(dirMap)
+		readLocal(t, localDm, runDir)
+
+		if len(localDm) != 1 {
+			t.Fatal("rename failed")
+		}
+		size, ok := localDm[path+"ble"]
+		if !ok {
+			t.Fatal("rename failed")
+		}
+		if size != int64(len(example)) {
+			t.Fatal("content mismatch")
+		}
+
+		err = os.Remove(path + "ble")
+		require.NoError(t, err)
+
+		// Wait for file to disappear from listing
+		deleted := false
+		for i := 0; i < 100; i++ {
+			_, err := os.Stat(filepath.Join(runDir, "renameble"))
+			if os.IsNotExist(err) {
+				deleted = true
+				break
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+		if !deleted {
+			t.Fatal("failed to delete file")
+		}
+
+		localDm = make(dirMap)
+		readLocal(t, localDm, runDir)
+		if len(localDm) != 0 {
+			t.Fatal("delete failed")
+		}
+	})
+
+	t.Run("dir ls", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir3")
+		err := os.Mkdir(runDir, 0777)
+		require.NoError(t, err)
+
+		defer os.RemoveAll(runDir)
+
+		dirPath := filepath.Join(runDir, "a directory")
+		err = os.Mkdir(dirPath, 0777)
+		require.NoError(t, err)
+
+		path := filepath.Join(runDir, "a file")
+		err = writeFile(path, []byte("hello"), 0600)
+		require.NoError(t, err)
+
+		entries := "a directory/|a file:5"
+		checkDir(t, runDir, entries)
+	})
+
+	t.Run("dir create and remove", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir4")
+		err := os.Mkdir(runDir, 0777)
+		require.NoError(t, err)
+
+		defer os.RemoveAll(runDir)
+
+		dirPath := filepath.Join(runDir, "dir")
+		err = os.Mkdir(dirPath, 0777)
+		require.NoError(t, err)
+
+		subDir := filepath.Join(dirPath, "subdir")
+		err = os.Mkdir(subDir, 0777)
+		require.NoError(t, err)
+
+		entries := "dir/|dir/subdir/"
+		checkDir(t, runDir, entries)
+	})
+
+	t.Run("dir create and remove file", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir5")
+		err := os.Mkdir(runDir, 0777)
+		require.NoError(t, err)
+
+		defer os.RemoveAll(runDir)
+
+		dirPath := filepath.Join(runDir, "dir")
+		err = os.Mkdir(dirPath, 0777)
+		require.NoError(t, err)
+
+		path := filepath.Join(dirPath, "file")
+		err = writeFile(path, []byte("potato"), 0600)
+		require.NoError(t, err)
+
+		entries := "dir/|dir/file:6"
+		checkDir(t, runDir, entries)
+	})
+
+	t.Run("dir rename file", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir6")
+		err := os.Mkdir(runDir, 0777)
+		require.NoError(t, err)
+
+		defer os.RemoveAll(runDir)
+
+		dirPath := filepath.Join(runDir, "dir")
+		err = os.Mkdir(dirPath, 0777)
+		require.NoError(t, err)
+
+		path := filepath.Join(dirPath, "file")
+		err = writeFile(path, []byte("potato"), 0600)
+		require.NoError(t, err)
+
+		entries := "dir/|dir/file:6"
+		checkDir(t, runDir, entries)
+		path2 := path + "2"
+		err = os.Rename(path, path2)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		entries = "dir/|dir/file2:6"
+		checkDir(t, runDir, entries)
+		path3 := path + "3"
+		err = os.Rename(path2, path3)
+		require.NoError(t, err)
+
+		entries = "dir/|dir/file3:6"
+		checkDir(t, runDir, entries)
+	})
+
+	t.Run("rename empty dir", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir7")
+		err := os.Mkdir(runDir, 0777)
+		require.NoError(t, err)
+
+		defer os.RemoveAll(runDir)
+
+		dirPath := filepath.Join(runDir, "dir")
+		err = os.Mkdir(dirPath, 0777)
+		require.NoError(t, err)
+
+		dirPath1 := filepath.Join(runDir, "dir1")
+		err = os.Mkdir(dirPath1, 0777)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		path := filepath.Join(dirPath1, "potato.txt")
+		err = writeFile(path, []byte("maris piper"), 0600)
+		require.NoError(t, err)
+
+		entries := "dir/|dir1/|dir1/potato.txt:11"
+		checkDir(t, runDir, entries)
+
+		path2 := filepath.Join(runDir, "dir/dir2")
+		err = os.Rename(dirPath1, path2)
+		require.NoError(t, err)
+
+		entries = "dir/|dir/dir2/|dir/dir2/potato.txt:11"
+		checkDir(t, runDir, entries)
+
+		path3 := filepath.Join(runDir, "dir/dir3")
+		err = os.Rename(path2, path3)
+		require.NoError(t, err)
+
+		entries = "dir/|dir/dir3/|dir/dir3/potato.txt:11"
+		checkDir(t, runDir, entries)
+	})
+
+	t.Run("rename full dir", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir8")
+		err := os.Mkdir(runDir, 0777)
+		require.NoError(t, err)
+
+		defer os.RemoveAll(runDir)
+
+		dirPath := filepath.Join(runDir, "dir")
+		err = os.Mkdir(dirPath, 0777)
+		require.NoError(t, err)
+
+		dirPath1 := filepath.Join(runDir, "dir1")
+		err = os.Mkdir(dirPath1, 0777)
+		require.NoError(t, err)
+
+		entries := "dir/|dir1/"
+		checkDir(t, runDir, entries)
+
+		path2 := filepath.Join(runDir, "dir/dir2")
+		err = os.Rename(dirPath1, path2)
+		require.NoError(t, err)
+
+		entries = "dir/|dir/dir2/"
+		checkDir(t, runDir, entries)
+
+		path3 := filepath.Join(runDir, "dir/dir3")
+		err = os.Rename(path2, path3)
+		require.NoError(t, err)
+
+		entries = "dir/|dir/dir3/"
+		checkDir(t, runDir, entries)
+	})
+
+	// TODO fix Chtimes
+	//t.Run("dir mod time", func(t *testing.T) {
+	//	runDir := filepath.Join(mntDir, "runDir")
+	//	err := os.Mkdir(runDir, 0777)
+	//	require.NoError(t, err)
+	//
+	//	defer os.RemoveAll(runDir)
+	//
+	//	dirPath := filepath.Join(runDir, "dir")
+	//	err = os.Mkdir(dirPath, 0777)
+	//	require.NoError(t, err)
+	//
+	//	mtime := time.Date(2012, time.November, 18, 17, 32, 31, 0, time.UTC)
+	//	err = os.Chtimes(dirPath, mtime, mtime)
+	//	require.NoError(t, err)
+	//
+	//	info, err := os.Stat(dirPath)
+	//	require.NoError(t, err)
+	//	// avoid errors because of timezone differences
+	//	assert.Equal(t, info.ModTime().Unix(), mtime.Unix())
+	//})
+
+	// TODO fix Chtimes
+	//t.Run("file mod time", func(t *testing.T) {
+	//	runDir := filepath.Join(mntDir, "runDir")
+	//	err := os.Mkdir(runDir, 0777)
+	//	require.NoError(t, err)
+	//
+	//	defer os.RemoveAll(runDir)
+	//
+	//	path := filepath.Join(runDir, "potato.txt")
+	//	err = writeFile(path, []byte("123"), 0600)
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//
+	//	mtime := time.Date(2012, time.November, 18, 17, 32, 31, 0, time.UTC)
+	//	err = os.Chtimes(path, mtime, mtime)
+	//	require.NoError(t, err)
+	//
+	//	info, err := os.Stat(path)
+	//	require.NoError(t, err)
+	//	// avoid errors because of timezone differences
+	//	assert.Equal(t, info.ModTime().Unix(), mtime.Unix())
+	//})
+
+	t.Run("read by byte", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir9")
+		err := os.Mkdir(runDir, 0777)
+		require.NoError(t, err)
+
+		defer os.RemoveAll(runDir)
+
+		var data = []byte("hellohello")
+		path := filepath.Join(runDir, "testfile")
+		err = writeFile(path, data, 0600)
+		require.NoError(t, err)
+
+		entries := "testfile:10"
+		checkDir(t, runDir, entries)
+
+		for i := 0; i < len(data); i++ {
+			fd, err := os.Open(path)
+			assert.NoError(t, err)
+			for j := 0; j < i; j++ {
+				buf := make([]byte, 1)
+				n, err := io.ReadFull(fd, buf)
+				assert.NoError(t, err)
+				assert.Equal(t, 1, n)
+				assert.Equal(t, buf[0], data[j])
+			}
+			err = fd.Close()
+			assert.NoError(t, err)
+		}
+	})
+
+	t.Run("read checksum", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir10")
+		err := os.Mkdir(runDir, 0777)
+		require.NoError(t, err)
+
+		defer os.RemoveAll(runDir)
+
+		b := make([]rune, 3*128*1024)
+		for i := range b {
+			b[i] = 'r'
+		}
+
+		path := filepath.Join(runDir, "bigfile")
+		err = writeFile(path, []byte(string(b)), 0600)
+		require.NoError(t, err)
+
+		// The hash comparison would fail in Flush, if we did not
+		// ensure we read the whole file
+		fd, err := os.Open(path)
+		assert.NoError(t, err)
+		buf := make([]byte, 10)
+		_, err = io.ReadFull(fd, buf)
+		assert.NoError(t, err)
+		err = fd.Close()
+		assert.NoError(t, err)
+
+		// The hash comparison would fail, because we only read parts
+		// of the file
+		fd, err = os.Open(path)
+		assert.NoError(t, err)
+		// read at start
+		_, err = io.ReadFull(fd, buf)
+		assert.NoError(t, err)
+		// read at end
+		_, err = fd.Seek(int64(len(b)-len(buf)), io.SeekStart)
+		assert.NoError(t, err)
+		_, err = io.ReadFull(fd, buf)
+		assert.NoError(t, err)
+		// ensure we don't compare hashes
+		err = fd.Close()
+		assert.NoError(t, err)
+	})
+
+	// TODO not run on windows
+	//t.Run("read double close", func(t *testing.T) {
+	//	runDir := filepath.Join(mntDir, "runDir")
+	//	err := os.Mkdir(runDir, 0777)
+	//	require.NoError(t, err)
+	//
+	//	defer os.RemoveAll(runDir)
+	//
+	//	path := filepath.Join(runDir, "testdoubleclose")
+	//	err = writeFile(path, []byte("hello"), 0600)
+	//	require.NoError(t, err)
+	//
+	//	in, err := os.Open(path)
+	//	assert.NoError(t, err)
+	//	fd := in.Fd()
+	//
+	//	fd1, err := syscall.Dup(int(fd))
+	//	assert.NoError(t, err)
+	//
+	//	fd2, err := syscall.Dup(int(fd))
+	//	assert.NoError(t, err)
+	//
+	//	// close one of the dups - should produce no error
+	//	err = syscall.Close(fd1)
+	//	assert.NoError(t, err)
+	//
+	//	// read from the file
+	//	buf := make([]byte, 1)
+	//	_, err = in.Read(buf)
+	//	assert.NoError(t, err)
+	//
+	//	// close it
+	//	err = in.Close()
+	//	assert.NoError(t, err)
+	//
+	//	// read from the other dup - should produce no error as this
+	//	// file is now buffered
+	//	n, err := syscall.Read(fd2, buf)
+	//	assert.NoError(t, err)
+	//	assert.Equal(t, 1, n)
+	//
+	//	// close the dup - should not produce an error
+	//	err = syscall.Close(fd2)
+	//	assert.NoError(t, err, "input/output error")
+	//})
+
+	//t.Run("read seek", func(t *testing.T) {
+	//	runDir := filepath.Join(mntDir, "runDir")
+	//	err := os.Mkdir(runDir, 0777)
+	//	require.NoError(t, err)
+	//
+	//	defer os.RemoveAll(runDir)
+	//
+	//	path := filepath.Join(runDir, "testfile")
+	//	err = writeFile(path, []byte("helloHELLO"), 0600)
+	//	require.NoError(t, err)
+	//
+	//	entries := "testfile:10"
+	//	checkDir(t, runDir, entries)
+	//
+	//	fd, err := os.Open(path)
+	//	assert.NoError(t, err)
+	//
+	//	// Seek to half way
+	//	_, err = fd.Seek(5, io.SeekStart)
+	//	assert.NoError(t, err)
+	//
+	//	buf, err := ioutil.ReadAll(fd)
+	//	assert.NoError(t, err)
+	//	assert.Equal(t, buf, []byte("HELLO"))
+	//
+	//	// Test seeking to the end
+	//	_, err = fd.Seek(10, io.SeekStart)
+	//	assert.NoError(t, err)
+	//
+	//	buf, err = ioutil.ReadAll(fd)
+	//	assert.NoError(t, err)
+	//	assert.Equal(t, buf, []byte(""))
+	//
+	//	// Test seeking beyond the end
+	//	_, err = fd.Seek(1000000, io.SeekStart)
+	//	assert.NoError(t, err)
+	//
+	//	buf, err = ioutil.ReadAll(fd)
+	//	assert.NoError(t, err)
+	//	assert.Equal(t, buf, []byte(""))
+	//
+	//	// Now back to the start
+	//	_, err = fd.Seek(0, io.SeekStart)
+	//	assert.NoError(t, err)
+	//
+	//	buf, err = ioutil.ReadAll(fd)
+	//	assert.NoError(t, err)
+	//	assert.Equal(t, buf, []byte("helloHELLO"))
+	//
+	//	err = fd.Close()
+	//	assert.NoError(t, err)
+	//})
+
+	t.Run("file empty", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir11")
+		err := os.Mkdir(runDir, 0777)
+		require.NoError(t, err)
+
+		defer os.RemoveAll(runDir)
+
+		path := filepath.Join(runDir, "testnowrite")
+		fd, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+		assert.NoError(t, err)
+
+		err = fd.Close()
+		assert.NoError(t, err)
+
+		entries := "testnowrite:0"
+		checkDir(t, runDir, entries)
+	})
+
+	t.Run("file write", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir12")
+		err := os.Mkdir(runDir, 0777)
+		require.NoError(t, err)
+
+		defer os.RemoveAll(runDir)
+
+		path := filepath.Join(runDir, "testwrite")
+		err = writeFile(path, []byte("data"), 0600)
+		assert.NoError(t, err)
+
+		entries := "testwrite:4"
+		checkDir(t, runDir, entries)
+
+		contents, err := os.ReadFile(path)
+		assert.NoError(t, err)
+
+		assert.Equal(t, "data", string(contents))
+	})
+
+	t.Run("file overwrite", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir13")
+		err := os.Mkdir(runDir, 0777)
+		require.NoError(t, err)
+
+		defer os.RemoveAll(runDir)
+
+		path := filepath.Join(runDir, "testwrite")
+		err = writeFile(path, []byte("data"), 0600)
+		assert.NoError(t, err)
+
+		entries := "testwrite:4"
+		checkDir(t, runDir, entries)
+
+		err = writeFile(path, []byte("potato"), 0600)
+		assert.NoError(t, err)
+
+		contents, err := os.ReadFile(path)
+		assert.NoError(t, err)
+
+		assert.Equal(t, "potato", string(contents))
+	})
+
+	t.Run("file fsync", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir14")
+		err := os.Mkdir(runDir, 0777)
+		require.NoError(t, err)
+
+		defer os.RemoveAll(runDir)
+
+		path := filepath.Join(runDir, "to be synced")
+		fd, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+		assert.NoError(t, err)
+		require.NoError(t, err)
+		_, err = fd.Write([]byte("hello"))
+		require.NoError(t, err)
+		err = fd.Sync()
+		require.NoError(t, err)
+		err = fd.Close()
+		require.NoError(t, err)
+	})
+
+	t.Run("file append", func(t *testing.T) {
+		runDir := filepath.Join(mntDir, "runDir15")
+		err := os.Mkdir(runDir, 0777)
+		require.NoError(t, err)
+
+		defer os.RemoveAll(runDir)
+
+		path := filepath.Join(runDir, "to be synced")
+		fh, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+		assert.NoError(t, err)
+		require.NoError(t, err)
+
+		testData := []byte("0123456789")
+		appendData := []byte("10")
+
+		_, err = fh.Write(testData)
+		require.NoError(t, err)
+
+		err = fh.Close()
+		require.NoError(t, err)
+
+		fh1, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND, 0666)
+		require.NoError(t, err)
+
+		_, err = fh1.Write(appendData)
+		require.NoError(t, err)
+
+		err = fh1.Close()
+		require.NoError(t, err)
+
+		info, err := os.Stat(path)
+		require.NoError(t, err)
+		require.EqualValues(t, len(testData)+len(appendData), info.Size())
+	})
+
+	t.Run("test root", func(t *testing.T) {
+		fi, err := os.Lstat(mntDir)
+		require.NoError(t, err)
+		assert.True(t, fi.IsDir())
+	})
+}
 
 // checkDir the dir entries
 func checkDir(t *testing.T, filePath, entries string) {
