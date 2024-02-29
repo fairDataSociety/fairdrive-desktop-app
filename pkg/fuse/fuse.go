@@ -2,6 +2,7 @@ package fuse
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"path/filepath"
 	"strconv"
@@ -843,6 +844,7 @@ func (f *Ffdfs) lookupNode(path string) (node *node_t) {
 		}
 	}
 	dirInode, err := f.api.DirectoryInode(f.pod.GetPodName(), filepath.ToSlash(path), f.sessionId, false)
+	fmt.Println("*********dirInode", dirInode)
 	if err != nil {
 		f.log.Warningf("lookup failed for %s: %s", path, err.Error())
 		return
