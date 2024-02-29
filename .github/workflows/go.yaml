@@ -19,13 +19,13 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest
-            arch: amd64
-            cgo: 1
-            cpath: C:\Program Files (x86)\WinFsp\inc\fuse
-#          - os: ubuntu-latest
+#          - os: windows-latest
 #            arch: amd64
 #            cgo: 1
+#            cpath: C:\Program Files (x86)\WinFsp\inc\fuse
+          - os: ubuntu-latest
+            arch: amd64
+            cgo: 1
 #          - os: macos-11
 #            arch: amd64
 #            cgo: 1
