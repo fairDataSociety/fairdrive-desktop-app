@@ -1,6 +1,7 @@
 package fuse
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -13,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"testing/fstest"
+	"testing/iotest"
 	"time"
 
 	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
@@ -185,164 +188,164 @@ func TestWrite(t *testing.T) {
 	})
 }
 
-//func TestMultiDirWithFiles(t *testing.T) {
-//	entries := []struct {
-//		path    string
-//		isDir   bool
-//		size    int64
-//		content []byte
-//	}{
-//		{
-//			path:  filepath.Join("dir1"),
-//			isDir: true,
-//		},
-//		{
-//			path:  filepath.Join("dir2"),
-//			isDir: true,
-//		},
-//		{
-//			path:  filepath.Join("dir3"),
-//			isDir: true,
-//		},
-//		{
-//			path: filepath.Join("file1"),
-//			size: 1024,
-//		},
-//		{
-//			path: filepath.Join("dir1", "file11"),
-//			size: 1024 * 512,
-//		},
-//		{
-//			path: filepath.Join("dir1", "file12"),
-//			size: 1024 * 1024,
-//		},
-//		{
-//			path: filepath.Join("dir3", "file31"),
-//			size: 1024 * 1024,
-//		},
-//		{
-//			path: filepath.Join("dir3", "file32"),
-//			size: 1024 * 1024,
-//		},
-//		{
-//			path: filepath.Join("dir3", "file33"),
-//			size: 1024,
-//		},
-//		{
-//			path:  filepath.Join("dir2", "dir4"),
-//			isDir: true,
-//		},
-//		{
-//			path:  filepath.Join("dir2", "dir4", "dir5"),
-//			isDir: true,
-//		},
-//		{
-//			path: filepath.Join("dir2", "dir4", "file241"),
-//			size: 5 * 1024 * 1024,
-//		},
-//		{
-//			path: filepath.Join("dir2", "dir4", "dir5", "file2451"),
-//			size: 10 * 1024 * 1024,
-//		},
-//	}
-//
-//	dfsApi, pi, sessionId := setupFairosWithFs(t)
-//	_, mntDir, closer := newTestFs(t, dfsApi, pi, sessionId)
-//	defer closer()
-//
-//	for idx, v := range entries {
-//		if v.isDir {
-//			err := os.Mkdir(filepath.Join(mntDir, v.path), 0755)
-//			require.NoError(t, err)
-//
-//		} else {
-//			f, err := os.Create(filepath.Join(mntDir, v.path))
-//			require.NoError(t, err)
-//
-//			var off int64 = 0
-//			for off < v.size {
-//				buf := make([]byte, 1024)
-//				_, err = rand.Read(buf)
-//				require.NoError(t, err)
-//
-//				n, err := f.Write(buf)
-//				require.NoError(t, err)
-//
-//				if n != 1024 {
-//					t.Fatalf("wrote %d bytes exp %d", n, 1024)
-//				}
-//				entries[idx].content = append(entries[idx].content, buf...)
-//				off += int64(n)
-//			}
-//			err = f.Close()
-//			require.NoError(t, err)
-//
-//		}
-//	}
-//
-//	verify := func(t *testing.T, mnt string) {
-//		t.Helper()
-//		for _, v := range entries {
-//			st, err := os.Stat(filepath.Join(mnt, v.path))
-//			require.NoError(t, err)
-//
-//			if st.Mode().IsDir() != v.isDir {
-//				t.Fatalf("isDir expected: %t found: %t", v.isDir, st.Mode().IsDir())
-//			}
-//			if !v.isDir {
-//				if st.Size() != v.size {
-//					t.Fatalf("expected size %d found %d", v.size, st.Size())
-//				}
-//				if got, err := os.ReadFile(filepath.Join(mnt, v.path)); err != nil {
-//					t.Fatalf("ReadFile: %v", err)
-//				} else if !bytes.Equal(got, v.content) {
-//					t.Fatalf("ReadFile %s: got %q, want %q", filepath.Join(mnt, v.path), got[:30], v.content[:30])
-//				}
-//			}
-//		}
-//	}
-//
-//	t.Run("verify structure", func(t *testing.T) {
-//		verify(t, mntDir)
-//	})
-//
-//	// TODO check why these take forever to run on windows
-//	// https://github.com/fairDataSociety/fairdrive-desktop-app/issues/35
-//	if runtime.GOOS != "windows" {
-//		t.Run("fstest", func(t *testing.T) {
-//			pathsToFind := []string{
-//				filepath.Join("dir1"),
-//				filepath.Join("dir2"),
-//				filepath.Join("dir3"),
-//				filepath.Join("file1"),
-//				filepath.Join("dir1", "file11"),
-//				filepath.Join("dir1", "file12"),
-//				filepath.Join("dir3", "file31"),
-//				filepath.Join("dir3", "file32"),
-//				filepath.Join("dir3", "file33"),
-//				filepath.Join("dir2", "dir4"),
-//				filepath.Join("dir2", "dir4", "dir5"),
-//				filepath.Join("dir2", "dir4", "file241"),
-//				filepath.Join("dir2", "dir4", "dir5", "file2451"),
-//			}
-//			fuseMount := os.DirFS(mntDir)
-//			err := fstest.TestFS(fuseMount, pathsToFind...)
-//			require.NoError(t, err)
-//		})
-//
-//		t.Run("iotest on files", func(t *testing.T) {
-//			for _, v := range entries {
-//				if !v.isDir {
-//					f, err := os.Open(filepath.Join(mntDir, v.path))
-//					require.NoError(t, err)
-//
-//					err = iotest.TestReader(f, v.content)
-//					require.NoError(t, err)
-//				}
-//			}
-//		})
-//	}
-//}
+func TestMultiDirWithFiles(t *testing.T) {
+	entries := []struct {
+		path    string
+		isDir   bool
+		size    int64
+		content []byte
+	}{
+		{
+			path:  filepath.Join("dir1"),
+			isDir: true,
+		},
+		{
+			path:  filepath.Join("dir2"),
+			isDir: true,
+		},
+		{
+			path:  filepath.Join("dir3"),
+			isDir: true,
+		},
+		{
+			path: filepath.Join("file1"),
+			size: 1024,
+		},
+		{
+			path: filepath.Join("dir1", "file11"),
+			size: 1024 * 512,
+		},
+		{
+			path: filepath.Join("dir1", "file12"),
+			size: 1024 * 1024,
+		},
+		{
+			path: filepath.Join("dir3", "file31"),
+			size: 1024 * 1024,
+		},
+		{
+			path: filepath.Join("dir3", "file32"),
+			size: 1024 * 1024,
+		},
+		{
+			path: filepath.Join("dir3", "file33"),
+			size: 1024,
+		},
+		{
+			path:  filepath.Join("dir2", "dir4"),
+			isDir: true,
+		},
+		{
+			path:  filepath.Join("dir2", "dir4", "dir5"),
+			isDir: true,
+		},
+		{
+			path: filepath.Join("dir2", "dir4", "file241"),
+			size: 5 * 1024 * 1024,
+		},
+		{
+			path: filepath.Join("dir2", "dir4", "dir5", "file2451"),
+			size: 10 * 1024 * 1024,
+		},
+	}
+
+	dfsApi, pi, sessionId := setupFairosWithFs(t)
+	_, mntDir, closer := newTestFs(t, dfsApi, pi, sessionId)
+	defer closer()
+
+	for idx, v := range entries {
+		if v.isDir {
+			err := os.Mkdir(filepath.Join(mntDir, v.path), 0755)
+			require.NoError(t, err)
+
+		} else {
+			f, err := os.Create(filepath.Join(mntDir, v.path))
+			require.NoError(t, err)
+
+			var off int64 = 0
+			for off < v.size {
+				buf := make([]byte, 1024)
+				_, err = rand.Read(buf)
+				require.NoError(t, err)
+
+				n, err := f.Write(buf)
+				require.NoError(t, err)
+
+				if n != 1024 {
+					t.Fatalf("wrote %d bytes exp %d", n, 1024)
+				}
+				entries[idx].content = append(entries[idx].content, buf...)
+				off += int64(n)
+			}
+			err = f.Close()
+			require.NoError(t, err)
+
+		}
+	}
+
+	verify := func(t *testing.T, mnt string) {
+		t.Helper()
+		for _, v := range entries {
+			st, err := os.Stat(filepath.Join(mnt, v.path))
+			require.NoError(t, err)
+
+			if st.Mode().IsDir() != v.isDir {
+				t.Fatalf("isDir expected: %t found: %t", v.isDir, st.Mode().IsDir())
+			}
+			if !v.isDir {
+				if st.Size() != v.size {
+					t.Fatalf("expected size %d found %d", v.size, st.Size())
+				}
+				if got, err := os.ReadFile(filepath.Join(mnt, v.path)); err != nil {
+					t.Fatalf("ReadFile: %v", err)
+				} else if !bytes.Equal(got, v.content) {
+					t.Fatalf("ReadFile %s: got %q, want %q", filepath.Join(mnt, v.path), got[:30], v.content[:30])
+				}
+			}
+		}
+	}
+
+	t.Run("verify structure", func(t *testing.T) {
+		verify(t, mntDir)
+	})
+
+	// TODO check why these take forever to run on windows
+	// https://github.com/fairDataSociety/fairdrive-desktop-app/issues/35
+	if runtime.GOOS != "windows" {
+		t.Run("fstest", func(t *testing.T) {
+			pathsToFind := []string{
+				filepath.Join("dir1"),
+				filepath.Join("dir2"),
+				filepath.Join("dir3"),
+				filepath.Join("file1"),
+				filepath.Join("dir1", "file11"),
+				filepath.Join("dir1", "file12"),
+				filepath.Join("dir3", "file31"),
+				filepath.Join("dir3", "file32"),
+				filepath.Join("dir3", "file33"),
+				filepath.Join("dir2", "dir4"),
+				filepath.Join("dir2", "dir4", "dir5"),
+				filepath.Join("dir2", "dir4", "file241"),
+				filepath.Join("dir2", "dir4", "dir5", "file2451"),
+			}
+			fuseMount := os.DirFS(mntDir)
+			err := fstest.TestFS(fuseMount, pathsToFind...)
+			require.NoError(t, err)
+		})
+
+		t.Run("iotest on files", func(t *testing.T) {
+			for _, v := range entries {
+				if !v.isDir {
+					f, err := os.Open(filepath.Join(mntDir, v.path))
+					require.NoError(t, err)
+
+					err = iotest.TestReader(f, v.content)
+					require.NoError(t, err)
+				}
+			}
+		})
+	}
+}
 
 //func TestRCloneTests(t *testing.T) {
 //	dfsApi, pi, sessionId := setupFairosWithFs(t)
