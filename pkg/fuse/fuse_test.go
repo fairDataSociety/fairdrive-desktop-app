@@ -90,7 +90,7 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 
 	err = dirObject.AddEntryToDir("/parentDir/subDir1", podPassword, "file1", true)
 	require.NoError(t, err)
-
+	fmt.Println("Setup done")
 	return dfsApi, pi, ui.GetSessionId()
 }
 
@@ -123,7 +123,7 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string)
 	t.Log("Mount at: ", mntDir)
 	go func() {
 		close(sched)
-		<-time.After(time.Second * 5)
+		fmt.Println("mounting")
 		if !srv.Mount(mntDir, fuseArgs) {
 			panic("mount returned false")
 		}
