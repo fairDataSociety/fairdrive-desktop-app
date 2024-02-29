@@ -95,7 +95,7 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 }
 
 func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string) (*Ffdfs, string, func()) {
-	logger := logging.New(os.Stdout, logrus.ErrorLevel)
+	logger := logging.New(os.Stdout, logrus.PanicLevel)
 
 	var (
 		err    error
