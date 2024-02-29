@@ -17,7 +17,7 @@ linter:
 
 .PHONY: test
 test:
-	$(GO) test -p 1 -v -timeout 20m ./pkg/fuse
+	$(GO) test -v -timeout 20m ./pkg/fuse
 
 .PHONY: test-race
 test-race:
