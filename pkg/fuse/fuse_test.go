@@ -46,7 +46,7 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 		Post:            mockpost.New(mockpost.WithAcceptAll()),
 	})
 	fmt.Println("Bee running at: ", beeUrl)
-	logger := logging.New(os.Stdout, logrus.PanicLevel)
+	logger := logging.New(io.Discard, logrus.PanicLevel)
 	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	ens := mock2.NewMockNamespaceManager()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
@@ -471,7 +471,10 @@ func TestRCloneTests(t *testing.T) {
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer os.RemoveAll(runDir)
+		defer func() {
+			fmt.Println("test done. removing", runDir)
+			os.RemoveAll(runDir)
+		}()
 
 		dirPath := filepath.Join(runDir, "dir")
 		err = os.Mkdir(dirPath, 0777)
