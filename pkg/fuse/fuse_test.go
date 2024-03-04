@@ -46,7 +46,7 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 		Post:            mockpost.New(mockpost.WithAcceptAll()),
 	})
 	fmt.Println("Bee running at: ", beeUrl)
-	logger := logging.New(os.Stdout, logrus.DebugLevel)
+	logger := logging.New(io.Discard, logrus.PanicLevel)
 	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	ens := mock2.NewMockNamespaceManager()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
@@ -90,12 +90,12 @@ func setupFairosWithFs(t *testing.T) (*api.DfsAPI, *pod.Info, string) {
 
 	err = dirObject.AddEntryToDir("/parentDir/subDir1", podPassword, "file1", true)
 	require.NoError(t, err)
-
+	fmt.Println("Setup done")
 	return dfsApi, pi, ui.GetSessionId()
 }
 
 func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string) (*Ffdfs, string, func()) {
-	logger := logging.New(os.Stdout, logrus.ErrorLevel)
+	logger := logging.New(os.Stdout, logrus.PanicLevel)
 
 	var (
 		err    error
@@ -104,7 +104,7 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string)
 	if runtime.GOOS == "windows" {
 		mntDir = "X:"
 	} else {
-		mntDir, err = os.MkdirTemp("", "tmpfuse")
+		mntDir, err = os.MkdirTemp("", "tempDir")
 		require.NoError(t, err)
 	}
 
@@ -123,13 +123,21 @@ func newTestFs(t *testing.T, dfsApi *api.DfsAPI, pi *pod.Info, sessionId string)
 	t.Log("Mount at: ", mntDir)
 	go func() {
 		close(sched)
+		fmt.Println("mounting")
 		if !srv.Mount(mntDir, fuseArgs) {
 			panic("mount returned false")
 		}
 	}()
 	<-sched
-	time.Sleep(time.Second)
-
+	retryCount := 1
+retryy:
+	files, _ := os.ReadDir(mntDir)
+	fmt.Println("retrying", files)
+	if len(files) == 0 && retryCount <= 10 {
+		<-time.After(time.Second * 20 * time.Duration(retryCount))
+		retryCount++
+		goto retryy
+	}
 	return f, mntDir, func() {
 		srv.Unmount()
 		time.Sleep(time.Second)
@@ -345,11 +353,12 @@ func TestRCloneTests(t *testing.T) {
 	defer closer()
 
 	t.Run("touch and delete", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+
+		runDir := filepath.Join(mntDir, "runDir1")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer os.RemoveAll(runDir)
+		// defer os.RemoveAll(runDir)
 
 		path := filepath.Join(runDir, "touched")
 		err = writeFile(path, []byte(""), 0600)
@@ -380,12 +389,12 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("rename and open", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir2")
 
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer os.RemoveAll(runDir)
+		// defer os.RemoveAll(runDir)
 
 		example := []byte("Some Data")
 		path := filepath.Join(runDir, "rename")
@@ -440,11 +449,11 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("dir ls", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir3")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer os.RemoveAll(runDir)
+		// defer os.RemoveAll(runDir)
 
 		dirPath := filepath.Join(runDir, "a directory")
 		err = os.Mkdir(dirPath, 0777)
@@ -459,11 +468,11 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("dir create and remove", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir4")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer os.RemoveAll(runDir)
+		//defer os.RemoveAll(runDir)
 
 		dirPath := filepath.Join(runDir, "dir")
 		err = os.Mkdir(dirPath, 0777)
@@ -478,11 +487,11 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("dir create and remove file", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir5")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer os.RemoveAll(runDir)
+		// defer os.RemoveAll(runDir)
 
 		dirPath := filepath.Join(runDir, "dir")
 		err = os.Mkdir(dirPath, 0777)
@@ -497,11 +506,11 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("dir rename file", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir6")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer os.RemoveAll(runDir)
+		// defer os.RemoveAll(runDir)
 
 		dirPath := filepath.Join(runDir, "dir")
 		err = os.Mkdir(dirPath, 0777)
@@ -530,11 +539,11 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("rename empty dir", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir7")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer os.RemoveAll(runDir)
+		// defer os.RemoveAll(runDir)
 
 		dirPath := filepath.Join(runDir, "dir")
 		err = os.Mkdir(dirPath, 0777)
@@ -569,11 +578,11 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("rename full dir", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir8")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer os.RemoveAll(runDir)
+		// defer os.RemoveAll(runDir)
 
 		dirPath := filepath.Join(runDir, "dir")
 		err = os.Mkdir(dirPath, 0777)
@@ -648,11 +657,11 @@ func TestRCloneTests(t *testing.T) {
 	//})
 
 	t.Run("read by byte", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir9")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer os.RemoveAll(runDir)
+		// defer os.RemoveAll(runDir)
 
 		var data = []byte("hellohello")
 		path := filepath.Join(runDir, "testfile")
@@ -678,11 +687,11 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("read checksum", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir10")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer os.RemoveAll(runDir)
+		// defer os.RemoveAll(runDir)
 
 		b := make([]rune, 3*128*1024)
 		for i := range b {
@@ -820,11 +829,11 @@ func TestRCloneTests(t *testing.T) {
 	//})
 
 	t.Run("file empty", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir11")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer os.RemoveAll(runDir)
+		// defer os.RemoveAll(runDir)
 
 		path := filepath.Join(runDir, "testnowrite")
 		fd, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
@@ -838,11 +847,11 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("file write", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir12")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer os.RemoveAll(runDir)
+		// defer os.RemoveAll(runDir)
 
 		path := filepath.Join(runDir, "testwrite")
 		err = writeFile(path, []byte("data"), 0600)
@@ -858,11 +867,11 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("file overwrite", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir13")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer os.RemoveAll(runDir)
+		// defer os.RemoveAll(runDir)
 
 		path := filepath.Join(runDir, "testwrite")
 		err = writeFile(path, []byte("data"), 0600)
@@ -881,11 +890,11 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("file fsync", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir14")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer os.RemoveAll(runDir)
+		// defer os.RemoveAll(runDir)
 
 		path := filepath.Join(runDir, "to be synced")
 		fd, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
@@ -900,11 +909,11 @@ func TestRCloneTests(t *testing.T) {
 	})
 
 	t.Run("file append", func(t *testing.T) {
-		runDir := filepath.Join(mntDir, "runDir")
+		runDir := filepath.Join(mntDir, "runDir15")
 		err := os.Mkdir(runDir, 0777)
 		require.NoError(t, err)
 
-		defer os.RemoveAll(runDir)
+		// defer os.RemoveAll(runDir)
 
 		path := filepath.Join(runDir, "to be synced")
 		fh, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)

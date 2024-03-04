@@ -427,14 +427,12 @@ func (f *Ffdfs) Truncate(path string, size int64, fh uint64) int {
 // Read reads data from a file.
 func (f *Ffdfs) Read(path string, buff []byte, ofst int64, fh uint64) (n int) {
 	defer f.synchronize()()
-	fmt.Printf("1 read: file %s from %d to %d\n", path, ofst, ofst+int64(len(buff)))
 	f.log.Debugf("read: file %s from %d to %d", path, ofst, ofst+int64(len(buff)))
 	node := f.getNode(path, fh)
 	if ofst == node.stat.Size {
 		return 0
 	}
 
-	fmt.Printf("2 read: file %s from %d to %d\n", path, ofst, ofst+int64(len(buff)))
 	if node.readsInFlight == nil {
 		r, _, err := f.api.ReadSeekCloser(f.pod.GetPodName(), path, f.sessionId, false)
 		if err != nil {
@@ -443,13 +441,11 @@ func (f *Ffdfs) Read(path string, buff []byte, ofst int64, fh uint64) (n int) {
 		}
 		node.readsInFlight = r
 	}
-	fmt.Printf("3 read: file %s from %d to %d\n", path, ofst, ofst+int64(len(buff)))
 	_, err := node.readsInFlight.Seek(ofst, 0)
 	if err != nil {
 		f.log.Errorf("read: seek failed %s: %s", path, err.Error())
 		return -fuse.EIO
 	}
-	fmt.Printf("4 read: file %s from %d to %d\n", path, ofst, ofst+int64(len(buff)))
 	dBufLen := int64(len(buff))
 	if node.stat.Size-ofst < int64(len(buff)) {
 		dBufLen = node.stat.Size - ofst
@@ -460,7 +456,6 @@ func (f *Ffdfs) Read(path string, buff []byte, ofst int64, fh uint64) (n int) {
 		f.log.Errorf("read: read failed %s: %s", path, err.Error())
 		return -fuse.EIO
 	}
-	fmt.Printf("5 read: file %s from %d to %d\n", path, ofst, ofst+int64(len(buff)))
 	if ofst+int64(n) == node.stat.Size {
 		node.readsInFlight.Close()
 		node.readsInFlight = nil
@@ -849,6 +844,7 @@ func (f *Ffdfs) lookupNode(path string) (node *node_t) {
 		}
 	}
 	dirInode, err := f.api.DirectoryInode(f.pod.GetPodName(), filepath.ToSlash(path), f.sessionId, false)
+	fmt.Println("*********dirInode", dirInode)
 	if err != nil {
 		f.log.Warningf("lookup failed for %s: %s", path, err.Error())
 		return

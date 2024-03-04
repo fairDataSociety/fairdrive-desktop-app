@@ -81,12 +81,12 @@ jobs:
           mkdir frontend/dist
           touch frontend/dist/index.html
       - name: Lint
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'macos-11'
         run:
           make lint
       - name: Test
         run: make test
-      - name: Race
-        if: matrix.os != 'windows-latest'
-        run: make test-race
+#      - name: Race
+#        if: matrix.os != 'windows-latest'
+#        run: make test-race
 

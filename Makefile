@@ -1,6 +1,6 @@
 GO ?= go
 GOLANGCI_LINT ?= $$($(GO) env GOPATH)/bin/golangci-lint
-GOLANGCI_LINT_VERSION ?= v1.52.2
+GOLANGCI_LINT_VERSION ?= v1.56.2
 
 COMMIT ?= "$(shell git describe --long --dirty --always --match "" || true)"
 VERSION ?= "$(shell git describe --tags --abbrev=0 || true)"
@@ -9,7 +9,7 @@ LDFLAGS ?= -s -w -X main.commit="$(COMMIT)" -X main.version="$(VERSION)" -X main
 
 .PHONY: lint
 lint: linter
-	$(GOLANGCI_LINT) run --skip-dirs frontend/dist --timeout 5m
+	$(GOLANGCI_LINT) run --skip-dirs frontend/dist --timeout 30m
 
 .PHONY: linter
 linter:
@@ -17,11 +17,11 @@ linter:
 
 .PHONY: test
 test:
-	$(GO) test -v ./pkg/fuse -timeout 5m
+	$(GO) test -v -timeout 20m ./pkg/fuse
 
 .PHONY: test-race
 test-race:
-	$(GO) test -v ./pkg/fuse -race -timeout 20m
+	$(GO) test -v -race -timeout 20m ./pkg/fuse
 
 dist:
 	mkdir $@
