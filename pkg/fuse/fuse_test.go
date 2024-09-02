@@ -5,7 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"io"
 	"os"
@@ -18,7 +18,7 @@ import (
 	"testing/iotest"
 	"time"
 
-	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"

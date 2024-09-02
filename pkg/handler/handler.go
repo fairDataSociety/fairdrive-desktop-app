@@ -112,6 +112,19 @@ func (h *Handler) Login(username, password string) error {
 	return err
 }
 
+func (h *Handler) LoginWithSignature(signature, password string) error {
+	if h.api == nil {
+		h.logger.Errorf("login: fairos not initialised")
+		return ErrFairOsNotInitialised
+	}
+	sessionID, err := h.api.LoginWithSignature(signature[2:], password)
+	if err != nil {
+		return err
+	}
+	h.sessionID = sessionID
+	return err
+}
+
 func (h *Handler) Load(username, password, mnemonic string) (*LiteUser, error) {
 	if h.api == nil {
 		h.logger.Errorf("login: fairos not initialised")

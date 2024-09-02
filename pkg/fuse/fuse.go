@@ -2,7 +2,6 @@ package fuse
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"path/filepath"
 	"strconv"
@@ -844,11 +843,11 @@ func (f *Ffdfs) lookupNode(path string) (node *node_t) {
 		}
 	}
 	dirInode, err := f.api.DirectoryInode(f.pod.GetPodName(), filepath.ToSlash(path), f.sessionId, false)
-	fmt.Println("*********dirInode", dirInode)
 	if err != nil {
 		f.log.Warningf("lookup failed for %s: %s", path, err.Error())
 		return
 	}
+
 	files := []string{}
 	dirs := []string{}
 	for _, fileOrDirName := range dirInode.FileOrDirNames {
@@ -861,7 +860,6 @@ func (f *Ffdfs) lookupNode(path string) (node *node_t) {
 		}
 	}
 	f.ino++
-
 	mode := dirInode.Meta.Mode
 	if mode == 0 {
 		mode = fuse.S_IFDIR | 07777

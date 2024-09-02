@@ -12,6 +12,10 @@ import {
 } from "@mui/material";
 import { openSignUp } from "../utils/openBrowser";
 import { EventsEmit } from "../../wailsjs/runtime";
+import { useSDK } from "@metamask/sdk-react";
+import React, { useState } from "react";
+
+const SIGN_WALLET_ADDRESS_DATA = `I am granting FULL ACCESS to the FDP account for address: {address}`;
 
 interface LoginProps {
   isLoading: boolean
@@ -19,9 +23,40 @@ interface LoginProps {
   updatePassword: (e: any) => void
   updateRemember: (e: any) => void
   login: () => void
+  loginWithSignature: (signature: string, password: string) => void
+  showLoader: (arg0: boolean) => void
 }
-function LoginComponent({isLoading, updateUsername, updatePassword, updateRemember, login}: LoginProps) {
 
+function LoginComponent({isLoading, updateUsername, updatePassword, updateRemember, login, loginWithSignature, showLoader}: LoginProps) {
+  const [account, setAccount] = useState<string>();
+  const { sdk, connected, connecting, provider, chainId } = useSDK();
+  const connect = async () => {
+    try {
+      showLoader(true)
+      const accounts = await sdk?.connect();
+      showLoader(false)
+
+      // @ts-ignore
+      setAccount(accounts?.[0]);
+      // @ts-ignore
+      const signature: string = await sdk?.connectAndSign({msg : getSignWalletData(accounts?.[0])})
+      console.log("signature", signature)
+      showLoader(true)
+
+      loginWithSignature(signature, "passwordpassword")
+      showLoader(false)
+
+    } catch (err) {
+      console.warn("failed to connect..", err);
+    }
+  };
+  function getSignWalletData(address: string): string {
+    if (address == "") {
+      throw new Error('Address is not a valid');
+    }
+
+    return SIGN_WALLET_ADDRESS_DATA.replace('{address}', address.toLowerCase());
+  }
   return (
     <>
       <Container component="main" maxWidth="xs">
@@ -123,6 +158,17 @@ function LoginComponent({isLoading, updateUsername, updatePassword, updateRememb
                   </Link>
                 </Tooltip>
               </Typography>
+            </>
+            <>
+              <br />
+              <Tooltip
+                title="Metamask"
+                placement="bottom"
+              >
+                <Link href="#" variant="body2" onClick={connect} align="center">
+                  Connect with Metamask
+                </Link>
+              </Tooltip>
             </>
           </FormGroup>
         </Box>

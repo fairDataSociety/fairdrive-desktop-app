@@ -78,6 +78,15 @@ func (d *DfsAPI) Login(username, password string) (string, error) {
 	return lr.UserInfo.GetSessionId(), nil
 }
 
+func (d *DfsAPI) LoginWithSignature(signature, password string) (string, error) {
+	lr, err := d.API.LoginUserWithSignature(signature, password, "")
+	if err != nil {
+		return "", err
+	}
+	d.logger.Debugf("user %s logged in", lr.Address)
+	return lr.UserInfo.GetSessionId(), nil
+}
+
 func (d *DfsAPI) Load(username, password, mnemonic string) (string, string, string, error) {
 	mnemonic, privateKey, ui, err := d.API.LoadLiteUser(username, password, mnemonic, "")
 	if err != nil {

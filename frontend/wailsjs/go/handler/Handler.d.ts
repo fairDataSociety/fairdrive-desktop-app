@@ -23,6 +23,8 @@ export function Load(arg1:string,arg2:string,arg3:string):Promise<handler.LiteUs
 
 export function Login(arg1:string,arg2:string):Promise<void>;
 
+export function LoginWithSignature(arg1:string,arg2:string):Promise<void>;
+
 export function Logout():Promise<void>;
 
 export function Mount(arg1:string,arg2:string,arg3:boolean):Promise<void>;

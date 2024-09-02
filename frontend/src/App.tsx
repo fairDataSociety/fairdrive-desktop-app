@@ -14,7 +14,7 @@ import {
   Logout,
   GetCashedPods,
   Load,
-  SubscribedPods, UnmountSubscribedPod,
+  SubscribedPods, UnmountSubscribedPod, LoginWithSignature,
 } from '../wailsjs/go/handler/Handler'
 import {
   SetupConfig,
@@ -254,7 +254,7 @@ function App() {
           } else {
             //console.log('doLogin remember', acc.Username, acc.Password)
 
-            await doLogin(acc.Username, acc.Password, '') // TODO remember me will not work for Lite Accounts as there is no mnemonic info available
+            await doLogin(acc.Username, acc.Password, '', '') // TODO remember me will not work for Lite Accounts as there is no mnemonic info available
 
             let _mountPoint = await GetMountPoint()
             setMountPoint(_mountPoint)
@@ -475,6 +475,7 @@ function App() {
         account.userInfo.username,
         account.userInfo.password,
         account.userInfo.mnemonic,
+        "",
       )
       setShowAccounts(false)
     } catch (e: any) {
@@ -506,13 +507,13 @@ function App() {
       return
     }
     try {
-      await doLogin(importUsername, importPassword, importMnemonic)
+      await doLogin(importUsername, importPassword, importMnemonic, '')
     } catch (e: any) {
       showError(e)
     }
   }
 
-  async function doLogin(user: string, pass: string, mnem: string) {
+  async function doLogin(user: string, pass: string, mnem: string, signature: string) {
     // TODO: logout existing user and maybe unmount all pods
     try {
       await Logout()
@@ -526,8 +527,13 @@ function App() {
     if (isPortableAccount) {
       mnem = '' // TODO fix should not be undefined, causes error and user can not be logged out
       try {
-        // try to log in with Portable account, if it fails, login with portable
-        await Login(user, pass)
+        if (signature) {
+          await LoginWithSignature(user, signature)
+        } else {
+          // try to log in with Portable account, if it fails, login with portable
+          await Login(user, pass)
+        }
+
         let p = await GetPodsList()
         setPrivateKey('')
         setMnemonic('')
@@ -590,7 +596,7 @@ function App() {
   async function login() {
     setIsLoading(true)
     try {
-      let { p, m } = await doLogin(username, password, mnemonic)
+      let { p, m } = await doLogin(username, password, mnemonic, '')
 
       if (remember) {
         await RememberPassword(username, password)
@@ -598,6 +604,29 @@ function App() {
       } else {
         await ForgetPassword()
       }
+    } catch (e: any) {
+      showError(e)
+    }
+    setIsLoading(false)
+  }
+
+  async function loginWithSignature(signature: string, password: string) {
+    setIsLoading(true)
+    try {
+      await LoginWithSignature(signature, password)
+      let p = await GetPodsList()
+      setPrivateKey('')
+      setMnemonic('')
+      setShowLogin(false)
+      setPods(p)
+      console.log("pods",p)
+      const subscribedPods = await SubscribedPods()
+      setSubscribedPods(subscribedPods)
+      console.log("subscribedPods", subscribedPods)
+
+      setShowPods(true)
+      EventsEmit('enableMenus')
+      setOpenError(false) // close error if it was open before
     } catch (e: any) {
       showError(e)
     }
@@ -1069,10 +1098,12 @@ function App() {
             return (
               <LoginComponent
                 login={login}
+                loginWithSignature={loginWithSignature}
                 isLoading={isLoading}
                 updateUsername={updateName}
                 updatePassword={updatePassword}
                 updateRemember={updateRemember}
+                showLoader={setIsLoading}
               />
             )
           }

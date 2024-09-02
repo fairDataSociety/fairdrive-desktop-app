@@ -173,7 +173,7 @@ function PodsComponent(
                   )
                 }
                 {
-                  pods.length > 0 && (
+                  subscribedPods != null && pods.length > 0 && (
                     <Tab
                       label={
                         <Tooltip title="Imported pods" placement="right">
@@ -185,7 +185,7 @@ function PodsComponent(
                   )
                 }
                 {
-                  subscribedPods.length > 0 && (
+                  subscribedPods != null && subscribedPods.length > 0 && (
                     <Tab
                       label={
                         <Tooltip title="Subscribed pods" placement="right">

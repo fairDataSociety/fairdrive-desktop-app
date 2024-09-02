@@ -38,6 +38,10 @@ export function Login(arg1, arg2) {
   return window['go']['handler']['Handler']['Login'](arg1, arg2);
 }
 
+export function LoginWithSignature(arg1, arg2) {
+  return window['go']['handler']['Handler']['LoginWithSignature'](arg1, arg2);
+}
+
 export function Logout() {
   return window['go']['handler']['Handler']['Logout']();
 }
