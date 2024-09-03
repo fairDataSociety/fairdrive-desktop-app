@@ -119,7 +119,7 @@ jobs:
           env
 
       - name: Go module cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -134,12 +134,12 @@ jobs:
         run: |
           make binary
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: matrix.os == 'windows-latest'
         with:
           name: windows
           path: build/bin/*
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: matrix.os == 'ubuntu-20.04'
         with:
           name: linux
@@ -158,7 +158,7 @@ jobs:
           CERTIFICATE_OSX_APPLICATION: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
           CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: matrix.os == 'macos-latest'
         with:
           name: ${{ matrix.job_name }}
@@ -168,20 +168,24 @@ jobs:
     needs: build
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/download-artifact@v3
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.22
+      - uses: actions/download-artifact@v4
         with:
           name: windows
           path: build/bin/windows
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: mac_arm64
           path: build/bin/mac_arm64
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: mac_amd64
           path: build/bin/mac_amd64
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: linux
           path: build/bin/linux
