@@ -29,7 +29,7 @@ jobs:
             deploy: true
 
           - job_name: mac_amd64
-            os: macos-11
+            os: macos-latest
             go: '1.22'
             build_flags: '-include "^darwin/amd64" -cgo'
             quicktest: true
@@ -37,7 +37,7 @@ jobs:
             deploy: true
 
           - job_name: mac_arm64
-            os: macos-11
+            os: macos-latest
             go: '1.22'
             build_flags: '-include "^darwin/arm64" -cgo -macos-arch arm64 -cgo-cflags=-I/usr/local/include -cgo-ldflags=-L/usr/local/lib'
             deploy: true
@@ -90,7 +90,7 @@ jobs:
         run: |
           brew update
           brew install --cask macfuse
-        if: matrix.os == 'macos-11'
+        if: matrix.os == 'macos-latest'
 
       - name: Install Libraries on Windows
         shell: powershell
@@ -145,11 +145,11 @@ jobs:
           name: linux
           path: build/bin/*
       - uses: actions/setup-node@v3
-        if: matrix.os == 'macos-11'
+        if: matrix.os == 'macos-latest'
         with:
           node-version: 18
       - shell: bash
-        if: matrix.os == 'macos-11'
+        if: matrix.os == 'macos-latest'
         run: |
           chmod +x scripts/add-cert.sh && ./scripts/add-cert.sh
           npm install --global create-dmg
@@ -162,7 +162,7 @@ jobs:
           CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
 
       - uses: actions/upload-artifact@v3
-        if: matrix.os == 'macos-11'
+        if: matrix.os == 'macos-latest'
         with:
           name: ${{ matrix.job_name }}
           path: build/bin/*

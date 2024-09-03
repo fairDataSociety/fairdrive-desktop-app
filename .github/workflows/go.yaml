@@ -82,7 +82,7 @@ jobs:
           mkdir frontend/dist
           touch frontend/dist/index.html
       - name: Lint
-        if: matrix.os == 'macos-11'
+        if: matrix.os == 'macos-latest'
         run:
           make lint
       - name: Test
