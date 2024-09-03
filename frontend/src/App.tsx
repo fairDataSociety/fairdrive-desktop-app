@@ -249,12 +249,12 @@ function App() {
           await Start(c) // TODO: remember me will not work for lite accounts
 
           let acc = await Get()
-          if (acc.Username === '' || acc.Password === '') {
+          if (acc.username === '' || acc.password === '') {
             EventsEmit('disableMenus')
           } else {
             //console.log('doLogin remember', acc.Username, acc.Password)
 
-            await doLogin(acc.Username, acc.Password, '') // TODO remember me will not work for Lite Accounts as there is no mnemonic info available
+            await doLogin(acc.username, acc.password, '') // TODO remember me will not work for Lite Accounts as there is no mnemonic info available
 
             let _mountPoint = await GetMountPoint()
             setMountPoint(_mountPoint)

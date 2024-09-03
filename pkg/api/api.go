@@ -48,6 +48,7 @@ func New(logger logging.Logger, fc *FairOSConfig) (*DfsAPI, error) {
 			EnsConfig:          ensConfig,
 			SubscriptionConfig: datahubConfig,
 			Logger:             logger,
+			FeedCacheSize:      -1,
 		},
 	)
 	if err != nil {
