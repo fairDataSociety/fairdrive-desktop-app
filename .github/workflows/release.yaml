@@ -151,11 +151,8 @@ jobs:
       - shell: bash
         if: matrix.os == 'macos-latest'
         run: |
-          chmod +x scripts/add-cert.sh && ./scripts/add-cert.sh
-          npm install --global create-dmg
           chmod +x 'build/bin/Fairdrive Desktop App.app/Contents/MacOS/Fairdrive Desktop App'
-          create-dmg 'build/bin/Fairdrive Desktop App.app' build/bin --identity '${{ secrets.ID }}'
-          mv 'build/bin/FDA 0.1.0.dmg' build/bin/FDA.dmg
+          hdiutil create -volname "FDA" -srcfolder build/bin -ov -format UDZO build/bin/FDA.dmg
           rm -rf 'build/bin/Fairdrive Desktop App.app'
         env:
           CERTIFICATE_OSX_APPLICATION: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
