@@ -20,7 +20,7 @@ jobs:
         job_name: [ 'linux', 'mac_amd64', 'mac_arm64', 'windows' ]
         include:
           - job_name: linux
-            os: ubuntu-20.04
+            os: ubuntu-latest
             go: '1.22'
             build_flags: '-include "^linux/"'
             check: true
@@ -83,7 +83,7 @@ jobs:
           sudo chown root:$USER /etc/fuse.conf
           sudo apt-get update
           sudo apt-get install fuse libfuse-dev rpm pkg-config build-essential libgtk-3-dev libwebkit2gtk-4.0-dev
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-latest'
 
       - name: Install Libraries on macOS
         shell: bash
@@ -140,7 +140,7 @@ jobs:
           name: windows
           path: build/bin/*
       - uses: actions/upload-artifact@v4
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-latest'
         with:
           name: linux
           path: build/bin/*
