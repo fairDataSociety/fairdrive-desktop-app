@@ -82,7 +82,7 @@ jobs:
           sudo chmod 666 /dev/fuse
           sudo chown root:$USER /etc/fuse.conf
           sudo apt-get update
-          sudo apt-get install fuse libfuse-dev rpm pkg-config build-essential libgtk-3-dev libwebkit2gtk-4.0-37
+          sudo apt-get install fuse libfuse-dev rpm pkg-config build-essential libgtk-3-dev libwebkit2gtk-4.1-dev
         if: matrix.os == 'ubuntu-latest'
 
       - name: Install Libraries on macOS
@@ -151,7 +151,7 @@ jobs:
       - shell: bash
         if: matrix.os == 'macos-latest'
         run: |
-          chmod +x 'build/bin/Fairdrive Desktop App.app/Contents/MacOS/Fairdrive Desktop App'
+          chmod +x 'build/bin/Fairdrive Desktop App.app/Contents/MacOS/FDA'
           hdiutil create -volname "FDA" -srcfolder build/bin -ov -format UDZO build/bin/FDA.dmg
           rm -rf 'build/bin/Fairdrive Desktop App.app'
 
