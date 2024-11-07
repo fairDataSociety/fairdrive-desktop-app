@@ -37,4 +37,10 @@ binary: dist FORCE
 	$(GO) version
 	wails build -trimpath -ldflags "$(LDFLAGS)"
 
+.PHONY: linux-binary
+binary: export CGO_ENABLED=1
+binary: dist FORCE
+	$(GO) version
+	wails build -trimpath -ldflags "$(LDFLAGS)" -tags webkit2_41
+
 FORCE:
